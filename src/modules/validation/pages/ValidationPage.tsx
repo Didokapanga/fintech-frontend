@@ -1,6 +1,6 @@
 import Tabs from "../../../components/ui/Tab";
-import ValidationCaisseTab from "../../transfert-client/components/ValidationCaisseTab";
-import ValidationClientTab from "../../transfert-client/components/ValidationClientTab";
+import ValidationCaisseTab from "../components/ValidationCaisseTab";
+import ValidationClientTab from "../components/ValidationClientTab";
 
 
 export default function ValidationPage() {

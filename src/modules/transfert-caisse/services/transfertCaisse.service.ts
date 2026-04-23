@@ -58,7 +58,7 @@ export const getTransferts = async (
     params: { page, limit },
   });
 
-  console.log("🔥 API RAW:", res.data);
+  // console.log("🔥 API RAW:", res.data);
 
   return {
     data: res.data.data.map((t: TransfertCaisseApi) => ({

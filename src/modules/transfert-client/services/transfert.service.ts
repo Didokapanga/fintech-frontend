@@ -1,21 +1,50 @@
+// src/modules/transfert-client/services/transfert.service.ts
 import { api } from "../../../services/api";
 
 export type CreateTransfertClientDto = {
   caisse_id: string;
   agence_exp: string;
   agence_dest: string;
-  client_exp: string;
-  client_dest: string;
+
+  exp_nom: string;
+  exp_postnom: string;
+  exp_prenom: string;
+  exp_phone: string;
+  exp_type_piece: string;
+  exp_numero_piece: string;
+
+  dest_nom: string;
+  dest_postnom: string;
+  dest_prenom: string;
+  dest_phone: string;
+  dest_type_piece: string;
+  dest_numero_piece: string;
+
   montant: number;
+  frais: number;
+  commission: number;
   devise: string;
-  type_piece: string;
-  numero_piece: string;
 };
 
 export type TransfertClient = {
   id: string;
-  montant: number;
+
+  code_reference: string;
+
+  exp_nom: string;
+  exp_postnom: string;
+  exp_phone: string;
+
+  dest_nom: string;
+  dest_postnom: string;
+  dest_phone: string;
+
+  montant: number | string;
   devise: string;
+
+  frais: number;
+  commission: number;
+
   statut: string;
   created_at: string;
 };

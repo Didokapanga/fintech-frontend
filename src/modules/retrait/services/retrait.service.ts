@@ -1,9 +1,14 @@
+// src/modules/retrait/services/retrait.service.ts
+
 import { api } from "../../../services/api";
 
 export type CreateRetraitDto = {
   code_reference: string;
   code_secret: string;
   caisse_id: string;
+  numero_piece: string;
+  created_by: string;
+  user_agent: string;
 };
 
 export type Retrait = {
@@ -14,17 +19,39 @@ export type Retrait = {
   devise: string;
   statut: string;
   created_at: string;
+
+  expediteur?: {
+    nom: string;
+    postnom: string;
+    prenom: string;
+    phone: string;
+  };
+
+  destinataire?: {
+    nom: string;
+    postnom: string;
+    prenom: string;
+    phone: string;
+  };
 };
 
-// ✅ type brut venant API
 type RetraitApi = {
   id: string;
   caisse_id: string;
   numero_piece: string;
-  montant: string; // ⚠️ string côté backend
+  montant: string;
   devise: string;
   statut: string;
   created_at: string;
+
+  // 🔥 optionnel si backend enrichi
+  exp_nom?: string;
+  exp_postnom?: string;
+  exp_phone?: string;
+
+  dest_nom?: string;
+  dest_postnom?: string;
+  dest_phone?: string;
 };
 
 export type PaginatedResponse<T> = {
@@ -42,7 +69,6 @@ export const createRetrait = async (data: CreateRetraitDto) => {
   return res.data.data;
 };
 
-// 🔥 HISTORIQUE
 export const getMyRetraits = async (
   page = 1,
   limit = 10
@@ -51,14 +77,12 @@ export const getMyRetraits = async (
     params: { page, limit },
   });
 
-  console.log("🔥 API RETRAITS:", res.data);
-
   const raw: RetraitApi[] = res.data.data;
 
   return {
     data: raw.map((r) => ({
       ...r,
-      montant: Number(r.montant), // ✅ conversion propre
+      montant: Number(r.montant),
     })),
     meta: res.data.meta,
   };

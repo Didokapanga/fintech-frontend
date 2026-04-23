@@ -9,6 +9,8 @@ import TransfertClientPage from "../modules/transfert-client/pages/TransfertClie
 import TransfertCaissePage from "../modules/transfert-caisse/pages/TransfertcaissePage";
 import ValidationPage from "../modules/validation/pages/ValidationPage";
 import RetraitPage from "../modules/retrait/pages/RetraitPage";
+import LedgerPage from "../modules/ledger/pages/LedgerPage";
+import RegisterPage from "../modules/auth/pages/RegisterPage";
 
 
 export const router = createBrowserRouter([
@@ -32,7 +34,8 @@ export const router = createBrowserRouter([
       { path: "caisses", element: <CaissesPage /> },
       { path: "transfert-caisse", element: <TransfertCaissePage /> },
       { path: "validation", element: <ValidationPage /> },
-      { path: "ledger", element: <div>Ledger</div> },
+      { path: "ledger", element: <LedgerPage /> },
+      {path: "/register", element: <RegisterPage />,},
     ],
   },
 ]);

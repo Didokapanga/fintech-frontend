@@ -4,11 +4,17 @@ import { useState } from "react";
 import { Button, Table } from "../../../components/ui";
 import type { Column } from "../../../components/ui/Table.types";
 
-// import { useValidateOperation } from "../hooks/useValidation";
-// import { useTransfertsCaisseToProcess } from "../../transfert-caisse/hooks/useTransfertCaisse";
 import type { TransfertCaisse } from "../../transfert-caisse/services/transfertCaisse.service";
-import { useValidateOperation } from "../../validation/hooks/useValidation";
+import { useValidateOperation } from "../hooks/useValidation";
 import { useTransfertsCaisseToProcess } from "../../transfert-caisse/hooks/useTransfertCaisse";
+import { useCaisses } from "../../caisse/hooks/useCaisses";
+
+// ✅ TYPE CAISSE
+type Caisse = {
+  id: string;
+  code_caisse: string;
+  devise: string;
+};
 
 export default function ValidationCaisseTab() {
   const [page] = useState(1);
@@ -16,7 +22,17 @@ export default function ValidationCaisseTab() {
   const { data, isLoading } = useTransfertsCaisseToProcess(page, 10);
   const { mutate } = useValidateOperation();
 
+  const { data: caisses = [] } = useCaisses() as { data: Caisse[] };
+
   const transferts = data?.data ?? [];
+
+  // 🔥 helper affichage lisible
+  const getCaisseLabel = (id: string) => {
+    const caisse = caisses.find((c) => c.id === id);
+    return caisse
+      ? `${caisse.code_caisse} (${caisse.devise})`
+      : id.slice(0, 8); // fallback propre
+  };
 
   // 🎨 BADGE
   const getStatusBadge = (status: string) => {
@@ -35,21 +51,33 @@ export default function ValidationCaisseTab() {
   };
 
   // ACTIONS
-  const handleValidate = (id: string) => {
+  const handleValidate = (row: TransfertCaisse) => {
+    let niveau: "N1" | "N2";
+
+    if (row.statut === "INITIE") {
+      niveau = "N1";
+    } else if (row.statut === "VALIDE") {
+      niveau = "N2";
+    } else {
+      return; // déjà traité
+    }
+
     mutate({
       operation_type: "TRANSFERT_CAISSE",
-      reference_id: id,
+      reference_id: row.id,
       decision: "APPROUVE",
-      niveau: "N1",
+      niveau,
     });
   };
 
-  const handleReject = (id: string) => {
+  const handleReject = (row: TransfertCaisse) => {
+    if (row.statut === "EXECUTE") return;
+
     mutate({
       operation_type: "TRANSFERT_CAISSE",
-      reference_id: id,
+      reference_id: row.id,
       decision: "REJETE",
-      niveau: "N1",
+      niveau: row.statut === "INITIE" ? "N1" : "N2",
     });
   };
 
@@ -58,10 +86,12 @@ export default function ValidationCaisseTab() {
     {
       header: "Caisse source",
       accessor: "caisse_source_id",
+      render: (value) => getCaisseLabel(String(value)),
     },
     {
       header: "Caisse destination",
       accessor: "caisse_destination_id",
+      render: (value) => getCaisseLabel(String(value)),
     },
     {
       header: "Montant",
@@ -103,13 +133,13 @@ export default function ValidationCaisseTab() {
       accessor: "id",
       render: (_v, row) => (
         <div className="flex gap-2">
-          <Button onClick={() => handleValidate(String(row.id))}>
+          <Button onClick={() => handleValidate(row)}>
             Valider
           </Button>
 
           <Button
             variant="danger"
-            onClick={() => handleReject(String(row.id))}
+            onClick={() => handleReject(row)}
           >
             Rejeter
           </Button>

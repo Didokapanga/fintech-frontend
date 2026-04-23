@@ -12,3 +12,12 @@
     transform: scale(1);
   }
 }
+
+.input {
+  @apply w-full px-4 py-2.5 rounded-xl border bg-gray-50 
+  focus:outline-none focus:ring-2 focus:ring-indigo-500;
+}
+
+.btn-primary {
+  @apply bg-indigo-600 hover:bg-indigo-700 text-white py-2.5 rounded-xl;
+}

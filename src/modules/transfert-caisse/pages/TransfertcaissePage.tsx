@@ -1,35 +1,64 @@
-// src/modules/transfert-caisse/pages/TransfertCaissePage.tsx
-
 import { useState } from "react";
 import { Button, Table } from "../../../components/ui";
 import type { Column } from "../../../components/ui/Table.types";
 import { useTransfertsCaisse } from "../hooks/useTransfertCaisse";
+import { useCaisses } from "../../caisse/hooks/useCaisses";
 import type { TransfertCaisse } from "../services/transfertCaisse.service";
 import TransfertCaisseModal from "../components/transfertCaisseModal";
+
+// ✅ TYPE CAISSE
+type Caisse = {
+  id: string;
+  code_caisse: string;
+  devise: string;
+};
 
 export default function TransfertCaissePage() {
   const [open, setOpen] = useState(false);
   const [page, setPage] = useState(1);
 
   const { data, isLoading } = useTransfertsCaisse(page, 10);
+  const { data: caisses = [] } = useCaisses() as { data: Caisse[] };
 
-  // 🔥 IMPORTANT
   const transferts = data?.data ?? [];
 
-  console.log("🔥 FRONT:", transferts);
+  const meta = !Array.isArray(data) ? data?.meta : undefined;
+
+  // console.log("🔥 FRONT:", transferts);
+
+  // 🔥 MAP ID → LIBELLÉ
+  const getCaisseLabel = (id: string) => {
+    const caisse = caisses.find((c) => c.id === id);
+    return caisse
+      ? `${caisse.code_caisse} (${caisse.devise})`
+      : "—";
+  };
 
   const columns: Column<TransfertCaisse>[] = [
-    { header: "Source", accessor: "caisse_source_id" },
-    { header: "Destination", accessor: "caisse_destination_id" },
+    {
+      header: "Source",
+      accessor: "caisse_source_id",
+      render: (value) => getCaisseLabel(String(value)),
+    },
+    {
+      header: "Destination",
+      accessor: "caisse_destination_id",
+      render: (value) => getCaisseLabel(String(value)),
+    },
 
     {
       header: "Montant",
       accessor: "montant",
-      render: (value, row) => (
-        <span className="font-semibold text-green-600">
-          {value.toLocaleString()} {row.devise}
-        </span>
-      ),
+      render: (value, row) => {
+        const montant =
+          typeof value === "number" ? value : Number(value);
+
+        return (
+          <span className="font-semibold text-green-600">
+            {montant.toLocaleString()} {row.devise}
+          </span>
+        );
+      },
     },
 
     { header: "Devise", accessor: "devise" },
@@ -39,7 +68,7 @@ export default function TransfertCaissePage() {
       accessor: "statut",
       render: (value) => (
         <span className="px-2 py-1 rounded bg-gray-100 text-sm">
-          {value}
+          {String(value)}
         </span>
       ),
     },
@@ -47,7 +76,8 @@ export default function TransfertCaissePage() {
     {
       header: "Date",
       accessor: "created_at",
-      render: (value) => new Date(value).toLocaleString(),
+      render: (value) =>
+        new Date(String(value)).toLocaleString(),
     },
   ];
 
@@ -80,26 +110,29 @@ export default function TransfertCaissePage() {
       )}
 
       {/* PAGINATION */}
-      <div className="flex justify-center gap-2">
-        <Button
-          variant="secondary"
-          disabled={page === 1}
-          onClick={() => setPage((p) => p - 1)}
-        >
-          ←
-        </Button>
+      {meta && (
+        <div className="flex justify-center items-center gap-3">
+          <Button
+            variant="secondary"
+            disabled={page === 1}
+            onClick={() => setPage((p) => p - 1)}
+          >
+            ←
+          </Button>
 
-        <span className="px-3 py-2 text-sm">
-          Page {data?.meta?.page || 1}
-        </span>
+          <span className="text-sm text-gray-600">
+            Page <strong>{meta.page}</strong> / {meta.totalPages}
+          </span>
 
-        <Button
-          variant="secondary"
-          onClick={() => setPage((p) => p + 1)}
-        >
-          →
-        </Button>
-      </div>
+          <Button
+            variant="secondary"
+            disabled={page >= meta.totalPages}
+            onClick={() => setPage((p) => p + 1)}
+          >
+            →
+          </Button>
+        </div>
+      )}
 
       {/* MODAL */}
       <TransfertCaisseModal

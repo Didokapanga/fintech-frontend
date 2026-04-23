@@ -10,7 +10,7 @@ export const api = axios.create({
 api.interceptors.request.use((config) => {
   const token = useAuthStore.getState().token;
 
-  console.log("🔥 TOKEN ENVOYÉ:", token);
+  // console.log("🔥 TOKEN ENVOYÉ:", token);
 
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
@@ -26,11 +26,11 @@ api.interceptors.response.use(
   (error) => {
     const status = error.response?.status;
 
-    console.log("🔥 API ERROR:", status, error.response?.data);
+    // console.log("🔥 API ERROR:", status, error.response?.data);
 
     // 🔴 uniquement si vrai problème auth
     if (status === 401) {
-      console.log("🔴 TOKEN EXPIRE → LOGOUT");
+      // console.log("🔴 TOKEN EXPIRE → LOGOUT");
 
       useAuthStore.getState().logout();
 

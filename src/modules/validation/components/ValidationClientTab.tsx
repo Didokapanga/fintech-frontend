@@ -4,21 +4,13 @@ import { useState } from "react";
 import { Button, Table } from "../../../components/ui";
 import type { Column } from "../../../components/ui/Table.types";
 
-import { useClients } from "../../clients/hooks/useClients";
 import { useAgences } from "../../agence/hooks/useAgences";
 import {
   useValidateOperation,
   useValidationList,
-} from "../../validation/hooks/useValidation";
-import type { TransfertClient } from "../../validation/services/validation.service";
-
-// TYPES
-type Client = {
-  id: string;
-  name: string;
-  first_name: string;
-  second_name: string;
-};
+} from "../hooks/useValidation";
+import type { TransfertClient } from "../services/validation.service";
+import { useAuthStore } from "../../../app/store";
 
 type Agence = {
   id: string;
@@ -26,26 +18,26 @@ type Agence = {
 };
 
 export default function ValidationClientTab() {
-  // ✅ FIX: suppression de setPage inutilisé
   const [page] = useState(1);
 
+  // 🔥 FIX PRINCIPAL : utiliser Zustand (PAS localStorage)
+  const user = useAuthStore((s) => s.user);
+
+  const role = user?.role_name?.toUpperCase() || "";
+
+  const canValidate = ["ADMIN", "N+1", "N+2"].includes(role);
+
+  // ✅ DATA
   const { data, isLoading } = useValidationList(page, 10);
   const { mutate } = useValidateOperation();
 
   const transferts = data?.data ?? [];
 
-  const { data: clientsData } = useClients();
+  // const { data: clientsData } = useClients();
   const { data: agencesData } = useAgences();
 
-  const clients: Client[] = (clientsData as Client[]) ?? [];
+  // const clients: Client[] = (clientsData as Client[]) ?? [];
   const agences: Agence[] = (agencesData as Agence[]) ?? [];
-
-  // HELPERS
-  const getClientName = (id: string) => {
-    const c = clients.find((c) => c.id === id);
-    if (!c) return "-";
-    return `${c.name} ${c.first_name} ${c.second_name}`;
-  };
 
   const getAgenceName = (id: string) => {
     const a = agences.find((a) => a.id === id);
@@ -89,25 +81,40 @@ export default function ValidationClientTab() {
   const columns: Column<TransfertClient>[] = [
     {
       header: "Expéditeur",
-      accessor: "client_exp",
-      render: (value) => (
-        <span>{getClientName(String(value))}</span>
+      accessor: "id",
+      render: (_v, row) => (
+        <div className="flex flex-col">
+          <span className="font-medium text-gray-800">
+            {row.exp_nom || "-"} {row.exp_postnom || ""}
+          </span>
+          <span className="text-xs text-gray-500">
+            {row.exp_phone || "-"}
+          </span>
+        </div>
       ),
     },
+
     {
       header: "Destinataire",
-      accessor: "client_dest",
-      render: (value) => (
-        <span>{getClientName(String(value))}</span>
+      accessor: "client_exp", // ✅ UNIQUE
+      render: (_v, row) => (
+        <div className="flex flex-col">
+          <span className="font-medium text-gray-800">
+            {row.dest_nom || "-"} {row.dest_postnom || ""}
+          </span>
+          <span className="text-xs text-gray-500">
+            {row.dest_phone || "-"}
+          </span>
+        </div>
       ),
     },
+
     {
       header: "Agence",
-      accessor: "agence_exp" as keyof TransfertClient,
-      render: (value) => (
-        <span>{getAgenceName(String(value))}</span>
-      ),
+      accessor: "agence_exp",
+      render: (value) => getAgenceName(String(value)),
     },
+
     {
       header: "Montant",
       accessor: "montant",
@@ -124,6 +131,7 @@ export default function ValidationClientTab() {
         );
       },
     },
+
     {
       header: "Statut",
       accessor: "statut",
@@ -137,38 +145,60 @@ export default function ValidationClientTab() {
         </span>
       ),
     },
+
     {
       header: "Date",
       accessor: "created_at",
       render: (value) =>
         new Date(String(value)).toLocaleString(),
     },
+
     {
       header: "Actions",
-      accessor: "id",
-      render: (_v, row) => (
-        <div className="flex gap-2">
-          <Button onClick={() => handleValidate(String(row.id))}>
-            Valider
-          </Button>
-          <Button
-            variant="danger"
-            onClick={() => handleReject(String(row.id))}
-          >
-            Rejeter
-          </Button>
-        </div>
-      ),
+      accessor: "client_dest", // ✅ UNIQUE
+      render: (_v, row) =>
+        canValidate ? (
+          <div className="flex gap-2">
+            <Button onClick={() => handleValidate(String(row.id))}>
+              Valider
+            </Button>
+
+            <Button
+              variant="danger"
+              onClick={() => handleReject(String(row.id))}
+            >
+              Rejeter
+            </Button>
+          </div>
+        ) : (
+          <span className="text-gray-400 text-sm italic">
+            Lecture seule
+          </span>
+        ),
     },
   ];
 
   return (
     <div className="space-y-4">
+
+      {/* INFO DROITS */}
+      {!canValidate && (
+        <div className="text-xs text-gray-400">
+          Vous êtes en mode lecture seule
+        </div>
+      )}
+
       <Table<TransfertClient>
         data={transferts}
         columns={columns}
         loading={isLoading}
       />
+
+      {!isLoading && transferts.length === 0 && (
+        <div className="text-center text-gray-500 py-6">
+          Aucun transfert à afficher
+        </div>
+      )}
     </div>
   );
 }

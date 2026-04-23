@@ -2,23 +2,15 @@
 
 import { useForm } from "react-hook-form";
 import { useCaisses } from "../../caisse/hooks/useCaisses";
-import { useClients } from "../../clients/hooks/useClients";
 import { useAgences } from "../../agence/hooks/useAgences";
 import { Button, Input, Modal } from "../../../components/ui";
 import { useCreateTransfertClient } from "../hooks/useTransfert";
 import type { CreateTransfertClientDto } from "../services/transfert.service";
+import { useAuthStore } from "../../../app/store";
 
-// ✅ TYPES
 type Caisse = {
   id: string;
   code_caisse: string;
-};
-
-type Client = {
-  id: string;
-  name: string;
-  first_name?: string;
-  second_name?: string;
 };
 
 type Agence = {
@@ -37,20 +29,25 @@ export default function TransfertClientModal({ open, onClose }: Props) {
 
   const { mutate, isPending } = useCreateTransfertClient();
 
+  const user = useAuthStore((s) => s.user);
+
   const { data: caisses = [] } = useCaisses() as { data: Caisse[] };
-  const { data: clients = [] } = useClients() as { data: Client[] };
   const { data: agences = [] } = useAgences() as { data: Agence[] };
 
-  // ✅ FORMAT NOM COMPLET
-  const getFullName = (c: Client) =>
-    [c.name, c.first_name, c.second_name]
-      .filter(Boolean)
-      .join(" ");
-
   const onSubmit = (data: CreateTransfertClientDto) => {
-    console.log("🔥 DATA ENVOYÉE:", data);
+  if (!user?.agence_id) {
+    alert("Agence utilisateur introuvable");
+    return;
+  }
 
-    mutate(data, {
+  const payload: CreateTransfertClientDto = {
+    ...data,
+    agence_exp: user.agence_id, // ✅ maintenant garanti string
+  };
+
+    // console.log("🔥 DATA ENVOYÉE:", payload);
+
+    mutate(payload, {
       onSuccess: (res) => {
         alert("Code secret: " + res.code_secret);
         reset();
@@ -67,104 +64,116 @@ export default function TransfertClientModal({ open, onClose }: Props) {
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
 
-        {/* 🔷 SECTION 1 */}
+        {/* CAISSE + DEVISE */}
         <div className="grid grid-cols-2 gap-4">
-
-          <select {...register("caisse_id", { required: true })} className="input">
+          <select {...register("caisse_id")} className="input">
             <option value="">Caisse</option>
-            {Array.isArray(caisses) &&
-              caisses.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.code_caisse}
+            {caisses.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.code_caisse}
+              </option>
+            ))}
+          </select>
+
+          <select {...register("devise")} className="input">
+            <option value="">Devise</option>
+            <option value="USD">USD</option>
+            <option value="CDF">CDF</option>
+          </select>
+        </div>
+
+        {/* AGENCES */}
+        <div className="grid grid-cols-2 gap-4">
+          <input
+            value={
+              agences.find((a) => a.id === user?.agence_id)?.libelle || ""
+            }
+            disabled
+            className="input bg-gray-100 cursor-not-allowed"
+          />
+
+          <select {...register("agence_dest")} className="input">
+            <option value="">Agence destination</option>
+            {agences
+              .filter((a) => a.id !== user?.agence_id) // ✅ FIX ICI
+              .map((a) => (
+                <option key={a.id} value={a.id}>
+                  {a.libelle}
                 </option>
               ))}
           </select>
-
-          <select {...register("devise", { required: true })} className="input">
-            <option value="">Devise</option>
-            <option value="CDF">CDF</option>
-            <option value="USD">USD</option>
-            <option value="EUR">EUR</option>
-          </select>
-
         </div>
 
-        {/* 🔷 SECTION 2 */}
-        <div className="grid grid-cols-2 gap-4">
+        {/* ================= EXPEDITEUR ================= */}
+        <div className="border rounded-xl p-4 space-y-3">
+          <h3 className="font-medium text-sm text-gray-600">
+            Expéditeur
+          </h3>
 
-          <select {...register("agence_exp", { required: true })} className="input">
-            <option value="">Agence expéditeur</option>
-            {agences.map((a) => (
-              <option key={a.id} value={a.id}>
-                {a.libelle}
-              </option>
-            ))}
-          </select>
+          <div className="grid grid-cols-3 gap-2">
+            <Input placeholder="Nom" {...register("exp_nom")} />
+            <Input placeholder="Postnom" {...register("exp_postnom")} />
+            <Input placeholder="Prénom" {...register("exp_prenom")} />
+          </div>
 
-          <select {...register("agence_dest", { required: true })} className="input">
-            <option value="">Agence destination</option>
-            {agences.map((a) => (
-              <option key={a.id} value={a.id}>
-                {a.libelle}
-              </option>
-            ))}
-          </select>
+          <Input placeholder="Téléphone" {...register("exp_phone")} />
 
+          <div className="grid grid-cols-2 gap-2">
+            <select {...register("exp_type_piece")} className="input">
+              <option value="">Type pièce</option>
+              <option value="CNI">CNI</option>
+              <option value="PASSEPORT">Passeport</option>
+            </select>
+
+            <Input
+              placeholder="Numéro pièce"
+              {...register("exp_numero_piece")}
+            />
+          </div>
         </div>
 
-        {/* 🔷 SECTION 3 */}
-        <div className="grid grid-cols-2 gap-4">
+        {/* ================= DESTINATAIRE ================= */}
+        <div className="border rounded-xl p-4 space-y-3">
+          <h3 className="font-medium text-sm text-gray-600">
+            Destinataire
+          </h3>
 
-          <select {...register("client_exp", { required: true })} className="input">
-            <option value="">Client expéditeur</option>
-            {clients.map((c) => (
-              <option key={c.id} value={c.id}>
-                {getFullName(c)}
-              </option>
-            ))}
-          </select>
+          <div className="grid grid-cols-3 gap-2">
+            <Input placeholder="Nom" {...register("dest_nom")} />
+            <Input placeholder="Postnom" {...register("dest_postnom")} />
+            <Input placeholder="Prénom" {...register("dest_prenom")} />
+          </div>
 
-          <select {...register("client_dest", { required: true })} className="input">
-            <option value="">Client bénéficiaire</option>
-            {clients.map((c) => (
-              <option key={c.id} value={c.id}>
-                {getFullName(c)}
-              </option>
-            ))}
-          </select>
+          <Input placeholder="Téléphone" {...register("dest_phone")} />
 
+          <div className="grid grid-cols-2 gap-2">
+            <select {...register("dest_type_piece")} className="input">
+              <option value="">Type pièce</option>
+              <option value="CARTE D'ELECTEUR">Carte d'électeur</option>
+              <option value="PASSEPORT">Passeport</option>
+            </select>
+
+            <Input
+              placeholder="Numéro pièce"
+              {...register("dest_numero_piece")}
+            />
+          </div>
         </div>
 
-        {/* 🔷 MONTANT */}
+        {/* MONTANT */}
         <Input
           type="number"
           label="Montant"
-          placeholder="ex: 100"
-          {...register("montant", { required: true, min: 1 })}
+          {...register("montant")}
         />
 
-        {/* 🔷 IDENTITÉ */}
-        <div className="grid grid-cols-2 gap-4">
-
-          <select
-            {...register("type_piece", { required: true })}
-            className="input"
-          >
-            <option value="">Type de pièce</option>
-            <option value="CARTE_ELECTEUR">Carte d'électeur</option>
-            <option value="PASSEPORT">Passeport</option>
-          </select>
-
-          <Input
-            label="Numéro pièce"
-            placeholder="Numéro d'identité"
-            {...register("numero_piece", { required: true })}
-          />
-
+        <div className="grid grid-cols-2 gap-2">
+          <Input type="number" label="Frais" {...register("frais")} />
+          <Input type="number" label="Commission" {...register("commission")} />
         </div>
 
         {/* ACTIONS */}
-        <div className="flex justify-end gap-2 pt-4">
+        <div className="flex justify-end gap-2">
           <Button type="button" variant="secondary" onClick={onClose}>
             Annuler
           </Button>

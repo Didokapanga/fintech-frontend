@@ -1,3 +1,5 @@
+// src/modules/retrait/components/RetraitHistoryTab.tsx
+
 import { useState } from "react";
 import { Table, Button } from "../../../components/ui";
 import type { Column } from "../../../components/ui/Table.types";
@@ -9,7 +11,8 @@ export default function RetraitHistoryTab() {
 
   const { data, isLoading } = useRetraitHistory(page, 10);
 
-  console.log("🔥 FRONT RETRAITS:", data);
+  const retraits: Retrait[] = data?.data || [];
+  const meta = !Array.isArray(data) ? data?.meta : undefined;
 
   const getStatusStyle = (statut: string) => {
     switch (statut) {
@@ -27,12 +30,79 @@ export default function RetraitHistoryTab() {
   };
 
   const columns: Column<Retrait>[] = [
+    // 🔹 EXPEDITEUR
+    {
+      header: "Expéditeur",
+      accessor: "id",
+      render: (_v, row) => {
+        const exp = row.expediteur;
+
+        return (
+          <div className="flex flex-col">
+            {exp ? (
+              <>
+                <span className="font-medium text-gray-800">
+                  {exp.nom} {exp.postnom}
+                </span>
+                <span className="text-xs text-gray-500">
+                  {exp.phone}
+                </span>
+              </>
+            ) : (
+              <span className="text-sm text-gray-400 italic">
+                Non disponible
+              </span>
+            )}
+          </div>
+        );
+      },
+    },
+
+    // 🔹 DESTINATAIRE
+    {
+      header: "Destinataire",
+      accessor: "numero_piece",
+      render: (_v, row) => {
+        const dest = row.destinataire;
+
+        return (
+          <div className="flex flex-col">
+            {dest ? (
+              <>
+                <span className="font-medium text-gray-800">
+                  {dest.nom} {dest.postnom}
+                </span>
+                <span className="text-xs text-gray-500">
+                  {dest.phone}
+                </span>
+              </>
+            ) : (
+              <span className="text-sm text-gray-400 italic">
+                Non disponible
+              </span>
+            )}
+          </div>
+        );
+      },
+    },
+
+    // 🔹 NUMERO PIECE
+    {
+      header: "Numéro pièce",
+      accessor: "montant",
+      render: (_v, row) => (
+        <span className="text-xs font-mono text-gray-600">
+          {row.numero_piece}
+        </span>
+      ),
+    },
+
+    // 🔹 MONTANT
     {
       header: "Montant",
-      accessor: "montant",
-      render: (value, row) => {
-        const montant =
-          typeof value === "number" ? value : Number(value);
+      accessor: "statut",
+      render: (_v, row) => {
+        const montant = Number(row.montant ?? 0);
 
         return (
           <span className="font-semibold text-green-600">
@@ -41,15 +111,13 @@ export default function RetraitHistoryTab() {
         );
       },
     },
-    {
-      header: "Numéro pièce",
-      accessor: "numero_piece",
-    },
+
+    // 🔹 STATUT
     {
       header: "Statut",
-      accessor: "statut",
-      render: (value) => {
-        const statut = String(value); // ✅ FIX TS
+      accessor: "created_at",
+      render: (_v, row) => {
+        const statut = String(row.statut ?? "");
 
         return (
           <span
@@ -62,49 +130,58 @@ export default function RetraitHistoryTab() {
         );
       },
     },
+
+    // 🔹 DATE (FIX ICI)
     {
       header: "Date",
-      accessor: "created_at",
-      render: (value) =>
-        new Date(String(value)).toLocaleString(), // ✅ FIX TS
+      accessor: "devise", // ✅ CHANGÉ → UNIQUE
+      render: (_v, row) => (
+        <span>
+          {new Date(String(row.created_at)).toLocaleString()}
+        </span>
+      ),
     },
   ];
 
   return (
-    <div className="space-y-4">
-      <Table<Retrait>
-        data={data?.data || []}
-        columns={columns}
-        loading={isLoading}
-      />
+    <div className="space-y-6">
+      <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
+        <Table<Retrait>
+          data={retraits}
+          columns={columns}
+          loading={isLoading}
+        />
+      </div>
 
-      {!isLoading && data?.data?.length === 0 && (
-        <div className="text-center text-gray-500 py-6">
+      {!isLoading && retraits.length === 0 && (
+        <div className="text-center text-gray-400 py-10">
           Aucun retrait trouvé
         </div>
       )}
 
-      <div className="flex justify-center gap-2">
-        <Button
-          variant="secondary"
-          disabled={page === 1}
-          onClick={() => setPage((p) => p - 1)}
-        >
-          ←
-        </Button>
+      {meta && (
+        <div className="flex justify-center items-center gap-3">
+          <Button
+            variant="secondary"
+            disabled={page === 1}
+            onClick={() => setPage((p) => p - 1)}
+          >
+            ←
+          </Button>
 
-        <span className="px-3 py-2 text-sm">
-          Page {data?.meta?.page || 1}
-        </span>
+          <span className="text-sm text-gray-600">
+            Page <strong>{meta.page}</strong> / {meta.totalPages}
+          </span>
 
-        <Button
-          variant="secondary"
-          disabled={page === data?.meta?.totalPages}
-          onClick={() => setPage((p) => p + 1)}
-        >
-          →
-        </Button>
-      </div>
+          <Button
+            variant="secondary"
+            disabled={page >= meta.totalPages}
+            onClick={() => setPage((p) => p + 1)}
+          >
+            →
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

@@ -125,15 +125,19 @@ export default function CaissesPage() {
       />
 
       {/* 🔥 MODALS */}
-      <MouvementFormModal
-        open={openMouvement}
-        onClose={() => setOpenMouvement(false)}
-      />
+      {openMouvement && (
+        <MouvementFormModal
+          open={openMouvement}
+          onClose={() => setOpenMouvement(false)}
+        />
+      )}
 
-      <CaisseFormModal
-        open={openCreate}
-        onClose={() => setOpenCreate(false)}
-      />
+      {openCreate && (
+        <CaisseFormModal
+          open={openCreate}
+          onClose={() => setOpenCreate(false)}
+        />
+      )}
 
       {/* CONFIRM DELETE */}
       <ConfirmModal

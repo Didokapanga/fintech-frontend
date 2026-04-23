@@ -7,7 +7,8 @@ import {
   FileText,
   Users,
   Building2,
-  Send, // 🔥 AJOUT
+  Send,
+  UserPlus, // 🔥 AJOUT
 } from "lucide-react";
 
 export const navItems = [
@@ -22,5 +23,6 @@ export const navItems = [
   { label: "Transfert caisse", icon: Repeat, path: "/transfert-caisse" },
   { label: "Validations", icon: ClipboardCheck, path: "/validation" },
   { label: "Caisses", icon: Wallet, path: "/caisses" },
-  { label: "Ledger", icon: FileText, path: "/ledger" },
+  { label: "Registre", icon: FileText, path: "/ledger" },
+  { label: "Utilisateurs", icon: UserPlus, path: "/register", roles: ["ADMIN", "N+1", "N+2"],}, // 🔥 inline (pas besoin d'autre système)
 ];

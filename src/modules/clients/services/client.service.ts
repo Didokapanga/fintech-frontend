@@ -12,11 +12,11 @@ export const getClients = async (params?: {
   page?: number;
   limit?: number;
 }) => {
-  console.log("PARAMS ENVOYÉS:", params);
+  // console.log("PARAMS ENVOYÉS:", params);
 
   const res = await api.get("/clients", { params });
 
-  console.log("RESPONSE API:", res.data);
+  // console.log("RESPONSE API:", res.data);
 
   return res.data.data ?? []; // ✅ FIX ICI
 };

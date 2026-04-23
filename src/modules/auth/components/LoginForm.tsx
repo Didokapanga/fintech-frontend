@@ -1,9 +1,12 @@
+// src/modules/auth/components/LoginForm.tsx
+
 import { useForm } from "react-hook-form";
 import { useLogin } from "../hooks/useAuth";
 import type { LoginDto } from "../types";
 import { toast } from "sonner";
 import { useAuthStore } from "../../../app/store";
 import type { AxiosError } from "axios";
+import { useState } from "react";
 
 export default function LoginForm() {
   const {
@@ -13,27 +16,48 @@ export default function LoginForm() {
   } = useForm<LoginDto>();
 
   const { mutate, isPending } = useLogin();
-  const setToken = useAuthStore((s) => s.setToken);
 
-  const onSubmit = (data: LoginDto) => {
-    console.log("LOGIN DATA:", data);
+  // ✅ FIX ICI
+  const setAuth = useAuthStore((s) => s.setAuth);
 
-    mutate(data, {
-      onSuccess: (res) => {
-        console.log("✅ LOGIN SUCCESS:", res);
+  const [showPassword, setShowPassword] = useState(false);
 
-        // 🔥 FIX ICI
-        setToken(res.token);
+  type LoginResponse = {
+  token: string;
+  user: {
+    id: string;
+    user_name: string;
+    role_name: string;
+    agence_id?: string;
+    agence_name?: string;
+  };
+};
 
-        toast.success("Connexion réussie");
+const onSubmit = (data: LoginDto) => {
+  mutate(data, {
+    onSuccess: (res: LoginResponse) => {
+      console.log("🔥 LOGIN RES:", res);
 
-        window.location.href = "/";
-      },
+      // ✅ sécurisation + structure stable
+      setAuth({
+        token: res.token,
+        user: {
+          id: res.user.id,
+          user_name: res.user.user_name,
+          role_name: res.user.role_name,
+          agence_id: res.user.agence_id,
+          agence_name: res.user.agence_name,
+        },
+      });
+
+      toast.success("Connexion réussie");
+
+      // 🔥 navigation propre (optionnel mais mieux que reload brutal)
+      window.location.href = "/";
+    },
 
       onError: (error: unknown) => {
         const err = error as AxiosError<{ message?: string }>;
-
-        console.log("❌ LOGIN ERROR:", err.response?.data);
 
         const message =
           err.response?.data?.message || "Identifiants invalides";
@@ -44,38 +68,86 @@ export default function LoginForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-      <div>
-        <label className="text-sm font-medium">Nom utilisateur</label>
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+
+      {/* USERNAME */}
+      <div className="space-y-1">
+        <label className="text-sm font-medium text-gray-700">
+          Nom utilisateur
+        </label>
+
         <input
           {...register("user_name", { required: "Champ requis" })}
-          className="w-full mt-1 px-3 py-2 border rounded-lg"
           placeholder="ex: admin"
+          className={`
+            w-full px-4 py-2.5 rounded-xl border
+            bg-gray-50 text-gray-800
+            focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white
+            transition
+            ${errors.user_name ? "border-red-500" : "border-gray-200"}
+          `}
         />
+
         {errors.user_name && (
-          <p className="text-red-500 text-sm">{errors.user_name.message}</p>
+          <p className="text-red-500 text-xs">
+            {errors.user_name.message}
+          </p>
         )}
       </div>
 
-      <div>
-        <label className="text-sm font-medium">Mot de passe</label>
-        <input
-          {...register("password", { required: "Champ requis" })}
-          type="password"
-          className="w-full mt-1 px-3 py-2 border rounded-lg"
-        />
+      {/* PASSWORD */}
+      <div className="space-y-1">
+        <label className="text-sm font-medium text-gray-700">
+          Mot de passe
+        </label>
+
+        <div className="relative">
+          <input
+            {...register("password", { required: "Champ requis" })}
+            type={showPassword ? "text" : "password"}
+            placeholder="••••••••"
+            className={`
+              w-full px-4 py-2.5 pr-10 rounded-xl border
+              bg-gray-50 text-gray-800
+              focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white
+              transition
+              ${errors.password ? "border-red-500" : "border-gray-200"}
+            `}
+          />
+
+          {/* TOGGLE */}
+          <button
+            type="button"
+            onClick={() => setShowPassword((s) => !s)}
+            className="absolute inset-y-0 right-3 flex items-center text-gray-400 hover:text-gray-600 transition"
+          >
+            {showPassword ? "🙈" : "👁️"}
+          </button>
+        </div>
+
         {errors.password && (
-          <p className="text-red-500 text-sm">{errors.password.message}</p>
+          <p className="text-red-500 text-xs">
+            {errors.password.message}
+          </p>
         )}
       </div>
 
+      {/* BUTTON */}
       <button
         type="submit"
         disabled={isPending}
-        className="w-full bg-indigo-600 text-white py-2 rounded-lg"
+        className="
+          w-full py-2.5 rounded-xl font-medium text-white
+          bg-gradient-to-r from-indigo-600 to-blue-500
+          hover:from-indigo-700 hover:to-blue-600
+          transition-all duration-200
+          shadow-md hover:shadow-lg
+          disabled:opacity-70 disabled:cursor-not-allowed
+        "
       >
         {isPending ? "Connexion..." : "Se connecter"}
       </button>
+
     </form>
   );
 }

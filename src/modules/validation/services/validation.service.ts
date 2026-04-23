@@ -6,9 +6,16 @@ export type TransfertClient = {
   id: string;
   client_exp: string;
   client_dest: string;
+  agence_exp: string;
   montant: number;
   devise: string;
   statut: string;
+  exp_nom: string;
+  exp_postnom: string;
+  exp_phone: string;
+  dest_nom: string;
+  dest_postnom: string;
+  dest_phone: string;
   created_at: string;
 };
 
@@ -16,9 +23,19 @@ type TransfertClientApi = {
   id: string;
   client_exp: string;
   client_dest: string;
+  agence_exp: string;
   montant: string;
   devise: string;
   statut: string;
+
+  exp_nom?: string;
+  exp_postnom?: string;
+  exp_phone?: string;
+
+  dest_nom?: string;
+  dest_postnom?: string;
+  dest_phone?: string;
+
   created_at: string;
 };
 
@@ -32,7 +49,7 @@ export type PaginatedResponse<T> = {
   };
 };
 
-// ✅ GET VALIDATION LIST
+// GET LIST
 export const getTransfertsToValidate = async (
   page = 1,
   limit = 10
@@ -45,12 +62,20 @@ export const getTransfertsToValidate = async (
     data: res.data.data.map((t: TransfertClientApi) => ({
       ...t,
       montant: Number(t.montant),
+
+      exp_nom: t.exp_nom ?? "",
+      exp_postnom: t.exp_postnom ?? "",
+      exp_phone: t.exp_phone ?? "",
+
+      dest_nom: t.dest_nom ?? "",
+      dest_postnom: t.dest_postnom ?? "",
+      dest_phone: t.dest_phone ?? "",
     })),
     meta: res.data.meta,
   };
 };
 
-// ✅ VALIDATE / REJECT
+// VALIDATE
 export const validateOperation = async (data: {
   operation_type: string;
   reference_id: string;

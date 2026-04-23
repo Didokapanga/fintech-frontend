@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 
 type TabItem = {
   label: string;
@@ -9,12 +9,26 @@ type TabItem = {
 type Props = {
   tabs: TabItem[];
   defaultValue?: string;
+  storageKey?: string; // ✅ pour différencier les pages
 };
 
-export default function Tabs({ tabs, defaultValue }: Props) {
-  const [active, setActive] = useState(
-    defaultValue || tabs[0]?.value
-  );
+export default function Tabs({
+  tabs,
+  defaultValue,
+  storageKey = "active_tab",
+}: Props) {
+  // 🔥 INIT depuis localStorage
+  const [active, setActive] = useState(() => {
+    const saved = localStorage.getItem(storageKey);
+    return saved || defaultValue || tabs[0]?.value;
+  });
+
+  // 🔥 SYNC localStorage
+  useEffect(() => {
+    if (active) {
+      localStorage.setItem(storageKey, active);
+    }
+  }, [active, storageKey]);
 
   return (
     <div className="space-y-4">

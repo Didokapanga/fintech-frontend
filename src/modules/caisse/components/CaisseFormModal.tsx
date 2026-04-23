@@ -20,7 +20,14 @@ export default function CaisseFormModal({ open, onClose }: Props) {
   const { data: users = [], isLoading: loadingUsers } = useUsers();
 
   const onSubmit = (data: CreateCaisseDto) => {
-    mutate(data, {
+  const payload = {
+    ...data,
+    agent_id: data.agent_id || undefined, // 🔥 FIX
+  };
+
+  console.log("🔥 PAYLOAD:", payload);
+
+    mutate(payload, {
       onSuccess: () => {
         reset();
         onClose();

@@ -1,5 +1,6 @@
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { getAllUsers, getUsersByAgence, login } from "../services/auth.service";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { getUsersByAgence, login, registerUser } from "../services/auth.service";
+import { api } from "../../../services/api";
 
 export const useLogin = () => {
   return useMutation({
@@ -14,9 +15,25 @@ export const useUsersByAgence = (agenceId?: string) =>
     enabled: !!agenceId,
   });
  
-export const useUsers = () =>
-  useQuery({
+export const useUsers = () => {
+  return useQuery({
     queryKey: ["users"],
-    queryFn: getAllUsers,
-    initialData: [],
-  });  
+    queryFn: async () => {
+      const res = await api.get("/auth");
+      return res.data.data;
+    },
+  });
+};  
+
+export const useRegister = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: registerUser,
+
+    onSuccess: () => {
+      // 🔥 REFRESH TABLE USERS
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+    },
+  });
+};  
