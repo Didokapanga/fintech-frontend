@@ -1,70 +1,173 @@
 // src/modules/auth/pages/LoginPage.tsx
 
 import LoginForm from "../components/LoginForm";
+import { ShieldCheck, Landmark, Lock } from "lucide-react";
 
 export default function LoginPage() {
   return (
-    <div className="min-h-screen flex bg-gray-50">
+    <div className="min-h-screen bg-[#f8fafc] flex">
 
-      {/* LEFT SIDE */}
-      <div className="hidden md:flex w-1/2 relative overflow-hidden bg-gradient-to-br from-indigo-700 via-blue-600 to-indigo-500 text-white items-start justify-start p-14">
+      {/* =========================================
+          LEFT SIDE
+      ========================================= */}
+      <div
+        className="
+          hidden lg:flex w-1/2 relative overflow-hidden
+          bg-gradient-to-br from-slate-900 via-indigo-900 to-blue-700
+          text-white p-14
+        "
+      >
+        {/* Background Glow */}
+        <div className="absolute -top-24 -left-24 w-[420px] h-[420px] rounded-full bg-white/10 blur-3xl" />
+        <div className="absolute bottom-[-100px] right-[-80px] w-[360px] h-[360px] rounded-full bg-cyan-300/10 blur-3xl" />
 
-        {/* Glow effects */}
-        <div className="absolute w-[400px] h-[400px] bg-white/10 rounded-full blur-3xl top-[-100px] left-[-100px]" />
-        <div className="absolute w-[300px] h-[300px] bg-white/10 rounded-full blur-3xl bottom-[-80px] right-[-80px]" />
+        <div className="relative z-10 flex flex-col justify-between h-full max-w-xl">
 
-        {/* Content */}
-        <div className="relative z-10 max-w-md space-y-6 mt-12">
+          {/* TOP */}
+          <div className="space-y-8 pt-8">
 
-          <h1 className="text-5xl font-extrabold tracking-tight leading-tight">
-            Global Fintech
-          </h1>
+            <div className="space-y-4">
+              <p className="text-sm uppercase tracking-[0.25em] text-white/70 font-medium">
+                Plateforme financière
+              </p>
 
-          <p className="text-lg text-white/80 leading-relaxed">
-            Plateforme sécurisée de gestion et de messagerie financière.
-            <br />
-            Rapide. Fiable. Moderne.
-          </p>
+              <h1 className="text-5xl font-bold leading-tight tracking-tight">
+                Global Fintech
+              </h1>
 
-          <div className="mt-10 text-sm text-white/60">
+              <p className="text-lg text-white/75 leading-relaxed max-w-lg">
+                Une plateforme moderne de messagerie financière,
+                sécurisée et pensée pour les opérations
+                inter-agences, les transferts et la supervision
+                bancaire.
+              </p>
+            </div>
+
+            {/* FEATURES */}
+            <div className="space-y-5 pt-6">
+
+              <Feature
+                icon={<ShieldCheck size={20} />}
+                title="Sécurité renforcée"
+                text="Contrôle d’accès, validation multi-niveaux et audit complet."
+              />
+
+              <Feature
+                icon={<Landmark size={20} />}
+                title="Gestion centralisée"
+                text="Pilotage des caisses, agences et flux financiers."
+              />
+
+              <Feature
+                icon={<Lock size={20} />}
+                title="Fiabilité opérationnelle"
+                text="Transactions rapides, traçables et sécurisées."
+              />
+
+            </div>
+          </div>
+
+          {/* FOOTER */}
+          <div className="text-sm text-white/50">
             © {new Date().getFullYear()} Global Fintech
           </div>
         </div>
       </div>
 
-      {/* RIGHT SIDE */}
-      <div className="flex flex-1 items-center justify-center p-6 bg-gradient-to-br from-gray-50 to-gray-100">
-
+      {/* =========================================
+          RIGHT SIDE
+      ========================================= */}
+      <div
+        className="
+          flex flex-1 items-center justify-center
+          px-6 py-10
+          bg-gradient-to-br from-slate-50 via-white to-slate-100
+        "
+      >
         <div className="w-full max-w-md">
 
-          {/* CARD */}
-          <div className="relative bg-white rounded-2xl shadow-2xl border border-gray-200 p-8">
-
-            {/* subtle glow */}
-            <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-indigo-100/40 to-transparent pointer-events-none" />
+          {/* LOGIN CARD */}
+          <div
+            className="
+              relative overflow-hidden
+              bg-white border border-slate-200
+              rounded-3xl shadow-xl
+              p-8 md:p-10
+            "
+          >
+            {/* subtle top accent */}
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-600 via-blue-500 to-cyan-400" />
 
             {/* HEADER */}
-            <div className="relative mb-6 text-center">
-              <h2 className="text-2xl font-semibold text-gray-800">
+            <div className="mb-8 text-center">
+              <div
+                className="
+                  mx-auto mb-4
+                  w-14 h-14 rounded-2xl
+                  bg-indigo-50
+                  flex items-center justify-center
+                "
+              >
+                <Lock className="w-6 h-6 text-indigo-600" />
+              </div>
+
+              <h2 className="text-3xl font-semibold text-slate-800">
                 Connexion
               </h2>
-              <p className="text-sm text-gray-500 mt-1">
-                Entrez vos identifiants pour continuer
+
+              <p className="text-sm text-slate-500 mt-2">
+                Entrez vos identifiants pour accéder à votre espace sécurisé
               </p>
             </div>
 
             {/* FORM */}
-            <div className="relative">
-              <LoginForm />
-            </div>
-
+            <LoginForm />
           </div>
 
           {/* FOOTER */}
-          <p className="text-center text-xs text-gray-400 mt-6">
-            Accès sécurisé • Données protégées
+          <p className="text-center text-xs text-slate-400 mt-6">
+            Accès sécurisé • Transactions protégées • Supervision fiable
           </p>
         </div>
+      </div>
+    </div>
+  );
+}
+
+/* =========================================
+   FEATURE ITEM
+========================================= */
+
+function Feature({
+  icon,
+  title,
+  text,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  text: string;
+}) {
+  return (
+    <div className="flex items-start gap-4">
+      <div
+        className="
+          w-10 h-10 rounded-xl
+          bg-white/10 border border-white/10
+          flex items-center justify-center
+          shrink-0
+        "
+      >
+        {icon}
+      </div>
+
+      <div>
+        <h3 className="font-semibold text-white">
+          {title}
+        </h3>
+
+        <p className="text-sm text-white/70 leading-relaxed">
+          {text}
+        </p>
       </div>
     </div>
   );
