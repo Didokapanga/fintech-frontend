@@ -11,24 +11,52 @@ type Props = {
   onClose: () => void;
 };
 
-export default function TransfertCaisseModal({ open, onClose }: Props) {
-  const { register, handleSubmit, reset, control } =
-    useForm<CreateTransfertCaisseDto>();
+export default function TransfertCaisseModal({
+  open,
+  onClose,
+}: Props) {
+  const {
+    register,
+    handleSubmit,
+    reset,
+    control,
+  } = useForm<CreateTransfertCaisseDto>({
+    defaultValues: {
+      // ✅ date/heure actuelle par défaut
+      date_operation: new Date()
+        .toISOString()
+        .slice(0, 16),
+    },
+  });
 
   const { mutate, isPending } = useCreateTransfertCaisse();
   const { data: caisses = [], isLoading } = useCaisses();
 
-  // ✅ FIX ESLint + React Compiler
+  // ✅ caisse source sélectionnée
   const sourceId = useWatch({
     control,
     name: "caisse_source_id",
   });
 
   const onSubmit = (data: CreateTransfertCaisseDto) => {
-    // console.log("🔥 DATA ENVOYÉE:", data);
-    mutate(data, {
+    // ✅ transformer au format ISO backend
+    const payload = {
+      ...data,
+      date_operation: new Date(
+        data.date_operation
+      ).toISOString(),
+    };
+
+    // console.log("🔥 DATA ENVOYÉE:", payload);
+
+    mutate(payload, {
       onSuccess: () => {
-        reset();
+        reset({
+          date_operation: new Date()
+            .toISOString()
+            .slice(0, 16),
+        });
+
         onClose();
       },
     });
@@ -40,15 +68,21 @@ export default function TransfertCaisseModal({ open, onClose }: Props) {
         Transfert de caisse
       </h2>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
-
+      <form
+        onSubmit={handleSubmit(onSubmit)}
+        className="space-y-3"
+      >
         {/* CAISSE SOURCE */}
         <select
-          {...register("caisse_source_id", { required: true })}
+          {...register("caisse_source_id", {
+            required: true,
+          })}
           className="w-full border rounded-lg px-3 py-2"
         >
           <option value="">
-            {isLoading ? "Chargement..." : "Caisse source"}
+            {isLoading
+              ? "Chargement..."
+              : "Caisse source"}
           </option>
 
           {caisses.map((c) => (
@@ -60,13 +94,20 @@ export default function TransfertCaisseModal({ open, onClose }: Props) {
 
         {/* CAISSE DESTINATION */}
         <select
-          {...register("caisse_destination_id", { required: true })}
+          {...register("caisse_destination_id", {
+            required: true,
+          })}
           className="w-full border rounded-lg px-3 py-2"
         >
-          <option value="">Caisse destination</option>
+          <option value="">
+            Caisse destination
+          </option>
 
           {caisses
-            .filter((c) => !sourceId || c.id !== sourceId) // ✅ sécurité
+            .filter(
+              (c) =>
+                !sourceId || c.id !== sourceId
+            )
             .map((c) => (
               <option key={c.id} value={c.id}>
                 {c.code_caisse} ({c.devise})
@@ -75,20 +116,22 @@ export default function TransfertCaisseModal({ open, onClose }: Props) {
         </select>
 
         {/* MONTANT */}
-      <Input
-        type="number"
-        label="Montant"
-        placeholder="ex: 100"
-        {...register("montant", {
+        <Input
+          type="number"
+          label="Montant"
+          placeholder="ex: 100"
+          {...register("montant", {
             required: true,
             min: 1,
-            valueAsNumber: true, // 🔥 FIX ICI
-        })}
+            valueAsNumber: true,
+          })}
         />
 
         {/* DEVISE */}
         <select
-          {...register("devise", { required: true })}
+          {...register("devise", {
+            required: true,
+          })}
           className="w-full border rounded-lg px-3 py-2"
         >
           <option value="">Devise</option>
@@ -97,13 +140,35 @@ export default function TransfertCaisseModal({ open, onClose }: Props) {
           <option value="EUR">EUR</option>
         </select>
 
+        {/* DATE OPERATION */}
+        <div>
+          <label className="block text-sm font-medium mb-1">
+            Date de l'opération
+          </label>
+
+          <input
+            type="date"
+            {...register("date_operation", {
+              required: true,
+            })}
+            className="w-full border rounded-lg px-3 py-2"
+          />
+        </div>
+
         {/* ACTIONS */}
         <div className="flex justify-end gap-2 pt-4">
-          <Button type="button" variant="secondary" onClick={onClose}>
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={onClose}
+          >
             Annuler
           </Button>
 
-          <Button type="submit" loading={isPending}>
+          <Button
+            type="submit"
+            loading={isPending}
+          >
             Transférer
           </Button>
         </div>

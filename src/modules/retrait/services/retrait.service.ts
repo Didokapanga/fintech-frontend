@@ -2,13 +2,26 @@
 
 import { api } from "../../../services/api";
 
+export type RetraitFilters = {
+  statut?: string;
+  date_operation?: string;
+};
+
 export type CreateRetraitDto = {
   code_reference: string;
   code_secret: string;
   caisse_id: string;
   numero_piece: string;
+  date_operation?: string;
   created_by: string;
   user_agent: string;
+};
+
+export type PersonneRetrait = {
+  nom: string;
+  postnom: string;
+  prenom: string;
+  phone: string;
 };
 
 export type Retrait = {
@@ -19,39 +32,25 @@ export type Retrait = {
   devise: string;
   statut: string;
   created_at: string;
+  date_operation?: string;
 
-  expediteur?: {
-    nom: string;
-    postnom: string;
-    prenom: string;
-    phone: string;
-  };
-
-  destinataire?: {
-    nom: string;
-    postnom: string;
-    prenom: string;
-    phone: string;
-  };
+  expediteur?: PersonneRetrait;
+  destinataire?: PersonneRetrait;
 };
 
 type RetraitApi = {
   id: string;
   caisse_id: string;
   numero_piece: string;
-  montant: string;
+  montant: string | number;
   devise: string;
   statut: string;
   created_at: string;
+  date_operation?: string;
 
-  // 🔥 optionnel si backend enrichi
-  exp_nom?: string;
-  exp_postnom?: string;
-  exp_phone?: string;
-
-  dest_nom?: string;
-  dest_postnom?: string;
-  dest_phone?: string;
+  // ✅ backend réel
+  expediteur?: PersonneRetrait;
+  destinataire?: PersonneRetrait;
 };
 
 export type PaginatedResponse<T> = {
@@ -64,26 +63,72 @@ export type PaginatedResponse<T> = {
   };
 };
 
-export const createRetrait = async (data: CreateRetraitDto) => {
-  const res = await api.post("/retraits", data);
+// ========================
+// CREATE RETRAIT
+// ========================
+export const createRetrait = async (
+  data: CreateRetraitDto
+) => {
+  const res = await api.post(
+    "/retraits",
+    data
+  );
+
   return res.data.data;
 };
 
+// ========================
+// GET MY RETRAITS
+// ========================
 export const getMyRetraits = async (
   page = 1,
-  limit = 10
+  limit = 10,
+  filters?: RetraitFilters
 ): Promise<PaginatedResponse<Retrait>> => {
-  const res = await api.get("/retraits/me", {
-    params: { page, limit },
-  });
+  const res = await api.get(
+    "/retraits/me",
+    {
+      params: {
+        page,
+        limit,
+        statut:
+          filters?.statut || undefined,
+        date_operation:
+          filters?.date_operation || undefined,
+      },
+    }
+  );
 
-  const raw: RetraitApi[] = res.data.data;
+  console.log(
+    "🔥 RETRAITS API:",
+    res.data
+  );
+
+  const raw: RetraitApi[] =
+    res.data?.data ?? [];
 
   return {
     data: raw.map((r) => ({
-      ...r,
-      montant: Number(r.montant),
+      id: r.id,
+      caisse_id: r.caisse_id,
+      numero_piece: r.numero_piece,
+      montant: Number(r.montant || 0),
+      devise: r.devise,
+      statut: r.statut,
+      created_at: r.created_at,
+      date_operation: r.date_operation,
+
+      // ✅ utiliser directement ce que le backend renvoie
+      expediteur: r.expediteur,
+      destinataire: r.destinataire,
     })),
-    meta: res.data.meta,
+
+    meta:
+      res.data?.meta || {
+        page: 1,
+        limit: 10,
+        total: 0,
+        totalPages: 1,
+      },
   };
 };

@@ -5,7 +5,7 @@ import {
   ClipboardCheck,
   Wallet,
   FileText,
-  Users,
+  // Users,
   Building2,
   Send,
   UserPlus, // 🔥 AJOUT
@@ -17,7 +17,7 @@ export const navItems = [
   { label: "Retrait", icon: Banknote, path: "/retrait" },
 
   // 👇 CLIENT & AGENCE (logique métier)
-  { label: "Clients", icon: Users, path: "/clients" },
+  // { label: "Clients", icon: Users, path: "/clients" },
   { label: "Agences", icon: Building2, path: "/agences" }, // ✅
 
   { label: "Transfert caisse", icon: Repeat, path: "/transfert-caisse" },

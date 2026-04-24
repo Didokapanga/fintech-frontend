@@ -27,6 +27,7 @@ type FormData = {
   code_secret: string;
   caisse_id: string;
   numero_piece: string;
+  date_operation: string; // 🔥 ajouté
 };
 
 type Props = {
@@ -34,18 +35,37 @@ type Props = {
 };
 
 export default function RetraitForm({ selected }: Props) {
-  const { register, handleSubmit, reset, setValue } = useForm<FormData>();
+  const {
+    register,
+    handleSubmit,
+    reset,
+    setValue,
+  } = useForm<FormData>();
 
   const { mutate, isPending } = useRetrait();
-  const { data: caisses = [] } = useCaisses() as { data: Caisse[] };
+  const { data: caisses = [] } =
+    useCaisses() as { data: Caisse[] };
+
   const user = useAuthStore((s) => s.user);
 
   // 🔥 AUTO REMPLISSAGE
   useEffect(() => {
     if (selected) {
-      setValue("code_reference", selected.code_reference);
+      setValue(
+        "code_reference",
+        selected.code_reference
+      );
     }
   }, [selected, setValue]);
+
+  // 🔥 date du jour par défaut
+  useEffect(() => {
+    const today = new Date()
+      .toISOString()
+      .split("T")[0];
+
+    setValue("date_operation", today);
+  }, [setValue]);
 
   const onSubmit = (data: FormData) => {
     if (!user?.id) {
@@ -59,14 +79,33 @@ export default function RetraitForm({ selected }: Props) {
       user_agent: navigator.userAgent,
     };
 
+    console.log(
+      "🔥 RETRAIT PAYLOAD:",
+      payload
+    );
+
     mutate(payload, {
       onSuccess: (res) => {
-        alert(`✅ Retrait réussi: ${res.montant}`);
-        reset();
+        alert(
+          `✅ Retrait réussi : ${res.montant}`
+        );
+        reset({
+          date_operation: new Date()
+            .toISOString()
+            .split("T")[0],
+        });
       },
+
       onError: (err: unknown) => {
-        const error = err as AxiosError<{ message?: string }>;
-        alert(error.response?.data?.message || "Erreur");
+        const error =
+          err as AxiosError<{
+            message?: string;
+          }>;
+
+        alert(
+          error.response?.data?.message ||
+            "Erreur lors du retrait"
+        );
       },
     });
   };
@@ -80,35 +119,74 @@ export default function RetraitForm({ selected }: Props) {
         Retrait client
       </h2>
 
+      {/* CODE REF */}
       <Input
         label="Code référence"
-        {...register("code_reference", { required: true })}
+        {...register("code_reference", {
+          required: true,
+        })}
       />
 
+      {/* CODE SECRET */}
       <Input
         label="Code secret"
         type="password"
-        {...register("code_secret", { required: true })}
+        {...register("code_secret", {
+          required: true,
+        })}
       />
 
+      {/* NUMERO PIECE */}
       <Input
         label="Numéro de pièce"
-        {...register("numero_piece", { required: true })}
+        {...register("numero_piece", {
+          required: true,
+        })}
       />
 
+      {/* DATE OPERATION */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Date opération
+        </label>
+
+        <input
+          type="date"
+          {...register("date_operation", {
+            required: true,
+          })}
+          className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+      </div>
+
+      {/* CAISSE */}
       <select
-        {...register("caisse_id", { required: true })}
+        {...register("caisse_id", {
+          required: true,
+        })}
         className="w-full border rounded-lg px-3 py-2"
       >
-        <option value="">Sélectionner une caisse</option>
+        <option value="">
+          Sélectionner une caisse
+        </option>
+
         {caisses.map((c) => (
-          <option key={c.id} value={c.id}>
-            {c.code_caisse} ({c.solde} {c.devise})
+          <option
+            key={c.id}
+            value={c.id}
+          >
+            {c.code_caisse} ({c.solde}{" "}
+            {c.devise})
           </option>
         ))}
       </select>
 
-      <Button type="submit" loading={isPending} className="w-full">
+      {/* SUBMIT */}
+      <Button
+        type="submit"
+        loading={isPending}
+        className="w-full"
+      >
         Valider le retrait
       </Button>
     </form>

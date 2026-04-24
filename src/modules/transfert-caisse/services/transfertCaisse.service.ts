@@ -7,9 +7,16 @@ export type CreateTransfertCaisseDto = {
   caisse_destination_id: string;
   montant: number;
   devise: string;
+  date_operation: string;
 };
 
-// ✅ TYPE FINAL (frontend)
+export type TransfertFilters = {
+  devise?: string;
+  statut?: string;
+  date_operation?: string;
+};
+
+// ✅ TYPE FINAL FRONT
 export type TransfertCaisse = {
   id: string;
   caisse_source_id: string;
@@ -17,15 +24,15 @@ export type TransfertCaisse = {
   montant: number;
   devise: string;
   statut: string;
+  date_operation: string;
   created_at: string;
 };
 
-// 🔥 TYPE BACKEND
 type TransfertCaisseApi = {
   id: string;
   caisse_source_id: string;
   caisse_destination_id: string;
-  montant: string; // 👈 IMPORTANT
+  montant: string;
   devise: string;
   statut: string;
   created_at: string;
@@ -49,21 +56,26 @@ export const createTransfertCaisse = async (
   return res.data.data;
 };
 
-// ✅ LIST
+// ✅ LIST + FILTERS
 export const getTransferts = async (
   page = 1,
-  limit = 10
+  limit = 10,
+  filters?: TransfertFilters
 ): Promise<PaginatedResponse<TransfertCaisse>> => {
   const res = await api.get("/transferts", {
-    params: { page, limit },
+    params: {
+      page,
+      limit,
+      devise: filters?.devise || undefined,
+      statut: filters?.statut || undefined,
+      date_operation: filters?.date_operation || undefined,
+    },
   });
-
-  // console.log("🔥 API RAW:", res.data);
 
   return {
     data: res.data.data.map((t: TransfertCaisseApi) => ({
       ...t,
-      montant: Number(t.montant), // ✅ conversion propre
+      montant: Number(t.montant),
     })),
     meta: res.data.meta,
   };

@@ -1,5 +1,11 @@
 // src/modules/transfert-client/services/transfert.service.ts
+
 import { api } from "../../../services/api";
+
+export type TransfertFilters = {
+  statut?: string;
+  date_operation?: string;
+};
 
 export type CreateTransfertClientDto = {
   caisse_id: string;
@@ -24,11 +30,13 @@ export type CreateTransfertClientDto = {
   frais: number;
   commission: number;
   devise: string;
+
+  // 🔥 NOUVEAU
+  date_operation: string;
 };
 
 export type TransfertClient = {
   id: string;
-
   code_reference: string;
 
   exp_nom: string;
@@ -46,7 +54,9 @@ export type TransfertClient = {
   commission: number;
 
   statut: string;
+
   created_at: string;
+  date_operation?: string; // 🔥 NOUVEAU
 };
 
 export type PaginatedResponse<T> = {
@@ -59,35 +69,61 @@ export type PaginatedResponse<T> = {
   };
 };
 
-// ✅ CREATE
+// CREATE
 export const createTransfertClient = async (
   data: CreateTransfertClientDto
 ) => {
-  const res = await api.post("/transfert-client", data);
+  const res = await api.post(
+    "/transfert-client",
+    data
+  );
+
   return res.data.data;
 };
 
-// ✅ GET BY AGENT (ME)
+// GET MY TRANSFERTS + FILTERS
 export const getMyTransferts = async (
   page = 1,
-  limit = 10
+  limit = 10,
+  filters?: TransfertFilters
 ): Promise<PaginatedResponse<TransfertClient>> => {
-  const res = await api.get("/transfert-client/me", {
-    params: { page, limit },
-  });
+  const res = await api.get(
+    "/transfert-client/me",
+    {
+      params: {
+        page,
+        limit,
+        statut:
+          filters?.statut || undefined,
+        date_operation:
+          filters?.date_operation || undefined,
+      },
+    }
+  );
 
   return res.data;
 };
 
-// ✅ GET BY AGENCE
+// GET BY AGENCE + FILTERS
 export const getTransfertsByAgence = async (
   agenceId: string,
   page = 1,
-  limit = 10
+  limit = 10,
+  filters?: TransfertFilters
 ): Promise<PaginatedResponse<TransfertClient>> => {
-  const res = await api.get(`/transfert-client/agence/${agenceId}`, {
-    params: { page, limit },
-  });
+  const res = await api.get(
+    `/transfert-client/agence/${agenceId}`,
+    {
+      params: {
+        page,
+        limit,
+        statut:
+          filters?.statut || undefined,
+        date_operation:
+          filters?.date_operation || undefined,
+      },
+    }
+  );
 
   return res.data;
-};
+}; 

@@ -11,16 +11,30 @@ export default function TransfertClientPage() {
   const [open, setOpen] = useState(false);
   const [page, setPage] = useState(1);
 
-  const { data, isLoading } = useMyTransferts(page, 10);
+  // 🔥 FILTERS
+  const [statut, setStatut] = useState("");
+  const [dateOperation, setDateOperation] =
+    useState("");
 
-  const transferts: TransfertClient[] = Array.isArray(data)
-    ? data
-    : data?.data ?? [];
+  const { data, isLoading } =
+    useMyTransferts(page, 10, {
+      statut,
+      date_operation: dateOperation,
+    });
 
-  const meta = !Array.isArray(data) ? data?.meta : undefined;
+  const transferts: TransfertClient[] =
+    Array.isArray(data)
+      ? data
+      : data?.data ?? [];
+
+  const meta = !Array.isArray(data)
+    ? data?.meta
+    : undefined;
 
   // 🎨 STYLE STATUT
-  const getStatusStyle = (status: string) => {
+  const getStatusStyle = (
+    status: string
+  ) => {
     switch (status) {
       case "INITIE":
         return "bg-yellow-100 text-yellow-700";
@@ -52,7 +66,8 @@ export default function TransfertClientPage() {
       render: (_v, row) => (
         <div className="flex flex-col">
           <span className="font-medium text-gray-800">
-            {row.exp_nom} {row.exp_postnom}
+            {row.exp_nom}{" "}
+            {row.exp_postnom}
           </span>
           <span className="text-xs text-gray-500">
             {row.exp_phone}
@@ -67,7 +82,8 @@ export default function TransfertClientPage() {
       render: (_v, row) => (
         <div className="flex flex-col">
           <span className="font-medium text-gray-800">
-            {row.dest_nom} {row.dest_postnom}
+            {row.dest_nom}{" "}
+            {row.dest_postnom}
           </span>
           <span className="text-xs text-gray-500">
             {row.dest_phone}
@@ -88,10 +104,13 @@ export default function TransfertClientPage() {
         return (
           <div className="flex flex-col">
             <span className="font-semibold text-green-600">
-              {montant.toLocaleString()} {row.devise}
+              {montant.toLocaleString()}{" "}
+              {row.devise}
             </span>
+
             <span className="text-xs text-gray-400">
-              Frais: {row.frais} • Comm: {row.commission}
+              Frais: {row.frais} •
+              Comm: {row.commission}
             </span>
           </div>
         );
@@ -114,9 +133,21 @@ export default function TransfertClientPage() {
 
     {
       header: "Date",
-      accessor: "created_at",
-      render: (value) =>
-        new Date(String(value)).toLocaleString(),
+      accessor: "date_operation",
+      render: (value, row) => {
+        const finalDate =
+          value || row.created_at;
+
+        return (
+          <span className="text-sm text-gray-600">
+            {new Date(
+              String(finalDate)
+            ).toLocaleDateString(
+              "fr-FR"
+            )}
+          </span>
+        );
+      },
     },
   ];
 
@@ -129,8 +160,10 @@ export default function TransfertClientPage() {
           <h1 className="text-2xl font-semibold text-gray-800">
             Transferts clients
           </h1>
+
           <p className="text-sm text-gray-500">
-            Historique des opérations envoyées
+            Historique des opérations
+            envoyées
           </p>
         </div>
 
@@ -140,6 +173,67 @@ export default function TransfertClientPage() {
         >
           + Nouveau transfert
         </Button>
+      </div>
+
+      {/* FILTERS */}
+      <div className="bg-white rounded-xl border p-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+          <select
+            value={statut}
+            onChange={(e) => {
+              setPage(1);
+              setStatut(
+                e.target.value
+              );
+            }}
+            className="w-full border rounded-lg px-3 py-2"
+          >
+            <option value="">
+              Statut
+            </option>
+
+            <option value="INITIE">
+              INITIE
+            </option>
+
+            <option value="VALIDE">
+              VALIDE
+            </option>
+
+            <option value="EXECUTE">
+              EXECUTE
+            </option>
+
+            <option value="REJETE">
+              REJETE
+            </option>
+          </select>
+
+          <input
+            type="date"
+            value={dateOperation}
+            onChange={(e) => {
+              setPage(1);
+              setDateOperation(
+                e.target.value
+              );
+            }}
+            className="w-full border rounded-lg px-3 py-2"
+          />
+
+          <Button
+            variant="secondary"
+            onClick={() => {
+              setPage(1);
+              setStatut("");
+              setDateOperation("");
+            }}
+          >
+            Reset
+          </Button>
+
+        </div>
       </div>
 
       {/* TABLE */}
@@ -152,11 +246,12 @@ export default function TransfertClientPage() {
       </div>
 
       {/* EMPTY */}
-      {!isLoading && transferts.length === 0 && (
-        <div className="text-center text-gray-400 py-10">
-          Aucun transfert trouvé
-        </div>
-      )}
+      {!isLoading &&
+        transferts.length === 0 && (
+          <div className="text-center text-gray-400 py-10">
+            Aucun transfert trouvé
+          </div>
+        )}
 
       {/* PAGINATION */}
       {meta && (
@@ -164,19 +259,30 @@ export default function TransfertClientPage() {
           <Button
             variant="secondary"
             disabled={page === 1}
-            onClick={() => setPage((p) => p - 1)}
+            onClick={() =>
+              setPage((p) => p - 1)
+            }
           >
             ←
           </Button>
 
           <span className="text-sm text-gray-600">
-            Page <strong>{meta.page}</strong> / {meta.totalPages}
+            Page{" "}
+            <strong>
+              {meta.page}
+            </strong>{" "}
+            / {meta.totalPages}
           </span>
 
           <Button
             variant="secondary"
-            disabled={page >= meta.totalPages}
-            onClick={() => setPage((p) => p + 1)}
+            disabled={
+              page >=
+              meta.totalPages
+            }
+            onClick={() =>
+              setPage((p) => p + 1)
+            }
           >
             →
           </Button>
@@ -187,7 +293,9 @@ export default function TransfertClientPage() {
       {open && (
         <TransfertClientModal
           open={open}
-          onClose={() => setOpen(false)}
+          onClose={() =>
+            setOpen(false)
+          }
         />
       )}
     </div>

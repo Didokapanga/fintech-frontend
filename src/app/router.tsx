@@ -11,6 +11,7 @@ import ValidationPage from "../modules/validation/pages/ValidationPage";
 import RetraitPage from "../modules/retrait/pages/RetraitPage";
 import LedgerPage from "../modules/ledger/pages/LedgerPage";
 import RegisterPage from "../modules/auth/pages/RegisterPage";
+import AdminDashboard from "../modules/admin/pages/AdminDashboard";
 
 
 export const router = createBrowserRouter([
@@ -26,7 +27,7 @@ export const router = createBrowserRouter([
       </ProtectedRoute>
     ),
     children: [
-      { path: "", element: <div>Dashboard</div> },
+      { path: "", element: <AdminDashboard /> },
       { path: "transfert-client", element: <TransfertClientPage /> },
       { path: "retrait", element: <RetraitPage /> },
       { path: "clients", element: <ClientsPage /> },

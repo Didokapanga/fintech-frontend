@@ -1,5 +1,4 @@
 // src/modules/transfert-client/components/TransfertClientModal.tsx
-
 import { useForm } from "react-hook-form";
 import { useCaisses } from "../../caisse/hooks/useCaisses";
 import { useAgences } from "../../agence/hooks/useAgences";
@@ -121,7 +120,7 @@ export default function TransfertClientModal({ open, onClose }: Props) {
           <div className="grid grid-cols-2 gap-2">
             <select {...register("exp_type_piece")} className="input">
               <option value="">Type pièce</option>
-              <option value="CNI">CNI</option>
+              <option value="CARTE D'ELECTEUR">Carte d'électeur</option>
               <option value="PASSEPORT">Passeport</option>
             </select>
 
@@ -159,14 +158,29 @@ export default function TransfertClientModal({ open, onClose }: Props) {
             />
           </div>
         </div>
+       <div className="grid grid-cols-2 gap-2">       
+          {/* MONTANT */}
+          <Input
+            type="number"
+            label="Montant"
+            {...register("montant")}
+          />
 
-        {/* MONTANT */}
-        <Input
-          type="number"
-          label="Montant"
-          {...register("montant")}
-        />
+          {/* DATE OPERATION */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Date opération
+            </label>
 
+            <input
+              type="date"
+              {...register("date_operation", {
+                required: true,
+              })}
+              className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            />
+          </div>
+        </div>
         <div className="grid grid-cols-2 gap-2">
           <Input type="number" label="Frais" {...register("frais")} />
           <Input type="number" label="Commission" {...register("commission")} />

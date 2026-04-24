@@ -1,49 +1,135 @@
+// src/modules/transfert-caisse/pages/TransfertCaissePage.tsx
+
 import { useState } from "react";
 import { Button, Table } from "../../../components/ui";
 import type { Column } from "../../../components/ui/Table.types";
-import { useTransfertsCaisse } from "../hooks/useTransfertCaisse";
-import { useCaisses } from "../../caisse/hooks/useCaisses";
-import type { TransfertCaisse } from "../services/transfertCaisse.service";
-import TransfertCaisseModal from "../components/transfertCaisseModal";
 
-// ✅ TYPE CAISSE
-type Caisse = {
-  id: string;
-  code_caisse: string;
-  devise: string;
-};
+import { useTransfertsCaisse } from "../hooks/useTransfertCaisse";
+import type {
+  TransfertCaisse,
+} from "../services/transfertCaisse.service";
+import TransfertCaisseModal from "../components/transfertCaisseModal";
+import { useCaisses } from "../../caisse/hooks/useCaisses";
+
 
 export default function TransfertCaissePage() {
   const [open, setOpen] = useState(false);
   const [page, setPage] = useState(1);
 
-  const { data, isLoading } = useTransfertsCaisse(page, 10);
-  const { data: caisses = [] } = useCaisses() as { data: Caisse[] };
+  // 🔥 FILTERS
+  const [devise, setDevise] = useState("");
+  const [statut, setStatut] = useState("");
+  const [dateOperation, setDateOperation] = useState("");
 
-  const transferts = data?.data ?? [];
+  // ✅ QUERY AVEC FILTRES
+  const { data, isLoading } = useTransfertsCaisse(
+    page,
+    10,
+    {
+      devise,
+      statut,
+      date_operation: dateOperation,
+    }
+  );
+  // 🔥 récupérer les caisses
+// const { data: caissesData = [] } = useCaisses() as {
+//   data: {
+//     id: string;
+//     code_caisse: string;
+//     agence?: {
+//       libelle?: string;
+//     };
+//     agence_libelle?: string;
+//   }[];
+// };
+const { data: caissesData = [] } = useCaisses();
 
-  const meta = !Array.isArray(data) ? data?.meta : undefined;
+// 🔥 helper affichage caisse
+const getCaisseInfo = (caisseId: string) => {
+  const caisse = caissesData.find(
+    (c) => String(c.id) === String(caisseId)
+  );
 
-  // console.log("🔥 FRONT:", transferts);
+  if (!caisse) {
+    return {
+      code: "-",
+      agence: "-",
+    };
+  }
 
-  // 🔥 MAP ID → LIBELLÉ
-  const getCaisseLabel = (id: string) => {
-    const caisse = caisses.find((c) => c.id === id);
-    return caisse
-      ? `${caisse.code_caisse} (${caisse.devise})`
-      : "—";
+  return {
+    code: caisse.code_caisse || "-",
+
+    agence:
+      caisse.agence?.libelle ||
+      caisse.agence_libelle ||
+      "-",
+  };
+};
+
+  const transferts: TransfertCaisse[] =
+    data?.data ?? [];
+
+  const meta = data?.meta;
+
+  const getStatusStyle = (status: string) => {
+    switch (status) {
+      case "INITIE":
+        return "bg-yellow-100 text-yellow-700";
+
+      case "VALIDE":
+        return "bg-blue-100 text-blue-700";
+
+      case "EXECUTE":
+        return "bg-green-100 text-green-700";
+
+      case "REJETE":
+        return "bg-red-100 text-red-700";
+
+      default:
+        return "bg-gray-100 text-gray-600";
+    }
   };
 
   const columns: Column<TransfertCaisse>[] = [
     {
-      header: "Source",
+      header: "Caisse source",
       accessor: "caisse_source_id",
-      render: (value) => getCaisseLabel(String(value)),
+      render: (value) => {
+        const info = getCaisseInfo(String(value));
+
+        return (
+          <div className="flex flex-col">
+            <span className="font-medium text-gray-800">
+              {info.code}
+            </span>
+
+            {/* <span className="text-xs text-gray-500">
+              {info.agence}
+            </span> */}
+          </div>
+        );
+      },
     },
+
     {
-      header: "Destination",
+      header: "Caisse destination",
       accessor: "caisse_destination_id",
-      render: (value) => getCaisseLabel(String(value)),
+      render: (value) => {
+        const info = getCaisseInfo(String(value));
+
+        return (
+          <div className="flex flex-col">
+            <span className="font-medium text-gray-800">
+              {info.code}
+            </span>
+
+            {/* <span className="text-xs text-gray-500">
+              {info.agence}
+            </span> */}
+          </div>
+        );
+      },
     },
 
     {
@@ -51,7 +137,9 @@ export default function TransfertCaissePage() {
       accessor: "montant",
       render: (value, row) => {
         const montant =
-          typeof value === "number" ? value : Number(value);
+          typeof value === "number"
+            ? value
+            : Number(value);
 
         return (
           <span className="font-semibold text-green-600">
@@ -61,13 +149,15 @@ export default function TransfertCaissePage() {
       },
     },
 
-    { header: "Devise", accessor: "devise" },
-
     {
       header: "Statut",
       accessor: "statut",
       render: (value) => (
-        <span className="px-2 py-1 rounded bg-gray-100 text-sm">
+        <span
+          className={`px-2 py-1 rounded text-xs font-medium ${getStatusStyle(
+            String(value)
+          )}`}
+        >
           {String(value)}
         </span>
       ),
@@ -75,70 +165,193 @@ export default function TransfertCaissePage() {
 
     {
       header: "Date",
-      accessor: "created_at",
-      render: (value) =>
-        new Date(String(value)).toLocaleString(),
+      accessor: "date_operation",
+        render: (value) => {
+          if (!value) {
+            return (
+              <span className="text-sm text-gray-400">
+                -
+              </span>
+            );
+          }
+
+          const date = new Date(String(value));
+
+          return (
+            <span className="text-sm text-gray-600">
+              {date.toLocaleDateString("fr-FR")}
+            </span>
+          );
+        },
     },
   ];
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
 
       {/* HEADER */}
       <div className="flex justify-between items-center">
-        <h1 className="text-xl font-semibold">
-          Transferts de caisse
-        </h1>
+        <div>
+          <h1 className="text-2xl font-semibold text-gray-800">
+            Transferts caisse
+          </h1>
 
-        <Button onClick={() => setOpen(true)}>
+          <p className="text-sm text-gray-500">
+            Historique des transferts entre caisses
+          </p>
+        </div>
+
+        <Button
+          onClick={() => setOpen(true)}
+          className="bg-indigo-600 hover:bg-indigo-700"
+        >
           + Nouveau transfert
         </Button>
       </div>
 
+      {/* 🔥 FILTRES */}
+      <div className="bg-white rounded-xl border shadow-sm p-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+
+          {/* DEVISE */}
+          <select
+            value={devise}
+            onChange={(e) => {
+              setPage(1);
+              setDevise(e.target.value);
+            }}
+            className="input"
+          >
+            <option value="">
+              Toutes devises
+            </option>
+
+            <option value="USD">
+              USD
+            </option>
+
+            <option value="CDF">
+              CDF
+            </option>
+          </select>
+
+          {/* STATUT */}
+          <select
+            value={statut}
+            onChange={(e) => {
+              setPage(1);
+              setStatut(e.target.value);
+            }}
+            className="input"
+          >
+            <option value="">
+              Tous statuts
+            </option>
+
+            <option value="INITIE">
+              INITIE
+            </option>
+
+            <option value="VALIDE">
+              VALIDE
+            </option>
+
+            <option value="EXECUTE">
+              EXECUTE
+            </option>
+
+            <option value="REJETE">
+              REJETE
+            </option>
+          </select>
+
+          {/* DATE */}
+          <input
+            type="date"
+            value={dateOperation}
+            onChange={(e) => {
+              setPage(1);
+              setDateOperation(e.target.value);
+            }}
+            className="input"
+          />
+
+          {/* RESET */}
+          <Button
+            variant="secondary"
+            onClick={() => {
+              setPage(1);
+              setDevise("");
+              setStatut("");
+              setDateOperation("");
+            }}
+          >
+            Reset
+          </Button>
+
+        </div>
+      </div>
+
       {/* TABLE */}
-      <Table<TransfertCaisse>
-        data={transferts}
-        columns={columns}
-        loading={isLoading}
-      />
+      <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
+        <Table<TransfertCaisse>
+          data={transferts}
+          columns={columns}
+          loading={isLoading}
+        />
+      </div>
 
       {/* EMPTY */}
-      {!isLoading && transferts.length === 0 && (
-        <div className="text-center text-gray-500 py-6">
-          Aucun transfert trouvé
-        </div>
-      )}
+      {!isLoading &&
+        transferts.length === 0 && (
+          <div className="text-center text-gray-400 py-10">
+            Aucun transfert trouvé
+          </div>
+        )}
 
       {/* PAGINATION */}
       {meta && (
         <div className="flex justify-center items-center gap-3">
+
           <Button
             variant="secondary"
             disabled={page === 1}
-            onClick={() => setPage((p) => p - 1)}
+            onClick={() =>
+              setPage((p) => p - 1)
+            }
           >
             ←
           </Button>
 
           <span className="text-sm text-gray-600">
-            Page <strong>{meta.page}</strong> / {meta.totalPages}
+            Page <strong>{meta.page}</strong>
+            {" / "}
+            {meta.totalPages}
           </span>
 
           <Button
             variant="secondary"
-            disabled={page >= meta.totalPages}
-            onClick={() => setPage((p) => p + 1)}
+            disabled={
+              page >= meta.totalPages
+            }
+            onClick={() =>
+              setPage((p) => p + 1)
+            }
           >
             →
           </Button>
+
         </div>
       )}
 
       {/* MODAL */}
-      <TransfertCaisseModal
-        open={open}
-        onClose={() => setOpen(false)}
-      />
+      {open && (
+        <TransfertCaisseModal
+          open={open}
+          onClose={() => setOpen(false)}
+        />
+      )}
+
     </div>
   );
 }
