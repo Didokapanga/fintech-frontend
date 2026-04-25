@@ -32,11 +32,11 @@ export default function RetraitHistoryTab() {
   ) => {
     switch (statut) {
       case "INITIE":
-        return "bg-green-100 text-green-700";
+        return "bg-yellow-100 text-yellow-700";
       case "VALIDE":
         return "bg-blue-100 text-blue-700";
       case "EXECUTE":
-        return "bg-yellow-100 text-yellow-700";
+        return "bg-green-100 text-green-700";
       case "ANNULE":
         return "bg-red-100 text-red-700";
       default:

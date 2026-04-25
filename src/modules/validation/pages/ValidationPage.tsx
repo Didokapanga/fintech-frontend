@@ -3,6 +3,7 @@ import Tabs from "../../../components/ui/Tab";
 import ValidationCaisseTab from "../components/ValidationCaisseTab";
 import ValidationClientTab from "../components/ValidationClientTab";
 import ValidationClotureCaisseTab from "../components/ValidationClotureCaisseTab";
+import ValidationRetraitTab from "../components/ValidationRetraitTab";
 
 export default function ValidationPage() {
   return (
@@ -29,6 +30,11 @@ export default function ValidationPage() {
             label: "Clôture caisse",
             value: "cloture",
             content: <ValidationClotureCaisseTab />,
+          },
+          {
+            label: "Retrait",
+            value: "retrait",
+            content: <ValidationRetraitTab />,
           },
         ]}
       />

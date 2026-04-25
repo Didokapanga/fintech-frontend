@@ -55,7 +55,7 @@ export type ClotureCaisseValidation = {
   code_reference: string;
 
   code_caisse?: string;
-  caisse_devise?: string; // ✅ ajouté
+  caisse_devise?: string;
   agence_libelle?: string;
 
   solde_systeme: number;
@@ -76,7 +76,7 @@ type ClotureCaisseValidationApi = {
   code_reference: string;
 
   code_caisse?: string;
-  caisse_devise?: string; // ✅ ajouté
+  caisse_devise?: string;
   agence_libelle?: string;
 
   solde_systeme: string | number;
@@ -90,6 +90,60 @@ type ClotureCaisseValidationApi = {
   statut: string;
   date_operation: string;
   created_at: string;
+};
+
+/* =========================================
+   🔹 RETRAIT VALIDATION TYPES
+========================================= */
+
+export type RetraitValidation = {
+  id: string;
+  code_reference: string;
+  numero_piece: string;
+  montant: number;
+  devise: string;
+  statut: string;
+  date_operation: string;
+  created_at: string;
+
+  expediteur?: {
+    nom?: string;
+    postnom?: string;
+    prenom?: string;
+    phone?: string;
+  };
+
+  destinataire?: {
+    nom?: string;
+    postnom?: string;
+    prenom?: string;
+    phone?: string;
+  };
+};
+
+type RetraitValidationApi = {
+  id: string;
+  code_reference: string;
+  numero_piece: string;
+  montant: string | number;
+  devise: string;
+  statut: string;
+  date_operation: string;
+  created_at: string;
+
+  expediteur?: {
+    nom?: string;
+    postnom?: string;
+    prenom?: string;
+    phone?: string;
+  };
+
+  destinataire?: {
+    nom?: string;
+    postnom?: string;
+    prenom?: string;
+    phone?: string;
+  };
 };
 
 /* =========================================
@@ -195,6 +249,97 @@ export const getCloturesToValidate = async (
           c.caisse_devise ??
           c.devise ??
           "-",
+      })
+    ),
+
+    meta: res.data.meta,
+  };
+};
+
+/* =========================================
+   🔹 GET RETRAITS TO VALIDATE
+========================================= */
+
+export const getRetraitsToValidate = async (
+  page = 1,
+  limit = 10
+): Promise<
+  PaginatedResponse<RetraitValidation>
+> => {
+  const res = await api.get(
+    "/retraits/validation",
+    {
+      params: {
+        page,
+        limit,
+      },
+    }
+  );
+
+  console.log(
+    "🔥 RETRAITS VALIDATION:",
+    res.data
+  );
+
+  return {
+    data: res.data.data.map(
+      (
+        r: RetraitValidationApi
+      ) => ({
+        id: r.id,
+        code_reference:
+          r.code_reference,
+
+        numero_piece:
+          r.numero_piece,
+
+        montant: Number(
+          r.montant
+        ),
+
+        devise: r.devise,
+        statut: r.statut,
+
+        date_operation:
+          r.date_operation,
+
+        created_at:
+          r.created_at,
+
+        expediteur: r.expediteur
+          ? {
+              nom:
+                r.expediteur
+                  .nom ?? "",
+              postnom:
+                r.expediteur
+                  .postnom ?? "",
+              prenom:
+                r.expediteur
+                  .prenom ?? "",
+              phone:
+                r.expediteur
+                  .phone ?? "",
+            }
+          : undefined,
+
+        destinataire:
+          r.destinataire
+            ? {
+                nom:
+                  r.destinataire
+                    .nom ?? "",
+                postnom:
+                  r.destinataire
+                    .postnom ?? "",
+                prenom:
+                  r.destinataire
+                    .prenom ?? "",
+                phone:
+                  r.destinataire
+                    .phone ?? "",
+              }
+            : undefined,
       })
     ),
 
