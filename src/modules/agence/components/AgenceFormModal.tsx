@@ -125,13 +125,13 @@ export default function AgenceFormModal({
             "libelle"
           )}
         />
-
+{/* 
         <Input
           label="Code agence"
           {...register(
             "code_agence"
           )}
-        />
+        /> */}
 
         <Input
           label="Ville"
