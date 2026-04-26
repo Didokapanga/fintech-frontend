@@ -1,36 +1,75 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+// src/modules/agence/hooks/useAgences.ts
+
+import {
+  useQuery,
+  useMutation,
+  useQueryClient,
+} from "@tanstack/react-query";
+
 import {
   getAgences,
   createAgence,
   deleteAgence,
-  type Agence,
 } from "../services/agence.service";
 
-export const useAgences = () =>
-  useQuery<Agence[]>({
+import type {
+  Agence,
+  CreateAgenceDto,
+} from "../types";
+
+/**
+ * =========================================
+ * GET ALL
+ * =========================================
+ */
+export const useAgences = () => {
+  return useQuery<Agence[]>({
     queryKey: ["agences"],
     queryFn: getAgences,
-    initialData: [],
   });
+};
 
+/**
+ * =========================================
+ * CREATE
+ * =========================================
+ */
 export const useCreateAgence = () => {
-  const qc = useQueryClient();
+  const queryClient =
+    useQueryClient();
 
   return useMutation({
-    mutationFn: createAgence,
+    mutationFn: (
+      data: CreateAgenceDto
+    ) =>
+      createAgence(data),
+
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["agences"] });
+      queryClient.invalidateQueries({
+        queryKey: ["agences"],
+      });
     },
   });
 };
 
+/**
+ * =========================================
+ * DELETE
+ * =========================================
+ */
 export const useDeleteAgence = () => {
-  const qc = useQueryClient();
+  const queryClient =
+    useQueryClient();
 
   return useMutation({
-    mutationFn: deleteAgence,
+    mutationFn: (
+      id: string
+    ) => deleteAgence(id),
+
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["agences"] });
+      queryClient.invalidateQueries({
+        queryKey: ["agences"],
+      });
     },
   });
 };
