@@ -1,29 +1,54 @@
-// src/modules/agence/services/agence.service.ts
 import { api } from "../../../services/api";
-import type { CreateAgenceDto } from "../types";
+import type {
+  Agence,
+  CreateAgenceDto,
+} from "../types";
 
-export type Agence = {
-  id: string;
-  libelle: string;
-  code_agence: string;
+/**
+ * =========================================
+ * GET AGENCES
+ * =========================================
+ */
+export const getAgences = async (): Promise<
+  Agence[]
+> => {
+  const res = await api.get(
+    "/agences"
+  );
+
+  return (
+    res.data.data ||
+    res.data
+  );
 };
 
-export const getAgences = async (): Promise<Agence[]> => {
-  const res = await api.get("/agences");
-  return res.data.data || res.data; // selon ton backend
+/**
+ * =========================================
+ * CREATE AGENCE
+ * =========================================
+ */
+export const createAgence = async (
+  data: CreateAgenceDto
+) => {
+  const res = await api.post(
+    "/agences",
+    data
+  );
+
+  return res.data;
 };
 
-export const createAgence = async (data: CreateAgenceDto) => {
-  return api.post("/agences", data);
+/**
+ * =========================================
+ * DELETE AGENCE
+ * =========================================
+ */
+export const deleteAgence = async (
+  id: string
+) => {
+  const res = await api.delete(
+    `/agences/${id}`
+  );
+
+  return res.data;
 };
-
-export const deleteAgence = async (id: string) => {
-  return api.delete(`/agences/${id}`);
-};
-
-
-
-// export const getAgences = async (): Promise<Agence[]> => {
-//   const res = await api.get("/agences");
-//   return res.data.data ?? res.data; // selon ton backend
-// };

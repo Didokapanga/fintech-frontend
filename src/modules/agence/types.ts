@@ -1,3 +1,4 @@
+// src/modules/agence/type.ts
 export interface Agence {
   id: string;
   libelle: string;
