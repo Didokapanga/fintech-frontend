@@ -1,38 +1,88 @@
+// src/modules/agence/pages/AgencesPage.tsx
+
 import { useState } from "react";
-import { useAgences, useDeleteAgence } from "../hooks/useAgences";
+import {
+  useAgences,
+  useDeleteAgence,
+} from "../hooks/useAgences";
 import type { Agence } from "../types";
-import { Button, Table } from "../../../components/ui";
+import {
+  Button,
+  Table,
+} from "../../../components/ui";
 import AgenceFormModal from "../components/AgenceFormModal";
 import ConfirmModal from "../../../components/ui/ConfirmModal";
 import type { Column } from "../../../components/ui/Table.types";
 
 export default function AgencesPage() {
-  const { data, isLoading } = useAgences();
-  const { mutate: deleteAgence, isPending } = useDeleteAgence();
+  const {
+    data,
+    isLoading,
+  } = useAgences();
 
-  const [open, setOpen] = useState(false);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const {
+    mutate: deleteAgence,
+    isPending,
+  } = useDeleteAgence();
+
+  const [
+    open,
+    setOpen,
+  ] = useState(false);
+
+  const [
+    selectedId,
+    setSelectedId,
+  ] = useState<string | null>(
+    null
+  );
 
   const handleDelete = () => {
     if (!selectedId) return;
 
     deleteAgence(selectedId, {
-      onSuccess: () => setSelectedId(null),
+      onSuccess: () =>
+        setSelectedId(null),
     });
   };
 
   const columns: Column<Agence>[] = [
-    { header: "Libellé", accessor: "libelle" },
-    { header: "Code", accessor: "code_agence" },
-    { header: "Ville", accessor: "ville" },
-    { header: "Commune", accessor: "commune" },
+    {
+      header: "Libellé",
+      accessor: "libelle",
+    },
+
+    {
+      header: "Code",
+      accessor: "code_agence",
+    },
+
+    {
+      header: "Ville",
+      accessor: "ville",
+    },
+
+    {
+      header: "Commune",
+      accessor: "commune",
+      render: (value) => (
+        <span>
+          {value || "-"}
+        </span>
+      ),
+    },
+
     {
       header: "Actions",
       accessor: "id",
       render: (_v, row) => (
         <Button
           variant="danger"
-          onClick={() => setSelectedId(row.id)}
+          onClick={() =>
+            setSelectedId(
+              row.id
+            )
+          }
         >
           Supprimer
         </Button>
@@ -42,26 +92,45 @@ export default function AgencesPage() {
 
   return (
     <div className="space-y-4">
+      {/* HEADER */}
       <div className="flex justify-between items-center">
-        <h1 className="text-xl font-semibold">Agences</h1>
+        <h1 className="text-xl font-semibold">
+          Agences
+        </h1>
 
-        <Button onClick={() => setOpen(true)}>
+        <Button
+          onClick={() =>
+            setOpen(true)
+          }
+        >
           + Nouvelle agence
         </Button>
       </div>
 
+      {/* TABLE */}
       <Table<Agence>
-        data={data}
+        data={data ?? []}
         columns={columns}
         loading={isLoading}
       />
 
-      <AgenceFormModal open={open} onClose={() => setOpen(false)} />
+      {/* MODAL CREATE */}
+      <AgenceFormModal
+        open={open}
+        onClose={() =>
+          setOpen(false)
+        }
+      />
 
+      {/* MODAL DELETE */}
       <ConfirmModal
         open={!!selectedId}
-        onClose={() => setSelectedId(null)}
-        onConfirm={handleDelete}
+        onClose={() =>
+          setSelectedId(null)
+        }
+        onConfirm={
+          handleDelete
+        }
         loading={isPending}
         title="Supprimer agence"
         description="Cette action est irréversible."
