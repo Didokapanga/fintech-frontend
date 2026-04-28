@@ -42,7 +42,17 @@ export const useValidateOperation = () => {
   return useMutation({
     mutationFn: validateOperation,
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["validation"] });
+      qc.invalidateQueries({
+        queryKey: ["validation"],
+      });
+
+      qc.invalidateQueries({
+        queryKey: ["transferts-caisse-process"],
+      });
+
+      qc.invalidateQueries({
+        queryKey: ["transferts-caisse"],
+      });
     },
   });
 };

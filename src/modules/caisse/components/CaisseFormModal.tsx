@@ -1,10 +1,12 @@
 // src/modules/caisse/components/CaisseFormModal.tsx
 
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useCreateCaisse } from "../hooks/useCaisses";
 import { useAgences } from "../../agence/hooks/useAgences";
 import { useUsers } from "../../auth/hooks/useAuth";
 import { Button, Modal } from "../../../components/ui";
+import AppMessageState from "../../../components/ui/AppMessageState";
 import type { CreateCaisseDto } from "../services/caisse.service";
 
 type Props = {
@@ -12,11 +14,6 @@ type Props = {
   onClose: () => void;
 };
 
-/**
- * 🔥 type user explicite
- * pour corriger :
- * Parameter 'u' implicitly has an 'any' type
- */
 type User = {
   id: string;
   user_name: string;
@@ -27,6 +24,24 @@ type Agence = {
   libelle: string;
 };
 
+type MessageState = {
+  variant:
+    | "error"
+    | "success"
+    | "info"
+    | "warning";
+  title: string;
+  message: string;
+};
+
+type ErrorWithResponse = Error & {
+  response?: {
+    data?: {
+      message?: string;
+    };
+  };
+};
+
 export default function CaisseFormModal({
   open,
   onClose,
@@ -35,7 +50,17 @@ export default function CaisseFormModal({
     register,
     handleSubmit,
     reset,
-  } = useForm<CreateCaisseDto>();
+    setError,
+    clearErrors,
+    formState: { errors },
+  } = useForm<CreateCaisseDto>({
+    defaultValues: {
+      agence_id: "",
+      agent_id: "",
+      type: "",
+      devise: "",
+    },
+  });
 
   const {
     mutate,
@@ -58,16 +83,70 @@ export default function CaisseFormModal({
     isLoading: boolean;
   };
 
+  const [
+    appMessage,
+    setAppMessage,
+  ] = useState<MessageState | null>(
+    null
+  );
+
   const onSubmit = (
     data: CreateCaisseDto
   ) => {
-    const payload = {
-      ...data,
+    /**
+     * =========================
+     * RÈGLES MÉTIER FRONTEND
+     * =========================
+     *
+     * 1. type = AGENT
+     *    → agent_id obligatoire
+     *
+     * 2. type = AGENCE
+     *    → agent_id interdit
+     */
 
-      // 🔥 si vide → undefined
-      agent_id:
-        data.agent_id ||
-        undefined,
+    if (
+      data.type === "AGENT" &&
+      !data.agent_id
+    ) {
+      setError("agent_id", {
+        type: "manual",
+        message:
+          "Un agent est obligatoire pour une caisse AGENT",
+      });
+      return;
+    }
+
+    if (
+      data.type === "AGENCE" &&
+      data.agent_id
+    ) {
+      setError("agent_id", {
+        type: "manual",
+        message:
+          "Une caisse AGENCE ne doit pas avoir d’agent",
+      });
+      return;
+    }
+
+    clearErrors("agent_id");
+
+    /**
+     * 🔥 payload propre
+     */
+
+    const payload = {
+      agence_id: data.agence_id,
+      type: data.type,
+      devise: data.devise,
+
+      ...(data.type === "AGENT" &&
+      data.agent_id
+        ? {
+            agent_id:
+              data.agent_id,
+          }
+        : {}),
     };
 
     console.log(
@@ -75,10 +154,36 @@ export default function CaisseFormModal({
       payload
     );
 
-    mutate(payload, {
+    mutate(payload as CreateCaisseDto, {
       onSuccess: () => {
+        setAppMessage({
+          variant: "success",
+          title: "Succès",
+          message:
+            "Caisse créée avec succès",
+        });
+
         reset();
         onClose();
+      },
+
+      onError: (
+        error: Error
+      ) => {
+        const apiError =
+          error as ErrorWithResponse;
+
+        setAppMessage({
+          variant: "error",
+          title:
+            "Création refusée",
+          message:
+            apiError
+              ?.response
+              ?.data
+              ?.message ||
+            "Impossible de créer cette caisse",
+        });
       },
     });
   };
@@ -91,6 +196,26 @@ export default function CaisseFormModal({
       <h2 className="text-lg font-semibold mb-4">
         Créer une caisse
       </h2>
+
+      {appMessage && (
+        <AppMessageState
+          variant={
+            appMessage.variant
+          }
+          title={
+            appMessage.title
+          }
+          message={
+            appMessage.message
+          }
+          buttonText="Fermer"
+          onAction={() =>
+            setAppMessage(
+              null
+            )
+          }
+        />
+      )}
 
       <form
         onSubmit={handleSubmit(
@@ -105,7 +230,8 @@ export default function CaisseFormModal({
           {...register(
             "agence_id",
             {
-              required: true,
+              required:
+                "Agence obligatoire",
             }
           )}
           className="w-full border rounded-lg px-3 py-2"
@@ -128,32 +254,14 @@ export default function CaisseFormModal({
           )}
         </select>
 
-        {/* =========================
-            USER / AGENT
-        ========================= */}
-        <select
-          {...register(
-            "agent_id"
-          )}
-          className="w-full border rounded-lg px-3 py-2"
-        >
-          <option value="">
-            {loadingUsers
-              ? "Chargement..."
-              : "Choisir un agent"}
-          </option>
-
-          {users.map(
-            (u: User) => (
-              <option
-                key={u.id}
-                value={u.id}
-              >
-                {u.user_name}
-              </option>
-            )
-          )}
-        </select>
+        {errors.agence_id && (
+          <p className="text-sm text-red-500">
+            {
+              errors.agence_id
+                .message
+            }
+          </p>
+        )}
 
         {/* =========================
             TYPE
@@ -167,7 +275,8 @@ export default function CaisseFormModal({
             {...register(
               "type",
               {
-                required: true,
+                required:
+                  "Type obligatoire",
               }
             )}
             className="w-full border rounded-lg px-3 py-2"
@@ -186,6 +295,49 @@ export default function CaisseFormModal({
           </select>
         </div>
 
+        {errors.type && (
+          <p className="text-sm text-red-500">
+            {errors.type.message}
+          </p>
+        )}
+
+        {/* =========================
+            USER / AGENT
+        ========================= */}
+        <select
+          {...register(
+            "agent_id"
+          )}
+          className="w-full border rounded-lg px-3 py-2"
+        >
+          <option value="">
+            {loadingUsers
+              ? "Chargement..."
+              : "Choisir un agent"
+            }
+          </option>
+
+          {users.map(
+            (u: User) => (
+              <option
+                key={u.id}
+                value={u.id}
+              >
+                {u.user_name}
+              </option>
+            )
+          )}
+        </select>
+
+        {errors.agent_id && (
+          <p className="text-sm text-red-500">
+            {
+              errors.agent_id
+                .message
+            }
+          </p>
+        )}
+
         {/* =========================
             DEVISE
         ========================= */}
@@ -193,7 +345,8 @@ export default function CaisseFormModal({
           {...register(
             "devise",
             {
-              required: true,
+              required:
+                "Devise obligatoire",
             }
           )}
           className="w-full border rounded-lg px-3 py-2"
@@ -214,6 +367,15 @@ export default function CaisseFormModal({
             EUR
           </option>
         </select>
+
+        {errors.devise && (
+          <p className="text-sm text-red-500">
+            {
+              errors.devise
+                .message
+            }
+          </p>
+        )}
 
         {/* =========================
             ACTIONS

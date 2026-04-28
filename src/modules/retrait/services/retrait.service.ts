@@ -99,10 +99,10 @@ export const getMyRetraits = async (
     }
   );
 
-  console.log(
-    "🔥 RETRAITS API:",
-    res.data
-  );
+  // console.log(
+  //   "🔥 RETRAITS API:",
+  //   res.data
+  // );
 
   const raw: RetraitApi[] =
     res.data?.data ?? [];
