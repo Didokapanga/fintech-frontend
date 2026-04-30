@@ -181,8 +181,7 @@ export default function AdminDashboard() {
 
             <p className="text-sm text-gray-500 mt-3 max-w-xl leading-relaxed">
               Voici un aperçu global de vos opérations,
-              validations et mouvements financiers
-              de la journée.
+              validations et mouvements financiers.
             </p>
           </div>
 
