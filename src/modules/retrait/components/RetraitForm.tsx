@@ -2,13 +2,14 @@
 
 import { useForm } from "react-hook-form";
 import { Button, Input } from "../../../components/ui";
+import AppMessageState from "../../../components/ui/AppMessageState";
 import { useRetrait } from "../hooks/useRetrait";
 import { useCaisses } from "../../caisse/hooks/useCaisses";
 import type { AxiosError } from "axios";
 import { useAuthStore } from "../../../app/store";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
-// ✅ TYPE CAISSE
+// TYPES
 type Caisse = {
   id: string;
   code_caisse: string;
@@ -16,22 +17,26 @@ type Caisse = {
   devise: string;
 };
 
-// 🔥 DATA REÇUE DU TABLE
 type SelectedTransfert = {
   code_reference: string;
 };
 
-// ✅ FORM
 type FormData = {
   code_reference: string;
   code_secret: string;
   caisse_id: string;
   numero_piece: string;
-  date_operation: string; // 🔥 ajouté
+  date_operation: string;
 };
 
 type Props = {
   selected?: SelectedTransfert | null;
+};
+
+type MessageState = {
+  variant: "error" | "success" | "info" | "warning";
+  title: string;
+  message: string;
 };
 
 export default function RetraitForm({ selected }: Props) {
@@ -48,7 +53,10 @@ export default function RetraitForm({ selected }: Props) {
 
   const user = useAuthStore((s) => s.user);
 
-  // 🔥 AUTO REMPLISSAGE
+  const [appMessage, setAppMessage] =
+    useState<MessageState | null>(null);
+
+  // AUTO REF
   useEffect(() => {
     if (selected) {
       setValue(
@@ -58,7 +66,7 @@ export default function RetraitForm({ selected }: Props) {
     }
   }, [selected, setValue]);
 
-  // 🔥 date du jour par défaut
+  // DATE PAR DEFAUT
   useEffect(() => {
     const today = new Date()
       .toISOString()
@@ -69,7 +77,11 @@ export default function RetraitForm({ selected }: Props) {
 
   const onSubmit = (data: FormData) => {
     if (!user?.id) {
-      alert("Utilisateur non connecté");
+      setAppMessage({
+        variant: "error",
+        title: "Erreur",
+        message: "Utilisateur non connecté",
+      });
       return;
     }
 
@@ -79,16 +91,14 @@ export default function RetraitForm({ selected }: Props) {
       user_agent: navigator.userAgent,
     };
 
-    console.log(
-      "🔥 RETRAIT PAYLOAD:",
-      payload
-    );
-
     mutate(payload, {
       onSuccess: (res) => {
-        alert(
-          `✅ Retrait réussi : ${res.montant}`
-        );
+        setAppMessage({
+          variant: "success",
+          title: "Succès",
+          message: `Retrait initié avec succès : ${res.montant}`,
+        });
+
         reset({
           date_operation: new Date()
             .toISOString()
@@ -102,10 +112,13 @@ export default function RetraitForm({ selected }: Props) {
             message?: string;
           }>;
 
-        alert(
-          error.response?.data?.message ||
-            "Erreur lors du retrait"
-        );
+        setAppMessage({
+          variant: "error",
+          title: "Retrait refusé",
+          message:
+            error.response?.data?.message ||
+            "Erreur lors du retrait",
+        });
       },
     });
   };
@@ -118,6 +131,16 @@ export default function RetraitForm({ selected }: Props) {
       <h2 className="text-lg font-semibold text-center">
         Retrait client
       </h2>
+
+      {/* MESSAGE */}
+      {appMessage && (
+        <AppMessageState
+          variant={appMessage.variant}
+          title={appMessage.title}
+          message={appMessage.message}
+          onAction={() => setAppMessage(null)}
+        />
+      )}
 
       {/* CODE REF */}
       <Input
@@ -144,9 +167,9 @@ export default function RetraitForm({ selected }: Props) {
         })}
       />
 
-      {/* DATE OPERATION */}
+      {/* DATE */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
+        <label className="block text-sm font-medium mb-1">
           Date opération
         </label>
 
@@ -155,7 +178,7 @@ export default function RetraitForm({ selected }: Props) {
           {...register("date_operation", {
             required: true,
           })}
-          className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full border rounded-lg px-3 py-2"
         />
       </div>
 
@@ -171,12 +194,8 @@ export default function RetraitForm({ selected }: Props) {
         </option>
 
         {caisses.map((c) => (
-          <option
-            key={c.id}
-            value={c.id}
-          >
-            {c.code_caisse} ({c.solde}{" "}
-            {c.devise})
+          <option key={c.id} value={c.id}>
+            {c.code_caisse} ({c.solde} {c.devise})
           </option>
         ))}
       </select>

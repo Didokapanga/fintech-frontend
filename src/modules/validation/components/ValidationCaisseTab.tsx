@@ -9,6 +9,9 @@ import { useValidateOperation } from "../hooks/useValidation";
 import { useTransfertsCaisseToProcess } from "../../transfert-caisse/hooks/useTransfertCaisse";
 import { useCaisses } from "../../caisse/hooks/useCaisses";
 
+import { useApiMutationWithFeedback } from "../../../hooks/useApiMutationWithFeedback";
+import AppMessageState from "../../../components/ui/AppMessageState";
+
 // ✅ TYPE CAISSE
 type Caisse = {
   id: string;
@@ -19,10 +22,30 @@ type Caisse = {
 export default function ValidationCaisseTab() {
   const [page] = useState(1);
 
-  const { data, isLoading } = useTransfertsCaisseToProcess(page, 10);
-  const { mutate } = useValidateOperation();
+  const { data, isLoading } =
+    useTransfertsCaisseToProcess(page, 10);
 
-  const { data: caisses = [] } = useCaisses() as { data: Caisse[] };
+  const validateOperation = useValidateOperation();
+
+  // ✅ 🔥 ICI ON AJOUTE LE HOOK
+  const {
+    mutate,
+    appMessage,
+    clearMessage,
+    isPending,
+  } = useApiMutationWithFeedback({
+    mutationFn: validateOperation.mutateAsync,
+
+    successMessage: "Validation effectuée avec succès",
+
+    invalidateQueries: [
+      "transferts-caisse-process",
+      "transferts-caisse",
+    ],
+  });
+
+  const { data: caisses = [] } =
+    useCaisses() as { data: Caisse[] };
 
   const transferts = data?.data ?? [];
 
@@ -31,7 +54,7 @@ export default function ValidationCaisseTab() {
     const caisse = caisses.find((c) => c.id === id);
     return caisse
       ? `${caisse.code_caisse} (${caisse.devise})`
-      : id.slice(0, 8); // fallback propre
+      : id.slice(0, 8);
   };
 
   // 🎨 BADGE
@@ -50,7 +73,7 @@ export default function ValidationCaisseTab() {
     }
   };
 
-  // ACTIONS
+  // ACTIONS (LOGIQUE INTACTE)
   const handleValidate = (row: TransfertCaisse) => {
     let niveau: "N1" | "N2";
 
@@ -59,7 +82,7 @@ export default function ValidationCaisseTab() {
     } else if (row.statut === "VALIDE") {
       niveau = "N2";
     } else {
-      return; // déjà traité
+      return;
     }
 
     mutate({
@@ -133,13 +156,17 @@ export default function ValidationCaisseTab() {
       accessor: "id",
       render: (_v, row) => (
         <div className="flex gap-2">
-          <Button onClick={() => handleValidate(row)}>
+          <Button
+            onClick={() => handleValidate(row)}
+            loading={isPending}
+          >
             Valider
           </Button>
 
           <Button
             variant="danger"
             onClick={() => handleReject(row)}
+            loading={isPending}
           >
             Rejeter
           </Button>
@@ -150,6 +177,17 @@ export default function ValidationCaisseTab() {
 
   return (
     <div className="space-y-4">
+
+      {/* ✅ MESSAGE UTILISATEUR */}
+      {appMessage && (
+        <AppMessageState
+          variant={appMessage.variant}
+          title={appMessage.title}
+          message={appMessage.message}
+          onAction={clearMessage}
+        />
+      )}
+
       <Table<TransfertCaisse>
         data={transferts}
         columns={columns}

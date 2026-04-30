@@ -218,10 +218,10 @@ export const getCloturesToValidate = async (
     }
   );
 
-  console.log(
-    "🔥 CLOTURES:",
-    res.data
-  );
+  // console.log(
+  //   "🔥 CLOTURES:",
+  //   res.data
+  // );
 
   return {
     data: res.data.data.map(
@@ -276,10 +276,10 @@ export const getRetraitsToValidate = async (
     }
   );
 
-  console.log(
-    "🔥 RETRAITS VALIDATION:",
-    res.data
-  );
+  // console.log(
+  //   "🔥 RETRAITS VALIDATION:",
+  //   res.data
+  // );
 
   return {
     data: res.data.data.map(

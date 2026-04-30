@@ -2,14 +2,14 @@
 
 import { useForm } from "react-hook-form";
 import type { RegisterDto } from "../services/auth.service";
-import { toast } from "sonner";
 import type { AxiosError } from "axios";
 import { useState } from "react";
 import { useRegister } from "../hooks/useAuth";
 import { useRoles } from "../hooks/useRoles";
 import { useAgences } from "../../agence/hooks/useAgences";
+import AppMessageState from "../../../components/ui/AppMessageState";
 
-// ✅ TYPES PROPRES
+// TYPES
 type Role = {
   id: string;
   role_name: string;
@@ -24,6 +24,12 @@ type Props = {
   onClose?: () => void;
 };
 
+type MessageState = {
+  variant: "error" | "success" | "info" | "warning";
+  title: string;
+  message: string;
+};
+
 export default function RegisterForm({ onClose }: Props) {
   const {
     register,
@@ -34,7 +40,6 @@ export default function RegisterForm({ onClose }: Props) {
 
   const { mutate, isPending } = useRegister();
 
-  // ✅ TYPES APPLIQUÉS
   const { data: roles = [] } = useRoles() as {
     data: Role[];
   };
@@ -45,29 +50,49 @@ export default function RegisterForm({ onClose }: Props) {
 
   const [showPassword, setShowPassword] = useState(false);
 
+  const [appMessage, setAppMessage] =
+    useState<MessageState | null>(null);
+
   const onSubmit = (data: RegisterDto) => {
-        mutate(data, {
-            onSuccess: () => {
-            toast.success("Utilisateur créé avec succès");
-
-            reset();
-
-            // 🔥 FERMER MODAL
-            onClose?.();
-            },
-
-            onError: (error: unknown) => {
-            const err = error as AxiosError<{ message?: string }>;
-
-            toast.error(
-                err.response?.data?.message || "Erreur lors de la création"
-            );
-            },
+    mutate(data, {
+      onSuccess: () => {
+        setAppMessage({
+          variant: "success",
+          title: "Succès",
+          message: "Utilisateur créé avec succès",
         });
-    };
+
+        reset();
+        onClose?.();
+      },
+
+      onError: (error: unknown) => {
+        const err =
+          error as AxiosError<{ message?: string }>;
+
+        setAppMessage({
+          variant: "error",
+          title: "Création refusée",
+          message:
+            err.response?.data?.message ||
+            "Erreur lors de la création",
+        });
+      },
+    });
+  };
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+
+      {/* MESSAGE */}
+      {appMessage && (
+        <AppMessageState
+          variant={appMessage.variant}
+          title={appMessage.title}
+          message={appMessage.message}
+          onAction={() => setAppMessage(null)}
+        />
+      )}
 
       {/* USERNAME */}
       <div>

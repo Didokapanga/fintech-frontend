@@ -1,8 +1,11 @@
 // src/modules/transfert-client/components/TransfertClientModal.tsx
+
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useCaisses } from "../../caisse/hooks/useCaisses";
 import { useAgences } from "../../agence/hooks/useAgences";
 import { Button, Input, Modal } from "../../../components/ui";
+import AppMessageState from "../../../components/ui/AppMessageState";
 import { useCreateTransfertClient } from "../hooks/useTransfert";
 import type { CreateTransfertClientDto } from "../services/transfert.service";
 import { useAuthStore } from "../../../app/store";
@@ -22,6 +25,20 @@ type Props = {
   onClose: () => void;
 };
 
+type MessageState = {
+  variant: "error" | "success" | "info" | "warning";
+  title: string;
+  message: string;
+};
+
+type ErrorWithResponse = Error & {
+  response?: {
+    data?: {
+      message?: string;
+    };
+  };
+};
+
 export default function TransfertClientModal({ open, onClose }: Props) {
   const { register, handleSubmit, reset } =
     useForm<CreateTransfertClientDto>();
@@ -33,24 +50,46 @@ export default function TransfertClientModal({ open, onClose }: Props) {
   const { data: caisses = [] } = useCaisses() as { data: Caisse[] };
   const { data: agences = [] } = useAgences() as { data: Agence[] };
 
+  const [appMessage, setAppMessage] =
+    useState<MessageState | null>(null);
+
   const onSubmit = (data: CreateTransfertClientDto) => {
-  if (!user?.agence_id) {
-    alert("Agence utilisateur introuvable");
-    return;
-  }
+    if (!user?.agence_id) {
+      setAppMessage({
+        variant: "error",
+        title: "Erreur",
+        message: "Agence utilisateur introuvable",
+      });
+      return;
+    }
 
-  const payload: CreateTransfertClientDto = {
-    ...data,
-    agence_exp: user.agence_id, // ✅ maintenant garanti string
-  };
-
-    // console.log("🔥 DATA ENVOYÉE:", payload);
+    const payload: CreateTransfertClientDto = {
+      ...data,
+      agence_exp: user.agence_id,
+    };
 
     mutate(payload, {
       onSuccess: (res) => {
-        alert("Code secret: " + res.code_secret);
+        setAppMessage({
+          variant: "success",
+          title: "Succès",
+          message: `Transfert effectué.\nCode secret: ${res.code_secret}`,
+        });
+
         reset();
         onClose();
+      },
+
+      onError: (error: Error) => {
+        const apiError = error as ErrorWithResponse;
+
+        setAppMessage({
+          variant: "error",
+          title: "Transfert refusé",
+          message:
+            apiError?.response?.data?.message ||
+            "Impossible d’effectuer ce transfert",
+        });
       },
     });
   };
@@ -60,6 +99,15 @@ export default function TransfertClientModal({ open, onClose }: Props) {
       <h2 className="text-xl font-semibold mb-6">
         Transfert client
       </h2>
+
+      {appMessage && (
+        <AppMessageState
+          variant={appMessage.variant}
+          title={appMessage.title}
+          message={appMessage.message}
+          onAction={() => setAppMessage(null)}
+        />
+      )}
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
 
@@ -94,7 +142,7 @@ export default function TransfertClientModal({ open, onClose }: Props) {
           <select {...register("agence_dest")} className="input">
             <option value="">Agence destination</option>
             {agences
-              .filter((a) => a.id !== user?.agence_id) // ✅ FIX ICI
+              .filter((a) => a.id !== user?.agence_id)
               .map((a) => (
                 <option key={a.id} value={a.id}>
                   {a.libelle}
@@ -103,7 +151,7 @@ export default function TransfertClientModal({ open, onClose }: Props) {
           </select>
         </div>
 
-        {/* ================= EXPEDITEUR ================= */}
+        {/* EXPEDITEUR */}
         <div className="border rounded-xl p-4 space-y-3">
           <h3 className="font-medium text-sm text-gray-600">
             Expéditeur
@@ -124,14 +172,11 @@ export default function TransfertClientModal({ open, onClose }: Props) {
               <option value="PASSEPORT">Passeport</option>
             </select>
 
-            <Input
-              placeholder="Numéro pièce"
-              {...register("exp_numero_piece")}
-            />
+            <Input placeholder="Numéro pièce" {...register("exp_numero_piece")} />
           </div>
         </div>
 
-        {/* ================= DESTINATAIRE ================= */}
+        {/* DESTINATAIRE */}
         <div className="border rounded-xl p-4 space-y-3">
           <h3 className="font-medium text-sm text-gray-600">
             Destinataire
@@ -152,21 +197,14 @@ export default function TransfertClientModal({ open, onClose }: Props) {
               <option value="PASSEPORT">Passeport</option>
             </select>
 
-            <Input
-              placeholder="Numéro pièce"
-              {...register("dest_numero_piece")}
-            />
+            <Input placeholder="Numéro pièce" {...register("dest_numero_piece")} />
           </div>
         </div>
-       <div className="grid grid-cols-2 gap-2">       
-          {/* MONTANT */}
-          <Input
-            type="number"
-            label="Montant"
-            {...register("montant")}
-          />
 
-          {/* DATE OPERATION */}
+        {/* MONTANT + DATE */}
+        <div className="grid grid-cols-2 gap-2">
+          <Input type="number" label="Montant" {...register("montant")} />
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Date opération
@@ -174,13 +212,13 @@ export default function TransfertClientModal({ open, onClose }: Props) {
 
             <input
               type="date"
-              {...register("date_operation", {
-                required: true,
-              })}
+              {...register("date_operation", { required: true })}
               className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
             />
           </div>
         </div>
+
+        {/* FRAIS */}
         <div className="grid grid-cols-2 gap-2">
           <Input type="number" label="Frais" {...register("frais")} />
           <Input type="number" label="Commission" {...register("commission")} />

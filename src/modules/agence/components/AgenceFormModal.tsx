@@ -5,8 +5,7 @@ import { Modal, Button, Input } from "../../../components/ui";
 import AppMessageState from "../../../components/ui/AppMessageState";
 import { useCreateAgence } from "../hooks/useAgences";
 import type { CreateAgenceDto } from "../types";
-import { useState } from "react";
-import type { AxiosError } from "axios";
+import { useApiMutationWithFeedback } from "../../../hooks/useApiMutationWithFeedback";
 
 type Props = {
   open: boolean;
@@ -23,75 +22,40 @@ export default function AgenceFormModal({
     reset,
   } = useForm<CreateAgenceDto>();
 
+  const createAgence = useCreateAgence();
+
+  // ✅ 🔥 HOOK CENTRALISÉ
   const {
     mutate,
     isPending,
-  } = useCreateAgence();
+    appMessage,
+    clearMessage,
+  } = useApiMutationWithFeedback({
+    mutationFn: createAgence.mutateAsync,
 
-  const [feedback, setFeedback] =
-    useState<{
-      type:
-        | "success"
-        | "error"
-        | null;
-      title: string;
-      message: string;
-    }>({
-      type: null,
-      title: "",
-      message: "",
-    });
+    successMessage:
+      "Agence créée avec succès",
+
+    invalidateQueries: ["agences"],
+
+    onSuccess: () => {
+      reset();
+
+      // 🔥 on garde ton comportement UX
+      setTimeout(() => {
+        onClose();
+        clearMessage();
+      }, 1500);
+    },
+
+    errorMessage:
+      "Une erreur est survenue lors de la création de l’agence.",
+  });
 
   const onSubmit = (
     data: CreateAgenceDto
   ) => {
-    setFeedback({
-      type: null,
-      title: "",
-      message: "",
-    });
-
-    mutate(data, {
-      onSuccess: () => {
-        setFeedback({
-          type: "success",
-          title:
-            "Agence créée avec succès",
-          message:
-            "La nouvelle agence a été enregistrée correctement.",
-        });
-
-        reset();
-
-        setTimeout(() => {
-          onClose();
-          setFeedback({
-            type: null,
-            title: "",
-            message: "",
-          });
-        }, 1500);
-      },
-
-      onError: (
-        error: unknown
-      ) => {
-        const err =
-          error as AxiosError<{
-            message?: string;
-          }>;
-
-        setFeedback({
-          type: "error",
-          title:
-            "Création impossible",
-          message:
-            err.response?.data
-              ?.message ||
-            "Une erreur est survenue lors de la création de l’agence.",
-        });
-      },
-    });
+    mutate(data);
   };
 
   return (
@@ -106,32 +70,22 @@ export default function AgenceFormModal({
         )}
         className="space-y-4"
       >
-        {/* MESSAGE STATE */}
-        {feedback.type && (
+        {/* ✅ MESSAGE CENTRALISÉ */}
+        {appMessage && (
           <AppMessageState
-            variant={feedback.type}
-            title={feedback.title}
-            message={
-              feedback.message
-            }
+            variant={appMessage.variant}
+            title={appMessage.title}
+            message={appMessage.message}
             fullPage={false}
+            onAction={clearMessage}
           />
         )}
 
         {/* FORM */}
         <Input
           label="Libellé"
-          {...register(
-            "libelle"
-          )}
+          {...register("libelle")}
         />
-{/* 
-        <Input
-          label="Code agence"
-          {...register(
-            "code_agence"
-          )}
-        /> */}
 
         <Input
           label="Ville"
@@ -140,16 +94,12 @@ export default function AgenceFormModal({
 
         <Input
           label="Commune"
-          {...register(
-            "commune"
-          )}
+          {...register("commune")}
         />
 
         <Input
           label="Quartier"
-          {...register(
-            "quartier"
-          )}
+          {...register("quartier")}
         />
 
         {/* ACTIONS */}

@@ -1,3 +1,5 @@
+// src/modules/caisse/hooks/useCaisses.ts
+
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   getCaisses,

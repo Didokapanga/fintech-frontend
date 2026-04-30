@@ -12,6 +12,9 @@ import {
 import type { TransfertClient } from "../services/validation.service";
 import { useAuthStore } from "../../../app/store";
 
+import { useApiMutationWithFeedback } from "../../../hooks/useApiMutationWithFeedback";
+import AppMessageState from "../../../components/ui/AppMessageState";
+
 type Agence = {
   id: string;
   libelle: string;
@@ -20,23 +23,33 @@ type Agence = {
 export default function ValidationClientTab() {
   const [page] = useState(1);
 
-  // 🔥 FIX PRINCIPAL : utiliser Zustand (PAS localStorage)
   const user = useAuthStore((s) => s.user);
-
   const role = user?.role_name?.toUpperCase() || "";
 
   const canValidate = ["ADMIN", "N+1", "N+2"].includes(role);
 
   // ✅ DATA
   const { data, isLoading } = useValidationList(page, 10);
-  const { mutate } = useValidateOperation();
+
+  const validateOperation = useValidateOperation();
+
+  // ✅ 🔥 AJOUT PROPRE
+  const {
+    mutate,
+    appMessage,
+    clearMessage,
+    isPending,
+  } = useApiMutationWithFeedback({
+    mutationFn: validateOperation.mutateAsync,
+
+    successMessage: "Validation effectuée avec succès",
+
+    invalidateQueries: ["validation-client"],
+  });
 
   const transferts = data?.data ?? [];
 
-  // const { data: clientsData } = useClients();
   const { data: agencesData } = useAgences();
-
-  // const clients: Client[] = (clientsData as Client[]) ?? [];
   const agences: Agence[] = (agencesData as Agence[]) ?? [];
 
   const getAgenceName = (id: string) => {
@@ -58,7 +71,7 @@ export default function ValidationClientTab() {
     }
   };
 
-  // ACTIONS
+  // ACTIONS (LOGIQUE INTACTE)
   const handleValidate = (id: string) => {
     mutate({
       operation_type: "TRANSFERT_CLIENT",
@@ -96,7 +109,7 @@ export default function ValidationClientTab() {
 
     {
       header: "Destinataire",
-      accessor: "client_exp", // ✅ UNIQUE
+      accessor: "client_exp",
       render: (_v, row) => (
         <div className="flex flex-col">
           <span className="font-medium text-gray-800">
@@ -155,17 +168,21 @@ export default function ValidationClientTab() {
 
     {
       header: "Actions",
-      accessor: "client_dest", // ✅ UNIQUE
+      accessor: "client_dest",
       render: (_v, row) =>
         canValidate ? (
           <div className="flex gap-2">
-            <Button onClick={() => handleValidate(String(row.id))}>
+            <Button
+              onClick={() => handleValidate(String(row.id))}
+              loading={isPending}
+            >
               Valider
             </Button>
 
             <Button
               variant="danger"
               onClick={() => handleReject(String(row.id))}
+              loading={isPending}
             >
               Rejeter
             </Button>
@@ -181,7 +198,16 @@ export default function ValidationClientTab() {
   return (
     <div className="space-y-4">
 
-      {/* INFO DROITS */}
+      {/* ✅ MESSAGE */}
+      {appMessage && (
+        <AppMessageState
+          variant={appMessage.variant}
+          title={appMessage.title}
+          message={appMessage.message}
+          onAction={clearMessage}
+        />
+      )}
+
       {!canValidate && (
         <div className="text-xs text-gray-400">
           Vous êtes en mode lecture seule

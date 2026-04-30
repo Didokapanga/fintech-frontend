@@ -3,26 +3,13 @@
 import { useForm } from "react-hook-form";
 import { useLogin } from "../hooks/useAuth";
 import type { LoginDto } from "../types";
-import { toast } from "sonner";
 import { useAuthStore } from "../../../app/store";
-import type { AxiosError } from "axios";
 import { useState } from "react";
 
-export default function LoginForm() {
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<LoginDto>();
+import { useApiMutationWithFeedback } from "../../../hooks/useApiMutationWithFeedback";
+import AppMessageState from "../../../components/ui/AppMessageState";
 
-  const { mutate, isPending } = useLogin();
-
-  // ✅ FIX ICI
-  const setAuth = useAuthStore((s) => s.setAuth);
-
-  const [showPassword, setShowPassword] = useState(false);
-
-  type LoginResponse = {
+type LoginResponse = {
   token: string;
   user: {
     id: string;
@@ -33,12 +20,32 @@ export default function LoginForm() {
   };
 };
 
-const onSubmit = (data: LoginDto) => {
-  mutate(data, {
-    onSuccess: (res: LoginResponse) => {
-      console.log("🔥 LOGIN RES:", res);
+export default function LoginForm() {
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<LoginDto>();
 
-      // ✅ sécurisation + structure stable
+  const loginMutation = useLogin();
+
+  const setAuth = useAuthStore((s) => s.setAuth);
+
+  const [showPassword, setShowPassword] = useState(false);
+
+  // ✅ 🔥 HOOK CENTRALISÉ
+  const {
+    mutate,
+    isPending,
+    appMessage,
+    clearMessage,
+  } = useApiMutationWithFeedback<LoginResponse, LoginDto>({
+    mutationFn: loginMutation.mutateAsync,
+
+    successMessage: "Connexion réussie",
+
+    onSuccess: (res) => {
+      // 🔐 stockage auth
       setAuth({
         token: res.token,
         user: {
@@ -50,25 +57,29 @@ const onSubmit = (data: LoginDto) => {
         },
       });
 
-      toast.success("Connexion réussie");
-
-      // 🔥 navigation propre (optionnel mais mieux que reload brutal)
+      // 🔥 redirection
       window.location.href = "/";
     },
 
-      onError: (error: unknown) => {
-        const err = error as AxiosError<{ message?: string }>;
+    errorMessage: "Identifiants invalides",
+  });
 
-        const message =
-          err.response?.data?.message || "Identifiants invalides";
-
-        toast.error(message);
-      },
-    });
+  const onSubmit = (data: LoginDto) => {
+    mutate(data);
   };
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+
+      {/* MESSAGE */}
+      {appMessage && (
+        <AppMessageState
+          variant={appMessage.variant}
+          title={appMessage.title}
+          message={appMessage.message}
+          onAction={clearMessage}
+        />
+      )}
 
       {/* USERNAME */}
       <div className="space-y-1">
@@ -115,7 +126,6 @@ const onSubmit = (data: LoginDto) => {
             `}
           />
 
-          {/* TOGGLE */}
           <button
             type="button"
             onClick={() => setShowPassword((s) => !s)}

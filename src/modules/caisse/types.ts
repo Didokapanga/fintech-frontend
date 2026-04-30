@@ -1,15 +1,6 @@
-export type CaisseState = "OUVERTE" | "FERMEE" | "CLOTUREE";
+// src/modules/caisse/types.ts
 
-// export interface Caisse {
-//   id: string;
-//   agence_id: string;
-//   agent_id?: string;
-//   type: string;
-//   devise: string;
-//   code_caisse: string;
-//   state: CaisseState;
-//   solde: number;
-// }
+export type CaisseState = "OUVERTE" | "FERMEE" | "CLOTUREE";
 
 export type Caisse = {
   id: string;
