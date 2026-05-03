@@ -205,8 +205,8 @@ export default function TransfertClientPage() {
               EXECUTE
             </option>
 
-            <option value="REJETE">
-              REJETE
+            <option value="ANNULE">
+              ANNULE
             </option>
           </select>
 

@@ -13,6 +13,7 @@ import { useAuthStore } from "../../../app/store";
 type Caisse = {
   id: string;
   code_caisse: string;
+  devise?: string; // ✅ AJOUT SAFE
 };
 
 type Agence = {
@@ -40,8 +41,14 @@ type ErrorWithResponse = Error & {
 };
 
 export default function TransfertClientModal({ open, onClose }: Props) {
-  const { register, handleSubmit, reset } =
-    useForm<CreateTransfertClientDto>();
+  // const { register, handleSubmit, reset } =
+  //   useForm<CreateTransfertClientDto>();
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<CreateTransfertClientDto>();
 
   const { mutate, isPending } = useCreateTransfertClient();
 
@@ -113,14 +120,26 @@ export default function TransfertClientModal({ open, onClose }: Props) {
 
         {/* CAISSE + DEVISE */}
         <div className="grid grid-cols-2 gap-4">
-          <select {...register("caisse_id")} className="input">
-            <option value="">Caisse</option>
+          <select
+            {...register("caisse_id", {
+              required: "La caisse est obligatoire",
+            })}
+            className="input"
+          >
+            <option value="">Sélectionner une caisse</option>
+
             {caisses.map((c) => (
               <option key={c.id} value={c.id}>
-                {c.code_caisse}
+                {c.code_caisse} {c.devise ? `(${c.devise})` : ""}
               </option>
             ))}
           </select>
+
+          {errors.caisse_id && (
+            <p className="text-red-500 text-xs">
+              {errors.caisse_id.message}
+            </p>
+          )}
 
           <select {...register("devise")} className="input">
             <option value="">Devise</option>

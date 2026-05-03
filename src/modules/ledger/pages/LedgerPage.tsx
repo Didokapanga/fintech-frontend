@@ -105,9 +105,35 @@ export default function LedgerPage() {
           }
           className="input"
         >
-          <option value="">Type</option>
-          <option value="TRANSFERT_CAISSE">Transfert</option>
-          <option value="RETRAIT">Retrait</option>
+          <option value="">Tous les types</option>
+
+          <option value="TRANSFERT_CAISSE">
+            Transfert caisse
+          </option>
+
+          <option value="TRANSFERT_CLIENT">
+            Transfert client
+          </option>
+
+          <option value="ANNULATION_TRANSFERT_CLIENT">
+            Annulation transfert client
+          </option>
+
+          <option value="RETRAIT">
+            Retrait
+          </option>
+
+          <option value="APPROVISIONNEMENT">
+            Approvisionnement
+          </option>
+
+          <option value="ECART_CAISSE">
+            Écart de caisse
+          </option>
+
+          <option value="REJETE">
+            Rejet
+          </option>
         </select>
 
         {/* SENS */}

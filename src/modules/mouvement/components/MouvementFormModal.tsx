@@ -224,16 +224,15 @@ export default function MouvementFormModal({
             className="w-full mt-1 px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
           >
             <option value="APPROVISIONNEMENT">
-              Approvisionnement
+              ➕ Approvisionnement
             </option>
 
             <option value="RETRAIT_SORTIE">
-              Retrait
+              ➖ Retrait (sortie)
             </option>
 
             <option value="TRANSFERT_SORTIE">
-              Transfert
-              sortie
+              🔁 Transfert vers une autre caisse
             </option>
           </select>
         </div>
