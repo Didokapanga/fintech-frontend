@@ -13,8 +13,8 @@ import {
 
 export const navItems = [
   { label: "Dashboard", icon: Home, path: "/" },
-  { label: "Transfert client", icon: Send, path: "/transfert-client" },
-  { label: "Retrait", icon: Banknote, path: "/retrait" },
+  { label: "Envoi", icon: Send, path: "/transfert-client" },
+  { label: "Paiement", icon: Banknote, path: "/retrait" },
 
   // 👇 CLIENT & AGENCE (logique métier)
   // { label: "Clients", icon: Users, path: "/clients" },

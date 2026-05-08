@@ -6,9 +6,9 @@ import {
   Banknote,
   Inbox,
   Wallet,
-  History,
   Repeat,
   Lock,
+  FileText,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -39,14 +39,14 @@ export default function CaissierDashboard() {
 
   const actions = [
     {
-      label: "Transfert client",
+      label: "Envoi",
       path: "/transfert-client",
       icon: Send,
       color: "text-indigo-600",
       bg: "bg-indigo-50",
     },
     {
-      label: "Retrait",
+      label: "Paiement",
       path: "/retrait",
       icon: Banknote,
       color: "text-green-600",
@@ -74,9 +74,9 @@ export default function CaissierDashboard() {
       bg: "bg-purple-50",
     },
     {
-      label: "Historique",
+      label: "Registre",
       path: "/ledger",
-      icon: History,
+      icon: FileText,
       color: "text-gray-600",
       bg: "bg-gray-100",
     },
@@ -86,107 +86,147 @@ export default function CaissierDashboard() {
     <div className="h-full flex flex-col justify-center px-6">
 
       {/* HEADER */}
-      <div className="mb-10 flex flex-col items-center space-y-5">
+<div className="relative mb-10">
 
-        {/* SELECT CAISSE */}
-        {caisses.length > 1 && (
-          <select
-            value={
-              selectedCaisse?.id || ""
-            }
-            onChange={(e) =>
-              setSelectedCaisseId(
-                e.target.value
-              )
-            }
-            className="
-              px-3 py-2 rounded-xl border bg-white text-sm
-              focus:outline-none focus:ring-2 focus:ring-indigo-500
-            "
-          >
-            {caisses.map((c) => (
-              <option
-                key={c.id}
-                value={c.id}
-              >
-                {c.code_caisse} (
-                {c.devise})
-              </option>
-            ))}
-          </select>
-        )}
+  {/* =========================================
+      LOGO → TOP LEFT
+  ========================================= */}
+  <div className="absolute top-0 left-0">
 
-        {/* INFOS */}
-        {selectedCaisse && (
-          <>
-            <div className="flex items-center gap-3 flex-wrap justify-center">
+    <div className="flex items-center gap-4">
 
-              <span className="px-3 py-1 rounded-lg bg-gray-100 text-sm font-medium">
-                Caisse{" "}
-                {
-                  selectedCaisse.code_caisse
-                }
-              </span>
+      <img
+        src="/logo.png"
+        alt="Fintech Logo"
+        className="
+          w-16 h-16
+          object-contain
+          rounded-2xl
+          shadow-sm
+        "
+      />
 
-              <span className="px-3 py-1 rounded-lg bg-indigo-50 text-indigo-600 text-sm font-medium">
-                {
-                  selectedCaisse.devise
-                }
-              </span>
+      <div className="flex flex-col leading-tight">
 
-              <span
-                className={`px-3 py-1 rounded-lg text-sm font-medium ${
-                  selectedCaisse.state ===
-                  "OUVERTE"
-                    ? "bg-green-100 text-green-700"
-                    : "bg-red-100 text-red-700"
-                }`}
-              >
-                ●{" "}
-                {
-                  selectedCaisse.state
-                }
-              </span>
-            </div>
+        <span className="text-2xl font-bold text-gray-800 tracking-tight">
+          Global Fintech
+        </span>
 
-            {/* SOLDE */}
-            <div className="text-center">
-              <p className="text-sm text-gray-500 mb-1">
-                Solde disponible
-              </p>
+        <span className="text-sm text-gray-500">
+          Financial System
+        </span>
 
-              <h1 className="text-4xl font-bold text-gray-800 tracking-tight">
-                {Number(
-                  selectedCaisse.solde
-                ).toLocaleString()}{" "}
-                <span className="text-lg text-gray-500">
-                  {
-                    selectedCaisse.devise
-                  }
-                </span>
-              </h1>
-            </div>
-
-            {/* 🔥 BOUTON CLOTURE */}
-            <button
-              onClick={() =>
-                setOpenCloture(true)
-              }
-              className="
-                flex items-center gap-2
-                px-5 py-3 rounded-2xl
-                bg-red-600 text-white
-                font-medium shadow-sm
-                hover:bg-red-700
-                transition-all
-              "
-            >
-              <Lock className="w-5 h-5" />
-              Clôturer ma caisse
-            </button>
-          </>
-        )}
       </div>
+    </div>
+  </div>
+
+  {/* =========================================
+      CENTER BLOCK
+  ========================================= */}
+  <div className="flex flex-col items-center space-y-5">
+
+    {/* SELECT CAISSE */}
+    {caisses.length > 1 && (
+      <select
+        value={
+          selectedCaisse?.id || ""
+        }
+        onChange={(e) =>
+          setSelectedCaisseId(
+            e.target.value
+          )
+        }
+        className="
+          px-3 py-2 rounded-xl border bg-white text-sm
+          focus:outline-none focus:ring-2 focus:ring-indigo-500
+        "
+      >
+        {caisses.map((c) => (
+          <option
+            key={c.id}
+            value={c.id}
+          >
+            {c.code_caisse} (
+            {c.devise})
+          </option>
+        ))}
+      </select>
+    )}
+
+    {/* INFOS */}
+    {selectedCaisse && (
+      <>
+        <div className="flex items-center gap-3 flex-wrap justify-center">
+
+          <span className="px-3 py-1 rounded-lg bg-gray-100 text-sm font-medium">
+            Caisse{" "}
+            {
+              selectedCaisse.code_caisse
+            }
+          </span>
+
+          <span className="px-3 py-1 rounded-lg bg-indigo-50 text-indigo-600 text-sm font-medium">
+            {
+              selectedCaisse.devise
+            }
+          </span>
+
+          <span
+            className={`px-3 py-1 rounded-lg text-sm font-medium ${
+              selectedCaisse.state ===
+              "OUVERTE"
+                ? "bg-green-100 text-green-700"
+                : "bg-red-100 text-red-700"
+            }`}
+          >
+            ●{" "}
+            {
+              selectedCaisse.state
+            }
+          </span>
+        </div>
+
+        {/* SOLDE */}
+        <div className="text-center">
+
+          <p className="text-sm text-gray-500 mb-1">
+            Solde disponible
+          </p>
+
+          <h1 className="text-4xl font-bold text-gray-800 tracking-tight">
+            {Number(
+              selectedCaisse.solde
+            ).toLocaleString()}{" "}
+            <span className="text-lg text-gray-500">
+              {
+                selectedCaisse.devise
+              }
+            </span>
+          </h1>
+
+        </div>
+
+        {/* 🔥 BOUTON CLOTURE */}
+        <button
+          onClick={() =>
+            setOpenCloture(true)
+          }
+          className="
+            flex items-center gap-2
+            px-5 py-3 rounded-2xl
+            bg-red-600 text-white
+            font-medium shadow-sm
+            hover:bg-red-700
+            transition-all
+          "
+        >
+          <Lock className="w-5 h-5" />
+          Clôturer ma caisse
+        </button>
+      </>
+    )}
+  </div>
+</div>
 
       {/* GRID ACTIONS */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 max-w-5xl mx-auto w-full">

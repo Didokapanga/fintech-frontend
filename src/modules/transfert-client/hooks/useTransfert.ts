@@ -42,7 +42,8 @@ export const useCreateTransfertClient = () => {
 export const useMyTransferts = (
   page: number,
   limit: number,
-  filters?: TransfertFilters
+  filters?: TransfertFilters,
+  enabled: boolean = true
 ) =>
   useQuery({
     queryKey: [
@@ -59,4 +60,5 @@ export const useMyTransferts = (
         limit,
         filters
       ),
+      enabled,
   });

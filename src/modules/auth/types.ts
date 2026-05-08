@@ -12,6 +12,7 @@ export type User = {
   phone: string;
   role_name: string;
   agence_name: string;
+  code_agence?: string;
   ville: string;
   is_activated: boolean;
 };

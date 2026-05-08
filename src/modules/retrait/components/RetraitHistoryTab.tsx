@@ -1,24 +1,120 @@
 // src/modules/retrait/components/RetraitHistoryTab.tsx
 
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useAuthStore } from "../../../app/store";
+
+import { useAgences } from "../../agence/hooks/useAgences";
+
 import { Table, Button } from "../../../components/ui";
 import type { Column } from "../../../components/ui/Table.types";
 import { useRetraitHistory } from "../hooks/useRetraitHistory";
-import type { Retrait } from "../services/retrait.service";
+import {
+  type Retrait,
+  getRetraitsByAgence,
+  getAllRetraits,
+} from "../services/retrait.service";
 
 export default function RetraitHistoryTab() {
   const [page, setPage] = useState(1);
+  const { user } = useAuthStore();
 
   // 🔥 FILTERS
   const [statut, setStatut] = useState("");
   const [dateOperation, setDateOperation] =
     useState("");
 
-  const { data, isLoading } =
-    useRetraitHistory(page, 10, {
+  const [selectedAgence, setSelectedAgence] =
+  useState("");
+
+  const isGlobalAdmin =
+  user?.role_name === "ADMIN";
+
+  const isAgenceView =
+    ["N+1", "N+2"].includes(
+      user?.role_name || ""
+    );
+  const { data: agences = [] } =
+  useAgences();
+
+  const myRetraitsQuery =
+  useRetraitHistory(
+    page,
+    10,
+    {
       statut,
-      date_operation: dateOperation,
-    });
+      date_operation:
+        dateOperation,
+    },
+
+    !isGlobalAdmin &&
+    !isAgenceView
+  );
+
+const agenceRetraitsQuery =
+  useQuery({
+    queryKey: [
+      "agence-retraits",
+      user?.agence_id,
+      page,
+      statut,
+      dateOperation,
+    ],
+
+    queryFn: () =>
+      getRetraitsByAgence(
+        String(user?.agence_id),
+        page,
+        10,
+        {
+          statut,
+          date_operation:
+            dateOperation,
+        }
+      ),
+
+    enabled:
+      isAgenceView &&
+      !!user?.agence_id,
+  });
+
+const globalRetraitsQuery =
+  useQuery({
+    queryKey: [
+      "global-retraits",
+      page,
+      statut,
+      dateOperation,
+      selectedAgence,
+    ],
+
+    queryFn: () =>
+      getAllRetraits(
+        page,
+        10,
+        {
+          agence_id:
+            selectedAgence,
+
+          statut,
+
+          date_operation:
+            dateOperation,
+        }
+      ),
+
+    enabled: isGlobalAdmin,
+  });
+
+  const currentQuery =
+    isGlobalAdmin
+      ? globalRetraitsQuery
+      : isAgenceView
+      ? agenceRetraitsQuery
+      : myRetraitsQuery;
+
+  const { data, isLoading } =
+    currentQuery;
 
   const retraits: Retrait[] =
     data?.data || [];
@@ -168,7 +264,8 @@ export default function RetraitHistoryTab() {
 
       {/* FILTERS */}
       <div className="bg-white rounded-xl border p-4">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* <div className="grid grid-cols-1 md:grid-cols-3 gap-4"> */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
 
           <select
             value={statut}
@@ -208,6 +305,33 @@ export default function RetraitHistoryTab() {
             }}
             className="w-full border rounded-lg px-3 py-2"
           />
+
+          {isGlobalAdmin && (
+            <select
+              value={selectedAgence}
+              onChange={(e) => {
+                setPage(1);
+
+                setSelectedAgence(
+                  e.target.value
+                );
+              }}
+              className="w-full border rounded-lg px-3 py-2"
+            >
+              <option value="">
+                Toutes les agences
+              </option>
+
+              {agences.map((agence) => (
+                <option
+                  key={agence.id}
+                  value={agence.id}
+                >
+                  {agence.libelle}
+                </option>
+              ))}
+            </select>
+          )}
 
           <Button
             variant="secondary"

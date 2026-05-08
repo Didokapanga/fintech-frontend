@@ -1,26 +1,150 @@
 // src/modules/transfert-client/pages/TransfertClientPage.tsx
-
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+
 import { Button, Table } from "../../../components/ui";
 import type { Column } from "../../../components/ui/Table.types";
+
 import { useMyTransferts } from "../hooks/useTransfert";
-import type { TransfertClient } from "../services/transfert.service";
+
+import {
+  getTransfertsByAgence,
+  type TransfertClient,
+} from "../services/transfert.service";
+
+import { useAgences } from "../../agence/hooks/useAgences";
+
 import TransfertClientModal from "../components/TransfertFormModal";
+import { useAuthStore } from "../../../app/store";
+import { api } from "../../../services/api";
+
 
 export default function TransfertClientPage() {
   const [open, setOpen] = useState(false);
   const [page, setPage] = useState(1);
+  const { user } = useAuthStore();
 
   // 🔥 FILTERS
   const [statut, setStatut] = useState("");
   const [dateOperation, setDateOperation] =
     useState("");
+  
+  const [selectedAgence, setSelectedAgence] =
+  useState("");
+
+  const isGlobalAdmin =
+  user?.role_name === "ADMIN";
+
+  const isAgenceView =
+    ["N+1", "N+2"].includes(
+      user?.role_name || ""
+    );
+  
+  const { data: agences = [] } =
+  useAgences();
+
+  const myTransfertsQuery =
+    useMyTransferts(
+      page,
+      10,
+      {
+        statut,
+        date_operation:
+          dateOperation,
+      },
+
+      !isGlobalAdmin &&
+      !isAgenceView
+    );
+
+  const agenceTransfertsQuery =
+    useQuery({
+      queryKey: [
+        "agence-transferts",
+        user?.agence_id,
+        page,
+        statut,
+        dateOperation,
+      ],
+
+      queryFn: () =>
+        getTransfertsByAgence(
+          String(user?.agence_id),
+          page,
+          10,
+          {
+            statut,
+            date_operation:
+              dateOperation,
+          }
+        ),
+
+      enabled:
+        isAgenceView &&
+        !!user?.agence_id,
+    });
+
+  const globalTransfertsQuery =
+  useQuery({
+    queryKey: [
+      "global-transferts",
+      page,
+      statut,
+      dateOperation,
+      selectedAgence,
+    ],
+
+    queryFn: async () => {
+      const params =
+        new URLSearchParams();
+
+      params.append(
+        "page",
+        String(page)
+      );
+
+      params.append("limit", "10");
+
+      if (statut) {
+        params.append(
+          "statut",
+          statut
+        );
+      }
+
+      if (dateOperation) {
+        params.append(
+          "date_operation",
+          dateOperation
+        );
+      }
+
+      if (selectedAgence) {
+        params.append(
+          "agence_exp",
+          selectedAgence
+        );
+      }
+
+      const res = await api.get(
+        `/transfert-client?${params.toString()}`
+      );
+
+      return res.data;
+    },
+
+    enabled: isGlobalAdmin,
+  });
+
+  const currentQuery =
+    isGlobalAdmin
+      ? globalTransfertsQuery
+      : isAgenceView
+      ? agenceTransfertsQuery
+      : myTransfertsQuery;
 
   const { data, isLoading } =
-    useMyTransferts(page, 10, {
-      statut,
-      date_operation: dateOperation,
-    });
+    currentQuery;
 
   const transferts: TransfertClient[] =
     Array.isArray(data)
@@ -167,12 +291,48 @@ export default function TransfertClientPage() {
           </p>
         </div>
 
-        <Button
+        <div className="flex items-center gap-3">
+
+            {isGlobalAdmin && (
+              <select
+                value={selectedAgence}
+                onChange={(e) => {
+                  setPage(1);
+                  setSelectedAgence(
+                    e.target.value
+                  );
+                }}
+                className="border rounded-lg px-3 py-2 text-sm"
+              >
+                <option value="">
+                  Toutes les agences
+                </option>
+
+                {agences.map((agence) => (
+                  <option
+                    key={agence.id}
+                    value={agence.id}
+                  >
+                    {agence.libelle}
+                  </option>
+                ))}
+              </select>
+            )}
+
+            <Button
+              onClick={() => setOpen(true)}
+              className="bg-indigo-600 hover:bg-indigo-700"
+            >
+              + Nouveau transfert
+            </Button>
+
+        </div>
+        {/* <Button
           onClick={() => setOpen(true)}
           className="bg-indigo-600 hover:bg-indigo-700"
         >
           + Nouveau transfert
-        </Button>
+        </Button> */}
       </div>
 
       {/* FILTERS */}

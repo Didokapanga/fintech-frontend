@@ -9,6 +9,7 @@ export default function Header() {
   const userName = user?.user_name || "Utilisateur";
   const role = user?.role_name || "USER";
   const agence = user?.agence_name || "—";
+  const agenceCode = user?.code_agence || "—";
 
   const getRoleStyle = (role: string) => {
     switch (role) {
@@ -30,7 +31,7 @@ export default function Header() {
       {/* LEFT */}
       <div className="text-lg font-semibold text-gray-800">
        <span className="text-gray-400">
-          • {agence}
+          • {agence} - {agenceCode}
         </span>
       </div>
 

@@ -17,6 +17,7 @@ type LoginResponse = {
     role_name: string;
     agence_id?: string;
     agence_name?: string;
+    code_agence?: string;
   };
 };
 
@@ -47,15 +48,23 @@ export default function LoginForm() {
     onSuccess: (res) => {
       // 🔐 stockage auth
       setAuth({
-        token: res.token,
-        user: {
-          id: res.user.id,
-          user_name: res.user.user_name,
-          role_name: res.user.role_name,
-          agence_id: res.user.agence_id,
-          agence_name: res.user.agence_name,
-        },
-      });
+      token: res.token,
+      user: {
+        id: res.user.id,
+        user_name: res.user.user_name,
+        role_name: res.user.role_name,
+
+        agence_id:
+          res.user.agence_id,
+
+        agence_name:
+          res.user.agence_name,
+
+        // ✅ AJOUT
+        code_agence:
+          res.user.code_agence,
+      },
+    });
 
       // 🔥 redirection
       window.location.href = "/";

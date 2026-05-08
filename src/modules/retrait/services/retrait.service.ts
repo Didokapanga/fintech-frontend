@@ -132,3 +132,143 @@ export const getMyRetraits = async (
       },
   };
 };
+
+// ========================
+// GET RETRAITS BY AGENCE
+// ========================
+export const getRetraitsByAgence =
+  async (
+    agence_id: string,
+    page = 1,
+    limit = 10,
+    filters?: RetraitFilters
+  ): Promise<
+    PaginatedResponse<Retrait>
+  > => {
+
+    const res = await api.get(
+      `/retraits/agence/${agence_id}`,
+      {
+        params: {
+          page,
+          limit,
+
+          statut:
+            filters?.statut ||
+            undefined,
+
+          date_operation:
+            filters?.date_operation ||
+            undefined,
+        },
+      }
+    );
+
+    const raw: RetraitApi[] =
+      res.data?.data ?? [];
+
+    return {
+      data: raw.map((r) => ({
+        id: r.id,
+        caisse_id: r.caisse_id,
+        numero_piece:
+          r.numero_piece,
+        montant: Number(
+          r.montant || 0
+        ),
+        devise: r.devise,
+        statut: r.statut,
+        created_at:
+          r.created_at,
+        date_operation:
+          r.date_operation,
+
+        expediteur:
+          r.expediteur,
+
+        destinataire:
+          r.destinataire,
+      })),
+
+      meta:
+        res.data?.meta || {
+          page: 1,
+          limit: 10,
+          total: 0,
+          totalPages: 1,
+        },
+    };
+  };
+
+// ========================
+// GET ALL RETRAITS
+// ADMIN
+// ========================
+export const getAllRetraits =
+  async (
+    page = 1,
+    limit = 10,
+    filters?: RetraitFilters & {
+      agence_id?: string;
+    }
+  ): Promise<
+    PaginatedResponse<Retrait>
+  > => {
+
+    const res = await api.get(
+      "/retraits",
+      {
+        params: {
+          page,
+          limit,
+
+          agence_id:
+            filters?.agence_id ||
+            undefined,
+
+          statut:
+            filters?.statut ||
+            undefined,
+
+          date_operation:
+            filters?.date_operation ||
+            undefined,
+        },
+      }
+    );
+
+    const raw: RetraitApi[] =
+      res.data?.data ?? [];
+
+    return {
+      data: raw.map((r) => ({
+        id: r.id,
+        caisse_id: r.caisse_id,
+        numero_piece:
+          r.numero_piece,
+        montant: Number(
+          r.montant || 0
+        ),
+        devise: r.devise,
+        statut: r.statut,
+        created_at:
+          r.created_at,
+        date_operation:
+          r.date_operation,
+
+        expediteur:
+          r.expediteur,
+
+        destinataire:
+          r.destinataire,
+      })),
+
+      meta:
+        res.data?.meta || {
+          page: 1,
+          limit: 10,
+          total: 0,
+          totalPages: 1,
+        },
+    };
+  };

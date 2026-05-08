@@ -11,6 +11,7 @@ type User = {
   // ✅ AJOUT
   agence_id?: string;
   agence_name?: string; // (optionnel mais recommandé)
+  code_agence?: string;
 };
 
 type AuthState = {

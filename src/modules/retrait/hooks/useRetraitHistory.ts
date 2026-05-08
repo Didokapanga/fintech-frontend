@@ -1,6 +1,5 @@
-// src/modules/retrait/hooks/useRetraitHistory.ts
-
 import { useQuery } from "@tanstack/react-query";
+
 import {
   getMyRetraits,
   type RetraitFilters,
@@ -9,7 +8,8 @@ import {
 export const useRetraitHistory = (
   page: number,
   limit: number,
-  filters?: RetraitFilters
+  filters?: RetraitFilters,
+  enabled: boolean = true
 ) =>
   useQuery({
     queryKey: [
@@ -26,4 +26,6 @@ export const useRetraitHistory = (
         limit,
         filters
       ),
+
+    enabled,
   });
