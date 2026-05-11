@@ -37,73 +37,101 @@ export default function AdminDashboard() {
    * =========================================
    */
   const rows = dashboard
-    ? [
-        {
-          label: "Transfert client",
-          volume: Number(
-            dashboard.transfert_client
-              ?.total_volume || 0
-          ),
-          count: Number(
-            dashboard.transfert_client
-              ?.total_count || 0
-          ),
-        },
+  ? [
+      {
+        label: "Transfert client",
 
-        {
-          label: "Retrait",
-          volume: Number(
-            dashboard.retrait
-              ?.total_volume || 0
-          ),
-          count: Number(
-            dashboard.retrait
-              ?.total_count || 0
-          ),
-        },
+        volumes:
+          dashboard
+            .transfert_client
+            ?.volumes || {},
 
-        {
-          label:
-            "Transferts en attente validation",
-          volume: Number(
-            dashboard
-              .transfert_en_attente_validation
-              ?.total_volume || 0
-          ),
-          count: Number(
-            dashboard
-              .transfert_en_attente_validation
-              ?.total_count || 0
-          ),
-        },
+        count: Number(
+          dashboard
+            .transfert_client
+            ?.total_count || 0
+        ),
+      },
 
-        {
-          label:
-            "Retraits en attente validation",
-          volume: Number(
-            dashboard
-              .retrait_en_attente_validation
-              ?.total_volume || 0
-          ),
-          count: Number(
-            dashboard
-              .retrait_en_attente_validation
-              ?.total_count || 0
-          ),
-        },
-      ]
-    : [];
+      {
+        label: "Retrait",
+
+        volumes:
+          dashboard
+            .retrait
+            ?.volumes || {},
+
+        count: Number(
+          dashboard
+            .retrait
+            ?.total_count || 0
+        ),
+      },
+
+      {
+        label:
+          "Transferts en attente validation",
+
+        volumes:
+          dashboard
+            .transfert_en_attente_validation
+            ?.volumes || {},
+
+        count: Number(
+          dashboard
+            .transfert_en_attente_validation
+            ?.total_count || 0
+        ),
+      },
+
+      {
+        label:
+          "Retraits en attente validation",
+
+        volumes:
+          dashboard
+            .retrait_en_attente_validation
+            ?.volumes || {},
+
+        count: Number(
+          dashboard
+            .retrait_en_attente_validation
+            ?.total_count || 0
+        ),
+      },
+    ]
+  : [];
 
   /**
-   * =========================================
-   * 🔥 KPI GLOBAL
-   * =========================================
-   */
-  const totalVolume = rows.reduce(
-    (acc, row) =>
-      acc + Number(row.volume || 0),
-    0
-  );
+ * =========================================
+ * 💰 KPI GLOBAL MULTI-DEVISE
+ * =========================================
+ */
+  const totalVolumes =
+    rows.reduce(
+      (
+        acc: Record<
+          string,
+          number
+        >,
+        row
+      ) => {
+
+        Object.entries(
+          row.volumes || {}
+        ).forEach(
+          ([devise, montant]) => {
+
+            acc[devise] =
+              (acc[devise] || 0) +
+              Number(montant || 0);
+          }
+        );
+
+        return acc;
+      },
+      {}
+    );
 
   const totalOperations = rows.reduce(
     (acc, row) =>
@@ -217,17 +245,17 @@ export default function AdminDashboard() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Kpi
           title="Volume total"
-          value={totalVolume}
+          values={totalVolumes}
         />
 
         <Kpi
           title="Total opérations"
-          value={totalOperations}
+          values={totalOperations}
         />
 
         <Kpi
           title="En attente validation"
-          value={pendingCount}
+          values={pendingCount}
         />
       </div>
 
@@ -254,20 +282,98 @@ export default function AdminDashboard() {
 
 function Kpi({
   title,
-  value,
+  values,
 }: {
   title: string;
-  value: number;
+
+  values:
+    | number
+    | Record<
+        string,
+        number
+      >;
 }) {
+
+  /**
+   * =========================================
+   * 🔢 SIMPLE NUMBER
+   * =========================================
+   */
+  if (
+    typeof values ===
+    "number"
+  ) {
+
+    return (
+      <div className="bg-white border rounded-2xl p-5 shadow-sm">
+
+        <p className="text-xs text-gray-400 uppercase tracking-wide">
+          {title}
+        </p>
+
+        <h2 className="text-2xl font-bold text-gray-800 mt-2">
+          {values.toLocaleString()}
+        </h2>
+
+      </div>
+    );
+  }
+
+  /**
+   * =========================================
+   * 💰 MULTI DEVISE
+   * =========================================
+   */
+  const entries =
+    Object.entries(
+      values || {}
+    );
+
   return (
     <div className="bg-white border rounded-2xl p-5 shadow-sm">
+
       <p className="text-xs text-gray-400 uppercase tracking-wide">
         {title}
       </p>
 
-      <h2 className="text-2xl font-bold text-gray-800 mt-2">
-        {value.toLocaleString()}
-      </h2>
+      <div className="mt-3 space-y-2">
+
+        {entries.length > 0 ? (
+
+          entries.map(
+            ([devise, montant]) => (
+
+              <div
+                key={devise}
+                className="
+                  flex items-center
+                  justify-between
+                "
+              >
+
+                <span className="text-sm text-gray-500">
+                  {devise}
+                </span>
+
+                <span className="text-lg font-bold text-gray-800">
+                  {Number(
+                    montant
+                  ).toLocaleString()}
+                </span>
+
+              </div>
+            )
+          )
+
+        ) : (
+
+          <span className="text-sm text-gray-400">
+            Aucune donnée
+          </span>
+        )}
+
+      </div>
+
     </div>
   );
 }

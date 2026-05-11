@@ -1,17 +1,23 @@
-// src/modules/admin/components/DashboardTable.tsx
-
 type Row = {
   label: string;
-  volume: number;
+
+  volumes: Record<
+    string,
+    number
+  >;
+
   count: number;
 };
 
 type Props = {
   data: Row[];
+
   dateOperation: string;
+
   onDateChange: (
     value: string
   ) => void;
+
   onReset: () => void;
 };
 
@@ -21,6 +27,56 @@ export default function DashboardTable({
   onDateChange,
   onReset,
 }: Props) {
+
+  /**
+   * =========================================
+   * 💰 FORMAT VOLUMES
+   * =========================================
+   */
+  const renderVolumes = (
+    volumes: Record<
+      string,
+      number
+    >
+  ) => {
+
+    const entries =
+      Object.entries(
+        volumes || {}
+      );
+
+    if (entries.length === 0) {
+      return (
+        <span className="text-gray-400">
+          Aucune donnée
+        </span>
+      );
+    }
+
+    return (
+      <div className="flex flex-col items-end gap-1">
+
+        {entries.map(
+          ([devise, montant]) => (
+            <span
+              key={devise}
+              className="
+                text-green-600
+                font-semibold
+              "
+            >
+              {Number(
+                montant
+              ).toLocaleString()}{" "}
+              {devise}
+            </span>
+          )
+        )}
+
+      </div>
+    );
+  };
+
   return (
     <div className="space-y-4">
 
@@ -28,10 +84,12 @@ export default function DashboardTable({
           FILTER
       ========================================= */}
       <div className="border rounded-2xl shadow-sm p-3">
+
         <div className="flex flex-col md:flex-row gap-3 md:items-end md:justify-between">
 
           {/* FILTER DATE */}
           <div className="flex flex-col flex-1 max-w-sm">
+
             <label className="text-xs font-medium text-gray-500 mb-1.5">
               Filtrer par date
             </label>
@@ -87,29 +145,37 @@ export default function DashboardTable({
           TABLE
       ========================================= */}
       <div className="bg-white rounded-2xl border shadow-sm overflow-hidden">
+
         <table className="w-full text-sm">
 
           {/* HEADER */}
           <thead className="bg-gray-50 text-gray-500 text-xs uppercase">
+
             <tr>
+
               <th className="text-left px-5 py-3">
                 Opération
               </th>
 
               <th className="text-right px-5 py-3">
-                Volume
+                Volumes
               </th>
 
               <th className="text-right px-5 py-3">
                 Nombre
               </th>
+
             </tr>
+
           </thead>
 
           {/* BODY */}
           <tbody>
+
             {data.length > 0 ? (
+
               data.map((row, i) => (
+
                 <tr
                   key={i}
                   className="
@@ -118,29 +184,42 @@ export default function DashboardTable({
                     transition
                   "
                 >
+
                   <td className="px-5 py-4 font-medium text-gray-700">
                     {row.label}
                   </td>
 
-                  <td className="px-5 py-4 text-right text-green-600 font-semibold">
-                    {row.volume.toLocaleString()} USD
+                  <td className="px-5 py-4 text-right">
+                    {renderVolumes(
+                      row.volumes
+                    )}
                   </td>
 
                   <td className="px-5 py-4 text-right text-gray-600">
                     {row.count}
                   </td>
+
                 </tr>
               ))
+
             ) : (
+
               <tr>
+
                 <td
                   colSpan={3}
-                  className="text-center py-8 text-gray-400"
+                  className="
+                    text-center
+                    py-8
+                    text-gray-400
+                  "
                 >
                   Aucune donnée disponible
                 </td>
+
               </tr>
             )}
+
           </tbody>
 
         </table>
