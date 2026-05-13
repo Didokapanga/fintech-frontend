@@ -1,3 +1,5 @@
+// DashboardTable.tsx
+
 type Row = {
   label: string;
 
@@ -12,9 +14,15 @@ type Row = {
 type Props = {
   data: Row[];
 
-  dateOperation: string;
+  dateFrom: string;
 
-  onDateChange: (
+  dateTo: string;
+
+  onDateFromChange: (
+    value: string
+  ) => void;
+
+  onDateToChange: (
     value: string
   ) => void;
 
@@ -23,8 +31,10 @@ type Props = {
 
 export default function DashboardTable({
   data,
-  dateOperation,
-  onDateChange,
+  dateFrom,
+  dateTo,
+  onDateFromChange,
+  onDateToChange,
   onReset,
 }: Props) {
 
@@ -83,22 +93,54 @@ export default function DashboardTable({
       {/* =========================================
           FILTER
       ========================================= */}
-      <div className="border rounded-2xl shadow-sm p-3">
+      <div className="bg-slate-300 border rounded-2xl shadow-sm p-3">
 
         <div className="flex flex-col md:flex-row gap-3 md:items-end md:justify-between">
 
-          {/* FILTER DATE */}
-          <div className="flex flex-col flex-1 max-w-sm">
+          {/* DATE FROM */}
+          <div className="flex flex-col flex-1">
 
             <label className="text-xs font-medium text-gray-500 mb-1.5">
-              Filtrer par date
+              Date début
             </label>
 
             <input
               type="date"
-              value={dateOperation}
+              value={dateFrom}
               onChange={(e) =>
-                onDateChange(
+                onDateFromChange(
+                  e.target.value
+                )
+              }
+              className="
+                h-11
+                px-4
+                rounded-xl
+                border border-gray-200
+                text-sm text-gray-700
+                bg-transparent
+                outline-none
+                transition-all
+                focus:border-indigo-500
+                focus:ring-2
+                focus:ring-indigo-100
+                hover:border-gray-300
+              "
+            />
+          </div>
+
+          {/* DATE TO */}
+          <div className="flex flex-col flex-1">
+
+            <label className="text-xs font-medium text-gray-500 mb-1.5">
+              Date fin
+            </label>
+
+            <input
+              type="date"
+              value={dateTo}
+              onChange={(e) =>
+                onDateToChange(
                   e.target.value
                 )
               }

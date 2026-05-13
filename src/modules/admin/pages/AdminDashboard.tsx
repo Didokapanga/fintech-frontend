@@ -6,20 +6,49 @@ import DashboardTable from "../components/DashboardTable";
 import { useDashboard } from "../hooks/useDashboard";
 
 export default function AdminDashboard() {
-  const user = useAuthStore((s) => s.user);
 
-  // ✅ filtre date_operation
-  const [dateOperation, setDateOperation] =
-    useState("");
+  const user =
+    useAuthStore(
+      (s) => s.user
+    );
 
-  // ✅ dashboard avec filtre backend date_operation
-  const { data } = useDashboard(
-    dateOperation
-  );
+  /**
+   * =========================================
+   * 📅 FILTRES PÉRIODE
+   * =========================================
+   */
+  const [
+    dateFrom,
+    setDateFrom
+  ] = useState("");
 
-  const dashboard = data?.data;
+  const [
+    dateTo,
+    setDateTo
+  ] = useState("");
 
-  // ✅ Bonjour / Bonsoir dynamique
+  /**
+   * =========================================
+   * 📊 DASHBOARD
+   * =========================================
+   */
+  const { data } =
+    useDashboard({
+      date_from:
+        dateFrom || undefined,
+
+      date_to:
+        dateTo || undefined,
+    });
+
+  const dashboard =
+    data?.data;
+
+  /**
+   * =========================================
+   * 👋 GREETING
+   * =========================================
+   */
   const currentHour =
     new Date().getHours();
 
@@ -30,83 +59,82 @@ export default function AdminDashboard() {
 
   /**
    * =========================================
-   * 🔥 TABLE DATA
-   *
-   * backend ajouté :
-   * - retrait en attente validation
+   * 📋 TABLE DATA
    * =========================================
    */
   const rows = dashboard
-  ? [
-      {
-        label: "Transfert client",
+    ? [
+        {
+          label:
+            "Transfert client",
 
-        volumes:
-          dashboard
-            .transfert_client
-            ?.volumes || {},
+          volumes:
+            dashboard
+              .transfert_client
+              ?.volumes || {},
 
-        count: Number(
-          dashboard
-            .transfert_client
-            ?.total_count || 0
-        ),
-      },
+          count: Number(
+            dashboard
+              .transfert_client
+              ?.total_count || 0
+          ),
+        },
 
-      {
-        label: "Retrait",
+        {
+          label:
+            "Retrait",
 
-        volumes:
-          dashboard
-            .retrait
-            ?.volumes || {},
+          volumes:
+            dashboard
+              .retrait
+              ?.volumes || {},
 
-        count: Number(
-          dashboard
-            .retrait
-            ?.total_count || 0
-        ),
-      },
+          count: Number(
+            dashboard
+              .retrait
+              ?.total_count || 0
+          ),
+        },
 
-      {
-        label:
-          "Transferts en attente validation",
+        {
+          label:
+            "Transferts en attente validation",
 
-        volumes:
-          dashboard
-            .transfert_en_attente_validation
-            ?.volumes || {},
+          volumes:
+            dashboard
+              .transfert_en_attente_validation
+              ?.volumes || {},
 
-        count: Number(
-          dashboard
-            .transfert_en_attente_validation
-            ?.total_count || 0
-        ),
-      },
+          count: Number(
+            dashboard
+              .transfert_en_attente_validation
+              ?.total_count || 0
+          ),
+        },
 
-      {
-        label:
-          "Retraits en attente validation",
+        {
+          label:
+            "Retraits en attente validation",
 
-        volumes:
-          dashboard
-            .retrait_en_attente_validation
-            ?.volumes || {},
+          volumes:
+            dashboard
+              .retrait_en_attente_validation
+              ?.volumes || {},
 
-        count: Number(
-          dashboard
-            .retrait_en_attente_validation
-            ?.total_count || 0
-        ),
-      },
-    ]
-  : [];
+          count: Number(
+            dashboard
+              .retrait_en_attente_validation
+              ?.total_count || 0
+          ),
+        },
+      ]
+    : [];
 
   /**
- * =========================================
- * 💰 KPI GLOBAL MULTI-DEVISE
- * =========================================
- */
+   * =========================================
+   * 💰 KPI GLOBAL MULTI-DEVISE
+   * =========================================
+   */
   const totalVolumes =
     rows.reduce(
       (
@@ -120,11 +148,16 @@ export default function AdminDashboard() {
         Object.entries(
           row.volumes || {}
         ).forEach(
-          ([devise, montant]) => {
+          ([
+            devise,
+            montant
+          ]) => {
 
             acc[devise] =
               (acc[devise] || 0) +
-              Number(montant || 0);
+              Number(
+                montant || 0
+              );
           }
         );
 
@@ -133,12 +166,29 @@ export default function AdminDashboard() {
       {}
     );
 
-  const totalOperations = rows.reduce(
-    (acc, row) =>
-      acc + Number(row.count || 0),
-    0
-  );
+  /**
+   * =========================================
+   * 🔢 TOTAL OPÉRATIONS
+   * =========================================
+   */
+  const totalOperations =
+    rows.reduce(
+      (
+        acc,
+        row
+      ) =>
+        acc +
+        Number(
+          row.count || 0
+        ),
+      0
+    );
 
+  /**
+   * =========================================
+   * ⏳ TOTAL EN ATTENTE
+   * =========================================
+   */
   const pendingCount =
     Number(
       dashboard
@@ -151,12 +201,21 @@ export default function AdminDashboard() {
         ?.total_count || 0
     );
 
-  const handleReset = () => {
-    setDateOperation("");
-  };
+  /**
+   * =========================================
+   * 🔄 RESET FILTERS
+   * =========================================
+   */
+  const handleReset =
+    () => {
+
+      setDateFrom("");
+      setDateTo("");
+    };
 
   return (
     <div className="space-y-6">
+
       {/* HEADER */}
       <div
         className="
@@ -168,7 +227,8 @@ export default function AdminDashboard() {
           shadow-sm
         "
       >
-        {/* subtle glow */}
+
+        {/* GLOW */}
         <div
           className="
             absolute -top-10 -right-10
@@ -191,29 +251,68 @@ export default function AdminDashboard() {
           "
         />
 
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+        <div
+          className="
+            relative z-10
+            flex flex-col
+            md:flex-row
+            md:items-center
+            md:justify-between
+            gap-6
+          "
+        >
 
           {/* LEFT */}
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-indigo-500 mb-2">
+
+            <p
+              className="
+                text-xs
+                font-semibold
+                uppercase
+                tracking-[0.18em]
+                text-indigo-500
+                mb-2
+              "
+            >
               Dashboard Administrateur
             </p>
 
-            <h1 className="text-3xl font-bold text-gray-800 leading-tight">
+            <h1
+              className="
+                text-3xl
+                font-bold
+                text-gray-800
+                leading-tight
+              "
+            >
               {greeting}{" "}
+
               <span className="text-indigo-600">
-                {user?.user_name || "Utilisateur"}
+                {user?.user_name ||
+                  "Utilisateur"}
               </span>{" "}
+
               👋
             </h1>
 
-            <p className="text-sm text-gray-500 mt-3 max-w-xl leading-relaxed">
-              Voici un aperçu global de vos opérations,
-              validations et mouvements financiers.
+            <p
+              className="
+                text-sm text-gray-500
+                mt-3
+                max-w-xl
+                leading-relaxed
+              "
+            >
+              Voici un aperçu global
+              de vos opérations,
+              validations et mouvements
+              financiers.
             </p>
+
           </div>
 
-          {/* RIGHT MINI BADGE */}
+          {/* RIGHT */}
           <div
             className="
               self-start md:self-center
@@ -225,24 +324,52 @@ export default function AdminDashboard() {
               backdrop-blur-sm
             "
           >
-            <p className="text-xs text-gray-400 uppercase font-medium">
+
+            <p
+              className="
+                text-xs
+                text-gray-400
+                uppercase
+                font-medium
+              "
+            >
               Aujourd’hui
             </p>
 
-            <p className="text-sm font-semibold text-gray-700 mt-1">
-              {new Date().toLocaleDateString("fr-FR", {
-                day: "2-digit",
-                month: "long",
-                year: "numeric",
-              })}
+            <p
+              className="
+                text-sm
+                font-semibold
+                text-gray-700
+                mt-1
+              "
+            >
+              {new Date()
+                .toLocaleDateString(
+                  "fr-FR",
+                  {
+                    day: "2-digit",
+                    month: "long",
+                    year: "numeric",
+                  }
+                )}
             </p>
+
           </div>
 
         </div>
       </div>
 
       {/* KPI */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div
+        className="
+          grid
+          grid-cols-1
+          md:grid-cols-3
+          gap-4
+        "
+      >
+
         <Kpi
           title="Volume total"
           values={totalVolumes}
@@ -257,24 +384,47 @@ export default function AdminDashboard() {
           title="En attente validation"
           values={pendingCount}
         />
+
       </div>
 
       {/* TABLE */}
       <div>
-        <h2 className="text-sm font-semibold text-gray-600 mb-3">
+
+        <h2
+          className="
+            text-sm
+            font-semibold
+            text-gray-600
+            mb-3
+          "
+        >
           Vue détaillée
         </h2>
 
         <DashboardTable
           data={rows}
-          dateOperation={
-            dateOperation
+
+          dateFrom={
+            dateFrom
           }
-          onDateChange={
-            setDateOperation
+
+          dateTo={
+            dateTo
           }
-          onReset={handleReset}
+
+          onDateFromChange={
+            setDateFrom
+          }
+
+          onDateToChange={
+            setDateTo
+          }
+
+          onReset={
+            handleReset
+          }
         />
+
       </div>
     </div>
   );
@@ -305,13 +455,35 @@ function Kpi({
   ) {
 
     return (
-      <div className="bg-white border rounded-2xl p-5 shadow-sm">
+      <div
+        className="
+          bg-white
+          border
+          rounded-2xl
+          p-5
+          shadow-sm
+        "
+      >
 
-        <p className="text-xs text-gray-400 uppercase tracking-wide">
+        <p
+          className="
+            text-xs
+            text-gray-400
+            uppercase
+            tracking-wide
+          "
+        >
           {title}
         </p>
 
-        <h2 className="text-2xl font-bold text-gray-800 mt-2">
+        <h2
+          className="
+            text-2xl
+            font-bold
+            text-gray-800
+            mt-2
+          "
+        >
           {values.toLocaleString()}
         </h2>
 
@@ -330,18 +502,41 @@ function Kpi({
     );
 
   return (
-    <div className="bg-white border rounded-2xl p-5 shadow-sm">
+    <div
+      className="
+        bg-white
+        border
+        rounded-2xl
+        p-5
+        shadow-sm
+      "
+    >
 
-      <p className="text-xs text-gray-400 uppercase tracking-wide">
+      <p
+        className="
+          text-xs
+          text-gray-400
+          uppercase
+          tracking-wide
+        "
+      >
         {title}
       </p>
 
-      <div className="mt-3 space-y-2">
+      <div
+        className="
+          mt-3
+          space-y-2
+        "
+      >
 
         {entries.length > 0 ? (
 
           entries.map(
-            ([devise, montant]) => (
+            ([
+              devise,
+              montant
+            ]) => (
 
               <div
                 key={devise}
@@ -351,11 +546,22 @@ function Kpi({
                 "
               >
 
-                <span className="text-sm text-gray-500">
+                <span
+                  className="
+                    text-sm
+                    text-gray-500
+                  "
+                >
                   {devise}
                 </span>
 
-                <span className="text-lg font-bold text-gray-800">
+                <span
+                  className="
+                    text-lg
+                    font-bold
+                    text-gray-800
+                  "
+                >
                   {Number(
                     montant
                   ).toLocaleString()}
@@ -367,7 +573,12 @@ function Kpi({
 
         ) : (
 
-          <span className="text-sm text-gray-400">
+          <span
+            className="
+              text-sm
+              text-gray-400
+            "
+          >
             Aucune donnée
           </span>
         )}

@@ -1,19 +1,37 @@
 // src/modules/admin/hooks/useDashboard.ts
-
 import { useQuery } from "@tanstack/react-query";
-import { getDashboard } from "../services/dashboard.service";
 
+import {
+  getDashboard
+} from "../services/dashboard.service";
+
+/**
+ * =========================================
+ * 📅 DASHBOARD FILTERS
+ * =========================================
+ */
+type DashboardFilters = {
+  date_from?: string;
+  date_to?: string;
+};
+
+/**
+ * =========================================
+ * 📊 DASHBOARD QUERY
+ * =========================================
+ */
 export const useDashboard = (
-  dateOperation?: string
+  filters?: DashboardFilters
 ) =>
   useQuery({
+
     queryKey: [
       "dashboard",
-      dateOperation,
+      filters,
     ],
 
     queryFn: () =>
       getDashboard(
-        dateOperation
+        filters
       ),
   });

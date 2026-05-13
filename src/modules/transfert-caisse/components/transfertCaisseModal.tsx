@@ -145,11 +145,19 @@ export default function TransfertCaisseModal({
               : "Caisse source"}
           </option>
 
-          {caisses.map((c) => (
-            <option key={c.id} value={c.id}>
-              {formatCaisse(c)}
-            </option>
-          ))}
+          {caisses
+            .filter(
+              (c) =>
+                c.type === "AGENCE"
+            )
+            .map((c) => (
+              <option
+                key={c.id}
+                value={c.id}
+              >
+                {formatCaisse(c)}
+              </option>
+            ))}
         </select>
 
         {/* CAISSE DESTINATION */}
@@ -166,13 +174,15 @@ export default function TransfertCaisseModal({
           {caisses
             .filter(
               (c) =>
-                !sourceId || c.id !== sourceId
+                (!sourceId || c.id !== sourceId) &&
+                c.type === "AGENT"
             )
             .map((c) => (
               <option key={c.id} value={c.id}>
                 {formatCaisse(c)}
               </option>
-            ))}
+            ))
+          }
         </select>
 
         {/* MONTANT */}

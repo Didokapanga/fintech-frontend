@@ -6,9 +6,11 @@ import {
   Wallet,
   FileText,
   // Users,
+  History,
   Building2,
   Send,
-  UserPlus, // 🔥 AJOUT
+  UserPlus,
+  ShieldCheck, // 🔥 AJOUT
 } from "lucide-react";
 
 export const navItems = [
@@ -24,5 +26,7 @@ export const navItems = [
   { label: "Validations", icon: ClipboardCheck, path: "/validation" },
   { label: "Caisses", icon: Wallet, path: "/caisses" },
   { label: "Registre", icon: FileText, path: "/ledger" },
+  { label: "Audit Logs", icon: ShieldCheck, path: "/audit-logs", roles: ["ADMIN", "N+1", "N+2"],},
+  { label: "Validation Logs", icon: History, path: "/validation-logs", roles: ["ADMIN", "N+1", "N+2"],},
   { label: "Utilisateurs", icon: UserPlus, path: "/register", roles: ["ADMIN", "N+1", "N+2"],}, // 🔥 inline (pas besoin d'autre système)
 ];

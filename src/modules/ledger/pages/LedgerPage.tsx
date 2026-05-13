@@ -113,12 +113,28 @@ export default function LedgerPage() {
     {
       header: "Client",
       accessor: "expediteur_complet",
+
       render: (_, row) => {
 
-        // 🔥 transfert caisse
-        if (
-          row.type_operation === "TRANSFERT_CAISSE"
-        ) {
+        /**
+         * =========================================
+         * 🔥 OPÉRATIONS CLIENT
+         * =========================================
+         */
+        const isClientOperation =
+          row.type_operation ===
+            "TRANSFERT_CLIENT" ||
+
+          row.type_operation ===
+            "RETRAIT";
+
+        /**
+         * =========================================
+         * 🔒 OPÉRATION INTERNE
+         * =========================================
+         */
+        if (!isClientOperation) {
+
           return (
             <span className="text-sm text-gray-500">
               Opération interne
@@ -126,8 +142,14 @@ export default function LedgerPage() {
           );
         }
 
+        /**
+         * =========================================
+         * 👤 CLIENT
+         * =========================================
+         */
         return (
           <div className="flex flex-col text-sm">
+
             <span>
               <strong>Exp:</strong>{" "}
               {row.expediteur_complet || "-"}
@@ -137,6 +159,7 @@ export default function LedgerPage() {
               <strong>Dest:</strong>{" "}
               {row.destinataire_complet || "-"}
             </span>
+
           </div>
         );
       },
@@ -186,7 +209,7 @@ export default function LedgerPage() {
       <div className="flex items-center justify-between gap-4 flex-wrap">
 
         <h1 className="text-xl font-semibold">
-          Ledger (Journal financier)
+          Journal financier ( Historique de vos mouvement d'argent )
         </h1>
 
         <button

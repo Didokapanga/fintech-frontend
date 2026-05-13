@@ -12,6 +12,8 @@ import RetraitPage from "../modules/retrait/pages/RetraitPage";
 import LedgerPage from "../modules/ledger/pages/LedgerPage";
 import RegisterPage from "../modules/auth/pages/RegisterPage";
 import AdminDashboard from "../modules/admin/pages/AdminDashboard";
+import AuditLogPage from "../modules/audit/pages/AuditLogPage";
+import ValidationLogPage from "../modules/validation-log/pages/ValidationLogPage";
 
 
 export const router = createBrowserRouter([
@@ -37,6 +39,8 @@ export const router = createBrowserRouter([
       { path: "validation", element: <ValidationPage /> },
       { path: "ledger", element: <LedgerPage /> },
       {path: "/register", element: <RegisterPage />,},
+      { path: "audit-logs", element: <AuditLogPage /> },
+      {path: "validation-logs", element: <ValidationLogPage />,},
     ],
   },
 ]);

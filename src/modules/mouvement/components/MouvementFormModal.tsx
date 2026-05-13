@@ -1,18 +1,27 @@
 // src/modules/mouvement/components/MouvementFormModal.tsx
 
 import { useForm, useWatch } from "react-hook-form";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+
 import { useCreateMouvement } from "../hooks/useMouvement";
+
 import { useCaisses } from "../../caisse/hooks/useCaisses";
+
 import {
   Button,
   Input,
   Modal,
 } from "../../../components/ui";
+
 import AppMessageState from "../../../components/ui/AppMessageState";
+
 import type { CreateMouvementDto } from "../types";
 
-// 🔥 LISTE DEVISES
+/**
+ * =========================================
+ * 💱 LISTE DEVISES
+ * =========================================
+ */
 const CURRENCIES = [
   "CDF",
   "USD",
@@ -30,7 +39,9 @@ type MessageState = {
     | "success"
     | "info"
     | "warning";
+
   title: string;
+
   message: string;
 };
 
@@ -46,6 +57,12 @@ export default function MouvementFormModal({
   open,
   onClose,
 }: Props) {
+
+  /**
+   * =========================================
+   * 🔥 FORM
+   * =========================================
+   */
   const {
     register,
     handleSubmit,
@@ -54,15 +71,30 @@ export default function MouvementFormModal({
     control,
   } = useForm<CreateMouvementDto>();
 
+  /**
+   * =========================================
+   * 🔥 CREATE MOUVEMENT
+   * =========================================
+   */
   const {
     mutate,
     isPending,
   } = useCreateMouvement();
 
+  /**
+   * =========================================
+   * 🔥 CAISSES
+   * =========================================
+   */
   const {
     data: caisses,
   } = useCaisses();
 
+  /**
+   * =========================================
+   * 🔥 MESSAGE
+   * =========================================
+   */
   const [
     appMessage,
     setAppMessage,
@@ -70,59 +102,109 @@ export default function MouvementFormModal({
     null
   );
 
-  // 🔥 WATCH CAISSE
+  /**
+   * =========================================
+   * 🔥 FILTRE
+   *
+   * uniquement caisse type AGENCE
+   * =========================================
+   */
+  const agenceCaisses =
+    useMemo(() => {
+
+      return (
+        caisses?.filter(
+          (c) =>
+            c.type ===
+            "AGENCE"
+        ) || []
+      );
+
+    }, [caisses]);
+
+  /**
+   * =========================================
+   * 🔥 WATCH CAISSE
+   * =========================================
+   */
   const selectedCaisseId =
     useWatch({
       control,
       name: "caisse_id",
     });
 
+  /**
+   * =========================================
+   * 🔥 SELECTED CAISSE
+   * =========================================
+   */
   const selectedCaisse =
-    caisses?.find(
+    agenceCaisses.find(
       (c) =>
         c.id ===
         selectedCaisseId
     );
 
-  // 🔥 AUTO DEVise selon caisse
+  /**
+   * =========================================
+   * 🔥 AUTO DEVISE
+   * =========================================
+   */
   useEffect(() => {
+
     if (selectedCaisse) {
+
       setValue(
         "devise",
         selectedCaisse.devise
       );
     }
+
   }, [
     selectedCaisse,
     setValue,
   ]);
 
+  /**
+   * =========================================
+   * 🚀 SUBMIT
+   * =========================================
+   */
   const onSubmit = (
     data: CreateMouvementDto
   ) => {
+
     mutate(data, {
+
       onSuccess: () => {
+
         setAppMessage({
           variant: "success",
+
           title: "Succès",
+
           message:
             "Mouvement enregistré avec succès",
         });
 
         reset();
+
         onClose();
       },
 
       onError: (
         error: Error
       ) => {
+
         const apiError =
           error as ErrorWithResponse;
 
         setAppMessage({
           variant: "error",
+
           title:
             "Opération refusée",
+
           message:
             apiError
               ?.response
@@ -139,6 +221,7 @@ export default function MouvementFormModal({
       open={open}
       onClose={onClose}
     >
+
       <h2 className="text-lg font-semibold mb-4">
         Mouvement de caisse
       </h2>
@@ -169,8 +252,10 @@ export default function MouvementFormModal({
         )}
         className="space-y-3"
       >
+
         {/* CAISSE */}
         <div>
+
           <label className="text-sm font-medium">
             Caisse
           </label>
@@ -182,26 +267,28 @@ export default function MouvementFormModal({
                 required: true,
               }
             )}
-            className="w-full mt-1 px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="
+              w-full mt-1 px-3 py-2
+              border rounded-lg
+              focus:outline-none
+              focus:ring-2
+              focus:ring-indigo-500
+            "
           >
+
             <option value="">
               Choisir une caisse
             </option>
 
-            {caisses?.map(
+            {agenceCaisses.map(
               (c) => (
+
                 <option
                   key={c.id}
                   value={c.id}
                 >
-                  {
-                    c.code_caisse
-                  }{" "}
-                  (
-                  {
-                    c.devise
-                  }
-                  )
+                  {c.code_caisse} (
+                  {c.devise})
                 </option>
               )
             )}
@@ -210,6 +297,7 @@ export default function MouvementFormModal({
 
         {/* TYPE */}
         <div>
+
           <label className="text-sm font-medium">
             Type
           </label>
@@ -221,8 +309,15 @@ export default function MouvementFormModal({
                 required: true,
               }
             )}
-            className="w-full mt-1 px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="
+              w-full mt-1 px-3 py-2
+              border rounded-lg
+              focus:outline-none
+              focus:ring-2
+              focus:ring-indigo-500
+            "
           >
+
             <option value="APPROVISIONNEMENT">
               ➕ Approvisionnement
             </option>
@@ -252,6 +347,7 @@ export default function MouvementFormModal({
 
         {/* DEVISE */}
         <div>
+
           <label className="text-sm font-medium">
             Devise
           </label>
@@ -266,8 +362,16 @@ export default function MouvementFormModal({
             disabled={
               !!selectedCaisse
             }
-            className="w-full mt-1 px-3 py-2 border rounded-lg bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="
+              w-full mt-1 px-3 py-2
+              border rounded-lg
+              bg-gray-100
+              focus:outline-none
+              focus:ring-2
+              focus:ring-indigo-500
+            "
           >
+
             <option value="">
               Choisir une devise
             </option>
@@ -276,6 +380,7 @@ export default function MouvementFormModal({
               (
                 currency
               ) => (
+
                 <option
                   key={
                     currency
@@ -284,9 +389,7 @@ export default function MouvementFormModal({
                     currency
                   }
                 >
-                  {
-                    currency
-                  }
+                  {currency}
                 </option>
               )
             )}
@@ -295,6 +398,7 @@ export default function MouvementFormModal({
 
         {/* ACTIONS */}
         <div className="flex justify-end gap-2 pt-4">
+
           <Button
             type="button"
             variant="secondary"
