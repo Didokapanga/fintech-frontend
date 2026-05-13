@@ -49,13 +49,13 @@ export default function TransfertCaisseModal({
     },
   });
 
-  const {
-    data: caisses = [],
+ const {
+  data: response,
     isLoading,
-  } = useCaisses() as {
-    data: Caisse[];
-    isLoading: boolean;
-  };
+  } = useCaisses(1, 100);
+
+  const caisses: Caisse[] =
+    response?.data || [];
 
   const sourceId = useWatch({
     control,

@@ -7,7 +7,7 @@ import { useRetrait } from "../hooks/useRetrait";
 import { useCaisses } from "../../caisse/hooks/useCaisses";
 import type { AxiosError } from "axios";
 import { useAuthStore } from "../../../app/store";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 // TYPES
 type Caisse = {
@@ -15,6 +15,7 @@ type Caisse = {
   code_caisse: string;
   solde: number;
   devise: string;
+  type?: string;
 };
 
 type SelectedTransfert = {
@@ -34,12 +35,28 @@ type Props = {
 };
 
 type MessageState = {
-  variant: "error" | "success" | "info" | "warning";
+  variant:
+    | "error"
+    | "success"
+    | "info"
+    | "warning";
+
   title: string;
   message: string;
 };
 
-export default function RetraitForm({ selected }: Props) {
+type PaginatedCaissesResponse = {
+  data: Caisse[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+};
+
+export default function RetraitForm({
+  selected,
+}: Props) {
+
   const {
     register,
     handleSubmit,
@@ -47,66 +64,138 @@ export default function RetraitForm({ selected }: Props) {
     setValue,
   } = useForm<FormData>();
 
-  const { mutate, isPending } = useRetrait();
-  const { data: caisses = [] } =
-    useCaisses() as { data: Caisse[] };
+  const {
+    mutate,
+    isPending,
+  } = useRetrait();
 
-  const user = useAuthStore((s) => s.user);
+  /**
+   * =========================================
+   * 🔥 CAISSES
+   * =========================================
+   */
+  const {
+    data: response,
+  } = useCaisses(
+    1,
+    100
+  ) as {
+    data?: PaginatedCaissesResponse;
+  };
 
-  const [appMessage, setAppMessage] =
-    useState<MessageState | null>(null);
+  /**
+   * =========================================
+   * 🔥 DATA STABLE
+   * =========================================
+   */
+  const caisses: Caisse[] =
+    useMemo(
+      () => response?.data || [],
+      [response]
+    );
 
-  // AUTO REF
+  const user = useAuthStore(
+    (s) => s.user
+  );
+
+  const [
+    appMessage,
+    setAppMessage,
+  ] = useState<MessageState | null>(
+    null
+  );
+
+  /**
+   * =========================================
+   * AUTO REF
+   * =========================================
+   */
   useEffect(() => {
+
     if (selected) {
+
       setValue(
         "code_reference",
         selected.code_reference
       );
     }
-  }, [selected, setValue]);
 
-  // DATE PAR DEFAUT
+  }, [
+    selected,
+    setValue,
+  ]);
+
+  /**
+   * =========================================
+   * DATE PAR DEFAUT
+   * =========================================
+   */
   useEffect(() => {
+
     const today = new Date()
       .toISOString()
       .split("T")[0];
 
-    setValue("date_operation", today);
+    setValue(
+      "date_operation",
+      today
+    );
+
   }, [setValue]);
 
-  const onSubmit = (data: FormData) => {
+  /**
+   * =========================================
+   * 🚀 SUBMIT
+   * =========================================
+   */
+  const onSubmit = (
+    data: FormData
+  ) => {
+
     if (!user?.id) {
+
       setAppMessage({
         variant: "error",
         title: "Erreur",
-        message: "Utilisateur non connecté",
+        message:
+          "Utilisateur non connecté",
       });
+
       return;
     }
 
     const payload = {
       ...data,
       created_by: user.id,
-      user_agent: navigator.userAgent,
+      user_agent:
+        navigator.userAgent,
     };
 
     mutate(payload, {
-      onSuccess: (res) => {
+
+      onSuccess: (
+        res
+      ) => {
+
         setAppMessage({
           variant: "success",
           title: "Succès",
-          message: `Retrait initié avec succès : ${res.montant}`,
+          message:
+            `Retrait initié avec succès : ${res.montant}`,
         });
 
         reset({
-          date_operation: new Date()
-            .toISOString()
-            .split("T")[0],
+          date_operation:
+            new Date()
+              .toISOString()
+              .split("T")[0],
         });
       },
 
-      onError: (err: unknown) => {
+      onError: (
+        err: unknown
+      ) => {
+
         const error =
           err as AxiosError<{
             message?: string;
@@ -114,9 +203,12 @@ export default function RetraitForm({ selected }: Props) {
 
         setAppMessage({
           variant: "error",
-          title: "Retrait refusé",
+          title:
+            "Retrait refusé",
           message:
-            error.response?.data?.message ||
+            error.response
+              ?.data
+              ?.message ||
             "Erreur lors du retrait",
         });
       },
@@ -125,9 +217,18 @@ export default function RetraitForm({ selected }: Props) {
 
   return (
     <form
-      onSubmit={handleSubmit(onSubmit)}
-      className="bg-white p-6 rounded-xl shadow space-y-4"
+      onSubmit={handleSubmit(
+        onSubmit
+      )}
+      className="
+        bg-white
+        p-6
+        rounded-xl
+        shadow
+        space-y-4
+      "
     >
+
       <h2 className="text-lg font-semibold text-center">
         Retrait client
       </h2>
@@ -135,75 +236,126 @@ export default function RetraitForm({ selected }: Props) {
       {/* MESSAGE */}
       {appMessage && (
         <AppMessageState
-          variant={appMessage.variant}
-          title={appMessage.title}
-          message={appMessage.message}
-          onAction={() => setAppMessage(null)}
+          variant={
+            appMessage.variant
+          }
+          title={
+            appMessage.title
+          }
+          message={
+            appMessage.message
+          }
+          onAction={() =>
+            setAppMessage(
+              null
+            )
+          }
         />
       )}
 
       {/* CODE REF */}
       <Input
         label="Code référence"
-        {...register("code_reference", {
-          required: true,
-        })}
+        {...register(
+          "code_reference",
+          {
+            required: true,
+          }
+        )}
       />
 
       {/* CODE SECRET */}
       <Input
         label="Code secret"
         type="password"
-        {...register("code_secret", {
-          required: true,
-        })}
+        {...register(
+          "code_secret",
+          {
+            required: true,
+          }
+        )}
       />
 
       {/* NUMERO PIECE */}
       <Input
         label="Numéro de pièce"
-        {...register("numero_piece", {
-          required: true,
-        })}
+        {...register(
+          "numero_piece",
+          {
+            required: true,
+          }
+        )}
       />
 
       {/* DATE */}
       <div>
+
         <label className="block text-sm font-medium mb-1">
           Date opération
         </label>
 
         <input
           type="date"
-          {...register("date_operation", {
-            required: true,
-          })}
-          className="w-full border rounded-lg px-3 py-2"
+          {...register(
+            "date_operation",
+            {
+              required: true,
+            }
+          )}
+          className="
+            w-full
+            border
+            rounded-lg
+            px-3
+            py-2
+          "
         />
       </div>
 
       {/* CAISSE */}
       <select
-        {...register("caisse_id", {
-          required: true,
-        })}
-        className="w-full border rounded-lg px-3 py-2"
+        {...register(
+          "caisse_id",
+          {
+            required: true,
+          }
+        )}
+        className="
+          w-full
+          border
+          rounded-lg
+          px-3
+          py-2
+        "
       >
+
         <option value="">
           Sélectionner une caisse
         </option>
 
-        {caisses.map((c) => (
-          <option key={c.id} value={c.id}>
-            {c.code_caisse} ({c.solde} {c.devise})
-          </option>
-        ))}
+        {caisses.map(
+          (
+            c: Caisse
+          ) => (
+
+            <option
+              key={c.id}
+              value={c.id}
+            >
+              {c.code_caisse} (
+              {c.solde}{" "}
+              {c.devise})
+            </option>
+          )
+        )}
       </select>
 
       {/* SUBMIT */}
       <Button
         type="submit"
-        loading={isPending}
+        loading={
+          isPending
+        }
         className="w-full"
       >
         Valider le retrait

@@ -53,6 +53,18 @@ type ErrorWithResponse = Error & {
   };
 };
 
+/**
+ * =========================================
+ * 🔥 TYPE CAISSE
+ * =========================================
+ */
+type CaisseItem = {
+  id: string;
+  type?: string;
+  devise: string;
+  code_caisse: string;
+};
+
 export default function MouvementFormModal({
   open,
   onClose,
@@ -87,8 +99,19 @@ export default function MouvementFormModal({
    * =========================================
    */
   const {
-    data: caisses,
-  } = useCaisses();
+    data: response,
+  } = useCaisses(1, 100);
+
+  /**
+   * =========================================
+   * 🔥 DATA STABLE
+   * =========================================
+   */
+  const caisses: CaisseItem[] =
+    useMemo(
+      () => response?.data || [],
+      [response]
+    );
 
   /**
    * =========================================
@@ -112,12 +135,12 @@ export default function MouvementFormModal({
   const agenceCaisses =
     useMemo(() => {
 
-      return (
-        caisses?.filter(
-          (c) =>
-            c.type ===
-            "AGENCE"
-        ) || []
+      return caisses.filter(
+        (
+          c: CaisseItem
+        ) =>
+          c.type ===
+          "AGENCE"
       );
 
     }, [caisses]);
@@ -140,7 +163,9 @@ export default function MouvementFormModal({
    */
   const selectedCaisse =
     agenceCaisses.find(
-      (c) =>
+      (
+        c: CaisseItem
+      ) =>
         c.id ===
         selectedCaisseId
     );
@@ -281,7 +306,9 @@ export default function MouvementFormModal({
             </option>
 
             {agenceCaisses.map(
-              (c) => (
+              (
+                c: CaisseItem
+              ) => (
 
                 <option
                   key={c.id}

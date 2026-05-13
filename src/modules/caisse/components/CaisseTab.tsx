@@ -1,6 +1,7 @@
 // src/modules/caisse/components/CaisseTab.tsx
 
 import { useState } from "react";
+
 import {
   useCaisses,
   useDeleteCaisse,
@@ -9,13 +10,24 @@ import {
 } from "../hooks/useCaisses";
 
 import type { Caisse } from "../types";
-import { Button, Table } from "../../../components/ui";
+
+import {
+  Button,
+  Table,
+} from "../../../components/ui";
+
 import ConfirmModal from "../../../components/ui/ConfirmModal";
+
 import AppMessageState from "../../../components/ui/AppMessageState";
-import type { Column } from "../../../components/ui/Table.types";
+
+import type {
+  Column,
+} from "../../../components/ui/Table.types";
+
 import CaisseStatusBadge from "./CaisseStatusBadge";
 
 import MouvementFormModal from "../../mouvement/components/MouvementFormModal";
+
 import CaisseFormModal from "./CaisseFormModal";
 
 type MessageState = {
@@ -24,7 +36,9 @@ type MessageState = {
     | "success"
     | "info"
     | "warning";
+
   title: string;
+
   message: string;
 };
 
@@ -36,10 +50,56 @@ type ErrorWithResponse = Error & {
   };
 };
 
-export default function CaisseTab() {
-  const { data, isLoading } =
-    useCaisses();
+type PaginatedCaissesResponse = {
+  data: Caisse[];
 
+  meta?: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
+};
+
+export default function CaisseTab() {
+
+  /**
+   * =========================================
+   * PAGINATION
+   * =========================================
+   */
+  const [page, setPage] =
+    useState(1);
+
+  const limit = 10;
+
+  /**
+   * =========================================
+   * QUERY
+   * =========================================
+   */
+  const {
+    data: response,
+    isLoading,
+  } = useCaisses(
+    page,
+    limit
+  ) as {
+    data?: PaginatedCaissesResponse;
+    isLoading: boolean;
+  };
+
+  const caisses =
+    response?.data || [];
+
+  const meta =
+    response?.meta;
+
+  /**
+   * =========================================
+   * MUTATIONS
+   * =========================================
+   */
   const {
     mutate: deleteCaisse,
   } = useDeleteCaisse();
@@ -52,6 +112,11 @@ export default function CaisseTab() {
     mutate: closeCaisse,
   } = useCloseCaisse();
 
+  /**
+   * =========================================
+   * STATES
+   * =========================================
+   */
   const [
     selectedId,
     setSelectedId,
@@ -76,26 +141,36 @@ export default function CaisseTab() {
     null
   );
 
+  /**
+   * =========================================
+   * TABLE COLUMNS
+   * =========================================
+   */
   const columns: Column<Caisse>[] =
     [
       {
         header: "Code",
+
         accessor: "code_caisse",
       },
 
       {
         header: "Devise",
+
         accessor: "devise",
       },
 
       {
         header: "Type",
+
         accessor: "type",
       },
 
       {
         header: "Solde",
+
         accessor: "solde",
+
         render: (
           value,
           row
@@ -114,7 +189,9 @@ export default function CaisseTab() {
 
       {
         header: "Statut",
+
         accessor: "state",
+
         render: (value) =>
           value ? (
             <CaisseStatusBadge
@@ -129,11 +206,15 @@ export default function CaisseTab() {
 
       {
         header: "Actions",
+
         accessor: "id",
+
         render: (_v, row) => (
           <div className="flex gap-2 flex-wrap">
+
             {row.state ===
               "FERMEE" && (
+
               <Button
                 onClick={() =>
                   openCaisse(
@@ -141,12 +222,15 @@ export default function CaisseTab() {
                     {
                       onSuccess:
                         () => {
+
                           setAppMessage(
                             {
                               variant:
                                 "success",
+
                               title:
                                 "Succès",
+
                               message:
                                 "Caisse ouverte avec succès",
                             }
@@ -154,8 +238,9 @@ export default function CaisseTab() {
                         },
 
                       onError: (
-                        error: Error
+                        error: unknown
                       ) => {
+
                         const apiError =
                           error as ErrorWithResponse;
 
@@ -163,13 +248,16 @@ export default function CaisseTab() {
                           {
                             variant:
                               "error",
+
                             title:
                               "Ouverture refusée",
+
                             message:
                               apiError
                                 ?.response
                                 ?.data
                                 ?.message ||
+
                               "Impossible d’ouvrir cette caisse",
                           }
                         );
@@ -185,20 +273,25 @@ export default function CaisseTab() {
 
             {row.state ===
               "OUVERTE" && (
+
               <Button
                 variant="secondary"
+
                 onClick={() =>
                   closeCaisse(
                     row.id,
                     {
                       onSuccess:
                         () => {
+
                           setAppMessage(
                             {
                               variant:
                                 "success",
+
                               title:
                                 "Succès",
+
                               message:
                                 "Caisse fermée avec succès",
                             }
@@ -206,8 +299,9 @@ export default function CaisseTab() {
                         },
 
                       onError: (
-                        error: Error
+                        error: unknown
                       ) => {
+
                         const apiError =
                           error as ErrorWithResponse;
 
@@ -215,13 +309,16 @@ export default function CaisseTab() {
                           {
                             variant:
                               "error",
+
                             title:
                               "Fermeture refusée",
+
                             message:
                               apiError
                                 ?.response
                                 ?.data
                                 ?.message ||
+
                               "Impossible de fermer cette caisse",
                           }
                         );
@@ -237,11 +334,13 @@ export default function CaisseTab() {
 
             <Button
               variant="secondary"
+
               onClick={() =>
                 alert(
                   "Edit bientôt"
                 )
               }
+
               className="px-2 py-1 text-xs"
             >
               Modifier
@@ -249,15 +348,18 @@ export default function CaisseTab() {
 
             <Button
               variant="danger"
+
               onClick={() =>
                 setSelectedId(
                   row.id
                 )
               }
+
               className="px-2 py-1 text-xs"
             >
               Supprimer
             </Button>
+
           </div>
         ),
       },
@@ -265,12 +367,16 @@ export default function CaisseTab() {
 
   return (
     <div className="space-y-4">
+
+      {/* HEADER */}
       <div className="flex justify-between items-center">
+
         <h1 className="text-xl font-semibold">
           Gestion des caisses
         </h1>
 
         <div className="flex gap-2">
+
           <Button
             onClick={() =>
               setOpenCreate(
@@ -280,21 +386,28 @@ export default function CaisseTab() {
           >
             + Caisse
           </Button>
+
         </div>
       </div>
 
+      {/* ALERT */}
       {appMessage && (
+
         <AppMessageState
           variant={
             appMessage.variant
           }
+
           title={
             appMessage.title
           }
+
           message={
             appMessage.message
           }
+
           buttonText="Fermer"
+
           onAction={() =>
             setAppMessage(
               null
@@ -303,17 +416,84 @@ export default function CaisseTab() {
         />
       )}
 
+      {/* TABLE */}
       <Table<Caisse>
-        data={data ?? []}
+        data={caisses}
         columns={columns}
         loading={isLoading}
       />
 
+      {/* PAGINATION */}
+      {meta && (
+
+        <div
+          className="
+            flex items-center
+            justify-center
+            gap-3
+            pt-2
+          "
+        >
+
+          <Button
+            variant="secondary"
+
+            disabled={
+              page === 1
+            }
+
+            onClick={() =>
+              setPage((p) =>
+                Math.max(
+                  1,
+                  p - 1
+                )
+              )
+            }
+          >
+            ←
+          </Button>
+
+          <span className="text-sm text-gray-600">
+
+            Page{" "}
+
+            <strong>
+              {meta.page}
+            </strong>{" "}
+
+            / {meta.totalPages}
+
+          </span>
+
+          <Button
+            variant="secondary"
+
+            disabled={
+              page >=
+              meta.totalPages
+            }
+
+            onClick={() =>
+              setPage((p) =>
+                p + 1
+              )
+            }
+          >
+            →
+          </Button>
+
+        </div>
+      )}
+
+      {/* MODALS */}
       {openMouvement && (
+
         <MouvementFormModal
           open={
             openMouvement
           }
+
           onClose={() =>
             setOpenMouvement(
               false
@@ -323,8 +503,10 @@ export default function CaisseTab() {
       )}
 
       {openCreate && (
+
         <CaisseFormModal
           open={openCreate}
+
           onClose={() =>
             setOpenCreate(
               false
@@ -333,26 +515,34 @@ export default function CaisseTab() {
         />
       )}
 
+      {/* DELETE CONFIRM */}
       <ConfirmModal
         open={!!selectedId}
+
         onClose={() =>
           setSelectedId(
             null
           )
         }
+
         onConfirm={() => {
+
           if (selectedId) {
+
             deleteCaisse(
               selectedId,
               {
                 onSuccess:
                   () => {
+
                     setAppMessage(
                       {
                         variant:
                           "success",
+
                         title:
                           "Succès",
+
                         message:
                           "Caisse supprimée avec succès",
                       }
@@ -360,8 +550,9 @@ export default function CaisseTab() {
                   },
 
                 onError: (
-                  error: Error
+                  error: unknown
                 ) => {
+
                   const apiError =
                     error as ErrorWithResponse;
 
@@ -369,13 +560,16 @@ export default function CaisseTab() {
                     {
                       variant:
                         "error",
+
                       title:
                         "Suppression refusée",
+
                       message:
                         apiError
                           ?.response
                           ?.data
                           ?.message ||
+
                         "Impossible de supprimer cette caisse",
                     }
                   );
@@ -388,7 +582,9 @@ export default function CaisseTab() {
             );
           }
         }}
+
         title="Supprimer caisse"
+
         description="Cette action est irréversible."
       />
     </div>

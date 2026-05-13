@@ -26,10 +26,12 @@ export default function CaissierDashboard() {
   const [openCloture, setOpenCloture] =
     useState(false);
 
-  const { data: caisses = [] } =
-    useCaisses() as {
-      data: Caisse[];
-    };
+  const {
+  data: response,
+  } = useCaisses(1, 100);
+
+  const caisses: Caisse[] =
+    response?.data || [];
 
   // 🔥 caisse active
   const selectedCaisse =

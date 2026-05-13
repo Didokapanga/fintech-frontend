@@ -10,9 +10,31 @@ export interface CreateCaisseDto {
 }
 
 // ✅ GET ALL
-export const getCaisses = async (): Promise<Caisse[]> => {
-  const res = await api.get("/caisses");
-  return res.data?.data ?? [];
+export const getCaisses = async (
+  page = 1,
+  limit = 10
+) => {
+
+  const res = await api.get(
+    `/caisses?page=${page}&limit=${limit}`
+  );
+
+  return {
+    data:
+      res.data?.data || [],
+
+    total:
+      res.data?.meta?.total || 0,
+
+    page:
+      res.data?.meta?.page || 1,
+
+    limit:
+      res.data?.meta?.limit || 10,
+
+    totalPages:
+      res.data?.meta?.totalPages || 1,
+  };
 };
 
 // ✅ GET ONE

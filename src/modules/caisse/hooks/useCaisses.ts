@@ -12,7 +12,6 @@ import {
   closeCaisse,
   type CreateCaisseDto,
 } from "../services/caisse.service";
-import type { Caisse } from "../types";
 
 
 type UpdateCaisseParams = {
@@ -21,11 +20,26 @@ type UpdateCaisseParams = {
 };
 
 // ✅ ALL
-export const useCaisses = () =>
-  useQuery<Caisse[]>({
-    queryKey: ["caisses"],
-    queryFn: getCaisses,
-    initialData: [],
+export const useCaisses = (
+  page = 1,
+  limit = 10
+) =>
+  useQuery({
+    queryKey: [
+      "caisses",
+      page,
+      limit
+    ],
+
+    queryFn: () =>
+      getCaisses(
+        page,
+        limit
+      ),
+
+    placeholderData: (
+      previousData
+    ) => previousData,
   });
 
 // ✅ DETAIL

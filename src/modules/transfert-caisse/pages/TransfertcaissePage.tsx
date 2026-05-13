@@ -31,41 +31,50 @@ export default function TransfertCaissePage() {
       date_operation: dateOperation,
     }
   );
-  // 🔥 récupérer les caisses
-// const { data: caissesData = [] } = useCaisses() as {
-//   data: {
-//     id: string;
-//     code_caisse: string;
-//     agence?: {
-//       libelle?: string;
-//     };
-//     agence_libelle?: string;
-//   }[];
-// };
-const { data: caissesData = [] } = useCaisses();
+ 
+  const {
+    data: caissesResponse,
+  } = useCaisses(1, 100);
 
-// 🔥 helper affichage caisse
-const getCaisseInfo = (caisseId: string) => {
-  const caisse = caissesData.find(
-    (c) => String(c.id) === String(caisseId)
-  );
+  const caissesData =
+    caissesResponse?.data || [];
 
-  if (!caisse) {
+  // 🔥 helper affichage caisse
+  const getCaisseInfo = (
+    caisseId: string
+  ) => {
+
+    const caisse =
+      caissesData.find(
+        (c: {
+          id: string;
+          code_caisse?: string;
+          agence?: {
+            libelle?: string;
+          };
+          agence_libelle?: string;
+        }) =>
+          String(c.id) ===
+          String(caisseId)
+      );
+
+    if (!caisse) {
+      return {
+        code: "-",
+        agence: "-",
+      };
+    }
+
     return {
-      code: "-",
-      agence: "-",
+      code:
+        caisse.code_caisse || "-",
+
+      agence:
+        caisse.agence?.libelle ||
+        caisse.agence_libelle ||
+        "-",
     };
-  }
-
-  return {
-    code: caisse.code_caisse || "-",
-
-    agence:
-      caisse.agence?.libelle ||
-      caisse.agence_libelle ||
-      "-",
   };
-};
 
   const transferts: TransfertCaisse[] =
     data?.data ?? [];
