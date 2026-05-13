@@ -2,6 +2,7 @@
 
 import LoginForm from "../components/LoginForm";
 import { ShieldCheck, Landmark, Lock } from "lucide-react";
+import CongoMap from "../../../assets/Congo-DR-Map.png";
 
 export default function LoginPage() {
   return (
@@ -26,22 +27,38 @@ export default function LoginPage() {
           {/* TOP */}
           <div className="space-y-8 pt-8">
 
-            <div className="space-y-4">
-              <p className="text-sm uppercase tracking-[0.25em] text-white/70 font-medium">
-                Plateforme financière
-              </p>
+            <div className="space-y-5">
 
-              <h1 className="text-5xl font-bold leading-tight tracking-tight">
-                Global Fintech
-              </h1>
+            <p className="text-sm uppercase tracking-[0.25em] text-white/70 font-medium">
+              Plateforme financière
+            </p>
 
-              <p className="text-lg text-white/75 leading-relaxed max-w-lg">
-                Une plateforme moderne de messagerie financière,
-                sécurisée et pensée pour les opérations
-                inter-agences, les transferts et la supervision
-                bancaire.
-              </p>
+            <div
+              className="
+                relative
+                w-full
+                max-w-[230px]
+                aspect-square
+                overflow-hidden
+                rounded-3xl
+                border border-white/10
+                bg-white/5
+                backdrop-blur-sm
+              "
+            >
+              <img
+                src={CongoMap}
+                alt="Carte RDC"
+                className="
+                  w-full
+                  h-full
+                  object-contain
+                  p-2
+                "
+              />
             </div>
+
+          </div>
 
             {/* FEATURES */}
             <div className="space-y-5 pt-6">

@@ -1,0 +1,161 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+     viewBox="0 0 1200 1200"
+     width="1200"
+     height="1200"
+     preserveAspectRatio="xMidYMid meet">
+
+  <defs>
+
+    <!-- Gradient principal -->
+    <linearGradient id="rdcGradient" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#2f6fed"/>
+      <stop offset="100%" stop-color="#163d8f"/>
+    </linearGradient>
+
+    <!-- Glow -->
+    <filter id="glow">
+      <feDropShadow dx="0" dy="0" stdDeviation="25"
+                    flood-color="#2f6fed"
+                    flood-opacity="0.35"/>
+    </filter>
+
+    <!-- Background -->
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#edf3ff"/>
+      <stop offset="100%" stop-color="#cfdcf5"/>
+    </linearGradient>
+
+    <!-- Pattern fintech -->
+    <pattern id="fintechPattern"
+             width="180"
+             height="180"
+             patternUnits="userSpaceOnUse"
+             patternTransform="rotate(-18)">
+
+      <g opacity="0.08">
+
+        <!-- Nodes -->
+        <circle cx="30" cy="30" r="6" fill="#ffffff"/>
+        <circle cx="90" cy="70" r="6" fill="#ffffff"/>
+        <circle cx="140" cy="25" r="6" fill="#ffffff"/>
+
+        <!-- Lines -->
+        <line x1="30" y1="30" x2="90" y2="70"
+              stroke="#ffffff"
+              stroke-width="2"/>
+
+        <line x1="90" y1="70" x2="140" y2="25"
+              stroke="#ffffff"
+              stroke-width="2"/>
+
+        <!-- Currency -->
+        <text x="40" y="140"
+              font-size="20"
+              fill="#ffffff"
+              font-family="Arial">$</text>
+
+        <!-- User -->
+        <circle cx="120" cy="130" r="8" fill="#ffffff"/>
+        <rect x="112" y="140"
+              width="16"
+              height="10"
+              rx="5"
+              fill="#ffffff"/>
+
+      </g>
+
+    </pattern>
+
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="1200" fill="url(#bg)"/>
+
+  <!-- Glow behind map -->
+  <ellipse cx="600" cy="620"
+           rx="330"
+           ry="420"
+           fill="#2f6fed"
+           opacity="0.12"/>
+
+  <!-- RDC Map -->
+  <g filter="url(#glow)">
+
+    <path d="
+      M330 250
+      L470 210
+      L620 230
+      L760 270
+      L860 350
+      L920 500
+      L870 670
+      L760 820
+      L610 900
+      L470 870
+      L340 780
+      L260 640
+      L240 470
+      L280 330
+      Z"
+
+      fill="url(#rdcGradient)"
+      stroke="#ffffff"
+      stroke-width="10"
+      stroke-linejoin="round"/>
+
+    <!-- Overlay pattern -->
+    <path d="
+      M330 250
+      L470 210
+      L620 230
+      L760 270
+      L860 350
+      L920 500
+      L870 670
+      L760 820
+      L610 900
+      L470 870
+      L340 780
+      L260 640
+      L240 470
+      L280 330
+      Z"
+
+      fill="url(#fintechPattern)"
+      opacity="0.8"/>
+
+  </g>
+
+  <!-- Capital point -->
+  <circle cx="430" cy="610"
+          r="14"
+          fill="#ffd166"/>
+
+  <circle cx="430" cy="610"
+          r="28"
+          fill="#ffd166"
+          opacity="0.25"/>
+
+  <!-- Label -->
+  <text x="470"
+        y="620"
+        font-size="34"
+        font-weight="700"
+        fill="#ffffff"
+        font-family="Segoe UI, Arial, sans-serif">
+    Kinshasa
+  </text>
+
+  <!-- Title -->
+  <text x="600"
+        y="1080"
+        text-anchor="middle"
+        font-size="58"
+        font-weight="900"
+        letter-spacing="6"
+        fill="#163d8f"
+        font-family="Segoe UI, Arial, sans-serif">
+    DEMOCRATIC REPUBLIC OF CONGO
+  </text>
+
+</svg>
