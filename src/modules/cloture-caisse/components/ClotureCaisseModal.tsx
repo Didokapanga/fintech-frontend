@@ -1,6 +1,7 @@
 // src/modules/cloture-caisse/components/ClotureCaisseModal.tsx
 
 import { useEffect } from "react";
+
 import {
   useForm,
   useWatch,
@@ -12,8 +13,13 @@ import {
   Modal,
 } from "../../../components/ui";
 
-import { useCaisses } from "../../caisse/hooks/useCaisses";
-import { useClotureCaisse } from "../hooks/useClotureCaisse";
+import {
+  useCaisses,
+} from "../../caisse/hooks/useCaisses";
+
+import {
+  useClotureCaisse,
+} from "../hooks/useClotureCaisse";
 
 type Props = {
   open: boolean;
@@ -28,6 +34,17 @@ type Caisse = {
   state: string;
 };
 
+type PaginatedCaissesResponse = {
+  data: Caisse[];
+
+  meta?: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
+};
+
 type FormData = {
   caisse_id: string;
   solde_physique: number;
@@ -40,6 +57,7 @@ export default function ClotureCaisseModal({
   open,
   onClose,
 }: Props) {
+
   const {
     register,
     handleSubmit,
@@ -48,27 +66,55 @@ export default function ClotureCaisseModal({
     control,
   } = useForm<FormData>();
 
-  const { data: caisses = [] } =
-    useCaisses() as {
-      data: Caisse[];
-    };
+  /**
+   * =========================================
+   * CAISSES
+   * =========================================
+   */
+  const {
+    data: response,
+  } = useCaisses(
+    1,
+    100
+  ) as {
+    data?: PaginatedCaissesResponse;
+  };
 
-  const { mutate, isPending } =
-    useClotureCaisse();
+  const caisses =
+    response?.data || [];
 
-  // ✅ FIX ESLint React Compiler
-  // remplacer watch() par useWatch()
+  /**
+   * =========================================
+   * MUTATION
+   * =========================================
+   */
+  const {
+    mutate,
+    isPending,
+  } = useClotureCaisse();
+
+  /**
+   * =========================================
+   * WATCH
+   * =========================================
+   */
   const caisseId = useWatch({
     control,
     name: "caisse_id",
   });
 
-  const selectedCaisse = caisses.find(
-    (c) => c.id === caisseId
-  );
+  const selectedCaisse =
+    caisses.find(
+      (c) => c.id === caisseId
+    );
 
-  // 🔥 date auto
+  /**
+   * =========================================
+   * DATE AUTO
+   * =========================================
+   */
   useEffect(() => {
+
     const today = new Date()
       .toISOString()
       .split("T")[0];
@@ -77,15 +123,26 @@ export default function ClotureCaisseModal({
       "date_operation",
       today
     );
+
   }, [setValue]);
 
-  const onSubmit = (data: FormData) => {
+  /**
+   * =========================================
+   * SUBMIT
+   * =========================================
+   */
+  const onSubmit = (
+    data: FormData
+  ) => {
+
     mutate(data, {
       onSuccess: () => {
+
         reset({
-          date_operation: new Date()
-            .toISOString()
-            .split("T")[0],
+          date_operation:
+            new Date()
+              .toISOString()
+              .split("T")[0],
         });
 
         onClose();
@@ -98,8 +155,12 @@ export default function ClotureCaisseModal({
       open={open}
       onClose={onClose}
     >
+
       <div className="space-y-5">
+
+        {/* HEADER */}
         <div>
+
           <h2 className="text-xl font-semibold">
             Clôture de caisse
           </h2>
@@ -108,16 +169,20 @@ export default function ClotureCaisseModal({
             Vérification du solde
             physique avant fermeture
           </p>
+
         </div>
 
+        {/* FORM */}
         <form
           onSubmit={handleSubmit(
             onSubmit
           )}
           className="space-y-4"
         >
+
           {/* CAISSE */}
           <div>
+
             <label className="block text-sm font-medium mb-1">
               Caisse
             </label>
@@ -131,9 +196,9 @@ export default function ClotureCaisseModal({
               )}
               className="w-full border rounded-xl px-3 py-2"
             >
+
               <option value="">
-                Sélectionner une
-                caisse
+                Sélectionner une caisse
               </option>
 
               {caisses
@@ -143,16 +208,19 @@ export default function ClotureCaisseModal({
                     "OUVERTE"
                 )
                 .map((c) => (
+
                   <option
                     key={c.id}
                     value={c.id}
                   >
-                    {
-                      c.code_caisse
-                    }{" "}
-                    (
-                    {c.solde.toLocaleString()}{" "}
-                    {c.devise})
+
+                    {c.code_caisse} (
+                    {Number(
+                      c.solde
+                    ).toLocaleString()}{" "}
+                    {c.devise}
+                    )
+
                   </option>
                 ))}
             </select>
@@ -160,17 +228,25 @@ export default function ClotureCaisseModal({
 
           {/* SOLDE SYSTEME */}
           {selectedCaisse && (
+
             <div className="bg-gray-50 border rounded-xl p-3">
+
               <p className="text-sm text-gray-500">
                 Solde système
               </p>
 
               <p className="text-lg font-semibold text-green-600">
-                {selectedCaisse.solde.toLocaleString()}{" "}
+
+                {Number(
+                  selectedCaisse.solde
+                ).toLocaleString()}{" "}
+
                 {
                   selectedCaisse.devise
                 }
+
               </p>
+
             </div>
           )}
 
@@ -189,7 +265,7 @@ export default function ClotureCaisseModal({
             )}
           />
 
-          {/* MOTIF ECART */}
+          {/* MOTIF */}
           <Input
             label="Motif écart (si nécessaire)"
             placeholder="Expliquer l’écart éventuel"
@@ -209,6 +285,7 @@ export default function ClotureCaisseModal({
 
           {/* DATE */}
           <div>
+
             <label className="block text-sm font-medium mb-1">
               Date opération
             </label>
@@ -227,6 +304,7 @@ export default function ClotureCaisseModal({
 
           {/* ACTIONS */}
           <div className="flex justify-end gap-3 pt-2">
+
             <Button
               type="button"
               variant="secondary"
@@ -243,6 +321,7 @@ export default function ClotureCaisseModal({
             >
               Clôturer
             </Button>
+
           </div>
         </form>
       </div>
