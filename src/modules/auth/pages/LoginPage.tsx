@@ -24,41 +24,64 @@ export default function LoginPage() {
 
         <div className="relative z-10 flex flex-col justify-between h-full max-w-xl">
 
-          {/* TOP */}
-          <div className="space-y-8 pt-8">
+            {/* TOP */}
+            <div className="space-y-8 pt-8">
 
-            <div className="space-y-5">
-
-            <p className="text-sm uppercase tracking-[0.25em] text-white/70 font-medium">
-              Plateforme financière
-            </p>
-
-            <div
+              <div
               className="
-                relative
-                w-full
-                max-w-[230px]
-                aspect-square
-                overflow-hidden
-                rounded-3xl
-                border border-white/10
-                bg-white/5
-                backdrop-blur-sm
+                grid grid-cols-2
+                gap-8
+                items-center
               "
             >
-              <img
-                src={CongoMap}
-                alt="Carte RDC"
-                className="
-                  w-full
-                  h-full
-                  object-contain
-                  p-2
-                "
-              />
-            </div>
 
-          </div>
+              {/* IMAGE */}
+              <div
+                className="
+                  relative
+                  w-full
+                  max-w-[230px]
+                  aspect-square
+                  overflow-hidden
+                  rounded-3xl
+                  border border-white/10
+                  bg-white/5
+                  backdrop-blur-sm
+                "
+              >
+                <img
+                  src={CongoMap}
+                  alt="Carte RDC"
+                  className="
+                    w-full
+                    h-full
+                    object-contain
+                    p-2
+                  "
+                />
+              </div>
+
+              {/* TEXTE */}
+              <div className="space-y-4">
+
+                <p className="text-sm uppercase tracking-[0.25em] text-white/70 font-medium">
+                  Plateforme financière
+                </p>
+
+                {/* <h1 className="text-5xl font-bold leading-tight tracking-tight">
+                  Global Fintech
+                </h1> */}
+
+                <p className="text-lg text-white/75 leading-relaxed">
+                  Une plateforme moderne de messagerie financière,
+                  sécurisée et pensée pour les opérations
+                  inter-agences, les transferts et la supervision
+                  des opérations.
+                </p>
+
+              </div>
+
+            </div>
 
             {/* FEATURES */}
             <div className="space-y-5 pt-6">
