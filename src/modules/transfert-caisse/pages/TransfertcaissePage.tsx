@@ -102,6 +102,15 @@ export default function TransfertCaissePage() {
 
   const columns: Column<TransfertCaisse>[] = [
     {
+      header: "Référence",
+      accessor: "code_reference",
+      render: (value) => (
+        <span className="text-xs font-mono text-gray-600">
+          {value}
+        </span>
+      ),
+    },
+    {
       header: "Caisse source",
       accessor: "caisse_source_id",
       render: (value) => {

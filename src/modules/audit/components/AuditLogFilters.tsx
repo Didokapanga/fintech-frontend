@@ -62,6 +62,10 @@ export default function AuditLogFilters({
           OPEN
         </option>
 
+        <option value="CLOSE">
+          CLOSE
+        </option>
+
         <option value="VALIDATE">
           VALIDATE
         </option>

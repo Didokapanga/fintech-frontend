@@ -127,6 +127,22 @@ export default function AdminDashboard() {
               ?.total_count || 0
           ),
         },
+
+        // {
+        //   label:
+        //     "Frais d'envoi",
+
+        //   volumes:
+        //     dashboard
+        //       .total_frais_transfert_client
+        //       ?.volumes || {},
+
+        //   count: Number(
+        //     dashboard
+        //       .total_frais_transfert_client
+        //       ?.total_count || 0
+        //   ),
+        // },
       ]
     : [];
 
@@ -200,6 +216,16 @@ export default function AdminDashboard() {
         ?.retrait_en_attente_validation
         ?.total_count || 0
     );
+
+    /**
+   * =========================================
+   * 💸 TOTAL FRAIS TRANSFERT CLIENT
+   * =========================================
+   */
+  const totalFees =
+    dashboard
+      ?.total_frais_transfert_client
+      ?.volumes || {};
 
   /**
    * =========================================
@@ -365,7 +391,7 @@ export default function AdminDashboard() {
         className="
           grid
           grid-cols-1
-          md:grid-cols-3
+          md:grid-cols-4
           gap-4
         "
       >
@@ -383,6 +409,11 @@ export default function AdminDashboard() {
         <Kpi
           title="En attente validation"
           values={pendingCount}
+        />
+
+        <Kpi
+          title="Frais d'envoi"
+          values={totalFees}
         />
 
       </div>

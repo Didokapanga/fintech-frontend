@@ -25,6 +25,7 @@ export type TransfertCaisse = {
   devise: string;
   statut: string;
   date_operation: string;
+  code_reference: string;
   created_at: string;
 };
 
