@@ -1,110 +1,178 @@
 // src/modules/retrait/components/RetraitHistoryTab.tsx
 
+import {
+  CalendarRange,
+  Filter,
+  RefreshCcw,
+} from "lucide-react";
+
 import { useState } from "react";
+
 import { useQuery } from "@tanstack/react-query";
-import { useAuthStore } from "../../../app/store";
 
-import { useAgences } from "../../agence/hooks/useAgences";
+import {
+  useAuthStore,
+} from "../../../app/store";
 
-import { Table, Button } from "../../../components/ui";
-import type { Column } from "../../../components/ui/Table.types";
-import { useRetraitHistory } from "../hooks/useRetraitHistory";
+import {
+  useAgences,
+} from "../../agence/hooks/useAgences";
+
+import {
+  Button,
+  Table,
+} from "../../../components/ui";
+
+import type {
+  Column,
+} from "../../../components/ui/Table.types";
+
+import {
+  useRetraitHistory,
+} from "../hooks/useRetraitHistory";
+
 import {
   type Retrait,
-  getRetraitsByAgence,
   getAllRetraits,
+  getRetraitsByAgence,
 } from "../services/retrait.service";
+import Pagination from "../../../components/ui/Pagination";
+
+/* -------------------------------------------------------------------------- */
+/*                                    PAGE                                    */
+/* -------------------------------------------------------------------------- */
 
 export default function RetraitHistoryTab() {
-  const [page, setPage] = useState(1);
-  const { user } = useAuthStore();
 
-  // 🔥 FILTERS
-  const [statut, setStatut] = useState("");
-  const [dateOperation, setDateOperation] =
-    useState("");
+  /* ------------------------------------------------------------------------ */
+  /*                                   STATE                                  */
+  /* ------------------------------------------------------------------------ */
 
-  const [selectedAgence, setSelectedAgence] =
-  useState("");
+  const [
+    page,
+    setPage,
+  ] = useState(1);
+
+  const [
+    statut,
+    setStatut,
+  ] = useState("");
+
+  const [
+    dateOperation,
+    setDateOperation,
+  ] = useState("");
+
+  const [
+    selectedAgence,
+    setSelectedAgence,
+  ] = useState("");
+
+  /* ------------------------------------------------------------------------ */
+  /*                                    AUTH                                  */
+  /* ------------------------------------------------------------------------ */
+
+  const { user } =
+    useAuthStore();
 
   const isGlobalAdmin =
-  user?.role_name === "ADMIN";
+    user?.role_name ===
+    "ADMIN";
 
   const isAgenceView =
-    ["N+1", "N+2"].includes(
-      user?.role_name || ""
-    );
-  const { data: agences = [] } =
-  useAgences();
+    ["N+1", "N+2"]
+      .includes(
+        user?.role_name || ""
+      );
+
+  /* ------------------------------------------------------------------------ */
+  /*                                  AGENCES                                 */
+  /* ------------------------------------------------------------------------ */
+
+  const {
+    data: agences = [],
+  } =
+    useAgences();
+
+  /* ------------------------------------------------------------------------ */
+  /*                                   QUERY                                  */
+  /* ------------------------------------------------------------------------ */
 
   const myRetraitsQuery =
-  useRetraitHistory(
-    page,
-    10,
-    {
-      statut,
-      date_operation:
+    useRetraitHistory(
+      page,
+      10,
+      {
+        statut,
+        date_operation:
+          dateOperation,
+      },
+
+      !isGlobalAdmin &&
+      !isAgenceView
+    );
+
+  const agenceRetraitsQuery =
+    useQuery({
+      queryKey: [
+        "agence-retraits",
+        user?.agence_id,
+        page,
+        statut,
         dateOperation,
-    },
+      ],
 
-    !isGlobalAdmin &&
-    !isAgenceView
-  );
+      queryFn: () =>
+        getRetraitsByAgence(
+          String(
+            user?.agence_id
+          ),
+          page,
+          10,
+          {
+            statut,
+            date_operation:
+              dateOperation,
+          }
+        ),
 
-const agenceRetraitsQuery =
-  useQuery({
-    queryKey: [
-      "agence-retraits",
-      user?.agence_id,
-      page,
-      statut,
-      dateOperation,
-    ],
+      enabled:
+        isAgenceView &&
+        !!user?.agence_id,
+    });
 
-    queryFn: () =>
-      getRetraitsByAgence(
-        String(user?.agence_id),
+  const globalRetraitsQuery =
+    useQuery({
+      queryKey: [
+        "global-retraits",
         page,
-        10,
-        {
-          statut,
-          date_operation:
-            dateOperation,
-        }
-      ),
+        statut,
+        dateOperation,
+        selectedAgence,
+      ],
 
-    enabled:
-      isAgenceView &&
-      !!user?.agence_id,
-  });
+      queryFn: () =>
+        getAllRetraits(
+          page,
+          10,
+          {
+            agence_id:
+              selectedAgence,
 
-const globalRetraitsQuery =
-  useQuery({
-    queryKey: [
-      "global-retraits",
-      page,
-      statut,
-      dateOperation,
-      selectedAgence,
-    ],
+            statut,
 
-    queryFn: () =>
-      getAllRetraits(
-        page,
-        10,
-        {
-          agence_id:
-            selectedAgence,
+            date_operation:
+              dateOperation,
+          }
+        ),
 
-          statut,
+      enabled:
+        isGlobalAdmin,
+    });
 
-          date_operation:
-            dateOperation,
-        }
-      ),
-
-    enabled: isGlobalAdmin,
-  });
+  /* ------------------------------------------------------------------------ */
+  /*                              CURRENT QUERY                               */
+  /* ------------------------------------------------------------------------ */
 
   const currentQuery =
     isGlobalAdmin
@@ -113,288 +181,683 @@ const globalRetraitsQuery =
       ? agenceRetraitsQuery
       : myRetraitsQuery;
 
-  const { data, isLoading } =
+  const {
+    data,
+    isLoading,
+  } =
     currentQuery;
 
-  const retraits: Retrait[] =
-    data?.data || [];
+  const retraits:
+    Retrait[] =
+      data?.data || [];
 
-  const meta = !Array.isArray(data)
-    ? data?.meta
-    : undefined;
+  const meta =
+    !Array.isArray(data)
+      ? data?.meta
+      : undefined;
+
+  /* ------------------------------------------------------------------------ */
+  /*                              STATUS STYLE                                */
+  /* ------------------------------------------------------------------------ */
 
   const getStatusStyle = (
     statut: string
   ) => {
+
     switch (statut) {
+
       case "INITIE":
-        return "bg-yellow-100 text-yellow-700";
+        return `
+          border-yellow-200
+          bg-yellow-50
+          text-yellow-700
+        `;
+
       case "VALIDE":
-        return "bg-blue-100 text-blue-700";
+        return `
+          border-blue-200
+          bg-blue-50
+          text-blue-700
+        `;
+
       case "EXECUTE":
-        return "bg-green-100 text-green-700";
+        return `
+          border-emerald-200
+          bg-emerald-50
+          text-emerald-700
+        `;
+
       case "ANNULE":
-        return "bg-red-100 text-red-700";
+        return `
+          border-red-200
+          bg-red-50
+          text-red-700
+        `;
+
       default:
-        return "bg-gray-100 text-gray-600";
+        return `
+          border-slate-200
+          bg-slate-100
+          text-slate-600
+        `;
     }
   };
 
-  const columns: Column<Retrait>[] = [
-    {
-      header: "Expéditeur",
-      accessor: "id",
-      render: (_v, row) => {
-        const exp = row.expediteur;
+  /* ------------------------------------------------------------------------ */
+  /*                                  COLUMNS                                 */
+  /* ------------------------------------------------------------------------ */
 
-        return (
-          <div className="flex flex-col">
-            {exp ? (
-              <>
-                <span className="font-medium text-gray-800">
-                  {exp.nom}{" "}
-                  {exp.postnom}
-                </span>
-                <span className="text-xs text-gray-500">
-                  {exp.phone}
-                </span>
-              </>
-            ) : (
-              <span className="text-sm text-gray-400 italic">
-                Non disponible
+  const columns:
+    Column<Retrait>[] =
+      [
+
+        /* -------------------------------------------------------------- */
+        /* EXPEDITEUR                                                     */
+        /* -------------------------------------------------------------- */
+
+        {
+          header:
+            "Expéditeur",
+
+          accessor:
+            "id",
+
+          render: (
+            _v,
+            row
+          ) => {
+
+            const exp =
+              row.expediteur;
+
+            return (
+              <div
+                className="
+                  flex
+                  flex-col
+                "
+              >
+
+                {exp ? (
+
+                  <>
+
+                    <span
+                      className="
+                        font-semibold
+                        text-slate-800
+                      "
+                    >
+                      {exp.nom}{" "}
+                      {
+                        exp.postnom
+                      }
+                    </span>
+
+                    <span
+                      className="
+                        mt-1
+                        text-xs
+                        text-slate-400
+                      "
+                    >
+                      {
+                        exp.phone
+                      }
+                    </span>
+
+                  </>
+
+                ) : (
+
+                  <span
+                    className="
+                      text-sm
+                      italic
+                      text-slate-400
+                    "
+                  >
+                    Non disponible
+                  </span>
+                )}
+
+              </div>
+            );
+          },
+        },
+
+        /* -------------------------------------------------------------- */
+        /* DESTINATAIRE                                                   */
+        /* -------------------------------------------------------------- */
+
+        {
+          header:
+            "Destinataire",
+
+          accessor:
+            "numero_piece",
+
+          render: (
+            _v,
+            row
+          ) => {
+
+            const dest =
+              row.destinataire;
+
+            return (
+              <div
+                className="
+                  flex
+                  flex-col
+                "
+              >
+
+                {dest ? (
+
+                  <>
+
+                    <span
+                      className="
+                        font-semibold
+                        text-slate-800
+                      "
+                    >
+                      {dest.nom}{" "}
+                      {
+                        dest.postnom
+                      }
+                    </span>
+
+                    <span
+                      className="
+                        mt-1
+                        text-xs
+                        text-slate-400
+                      "
+                    >
+                      {
+                        dest.phone
+                      }
+                    </span>
+
+                  </>
+
+                ) : (
+
+                  <span
+                    className="
+                      text-sm
+                      italic
+                      text-slate-400
+                    "
+                  >
+                    Non disponible
+                  </span>
+                )}
+
+              </div>
+            );
+          },
+        },
+
+        /* -------------------------------------------------------------- */
+        /* PIECE                                                          */
+        /* -------------------------------------------------------------- */
+
+        {
+          header:
+            "Pièce",
+
+          accessor:
+            "montant",
+
+          render: (
+            _v,
+            row
+          ) => (
+
+            <span
+              className="
+                rounded-xl
+                bg-slate-100
+                px-3
+                py-2
+                font-mono
+                text-xs
+                text-slate-600
+              "
+            >
+              {
+                row.numero_piece
+              }
+            </span>
+          ),
+        },
+
+        /* -------------------------------------------------------------- */
+        /* MONTANT                                                        */
+        /* -------------------------------------------------------------- */
+
+        {
+          header:
+            "Montant",
+
+          accessor:
+            "statut",
+
+          render: (
+            _v,
+            row
+          ) => (
+
+            <div
+              className="
+                flex
+                flex-col
+              "
+            >
+
+              <span
+                className="
+                  text-base
+                  font-semibold
+                  text-emerald-600
+                "
+              >
+                {Number(
+                  row.montant ||
+                    0
+                ).toLocaleString()}{" "}
+                {row.devise}
               </span>
-            )}
-          </div>
-        );
-      },
-    },
 
-    {
-      header: "Destinataire",
-      accessor: "numero_piece",
-      render: (_v, row) => {
-        const dest =
-          row.destinataire;
-
-        return (
-          <div className="flex flex-col">
-            {dest ? (
-              <>
-                <span className="font-medium text-gray-800">
-                  {dest.nom}{" "}
-                  {dest.postnom}
-                </span>
-                <span className="text-xs text-gray-500">
-                  {dest.phone}
-                </span>
-              </>
-            ) : (
-              <span className="text-sm text-gray-400 italic">
-                Non disponible
+              <span
+                className="
+                  mt-1
+                  text-xs
+                  text-slate-400
+                "
+              >
+                Retrait validé
               </span>
-            )}
-          </div>
-        );
-      },
-    },
 
-    {
-      header: "Numéro pièce",
-      accessor: "montant",
-      render: (_v, row) => (
-        <span className="text-xs font-mono text-gray-600">
-          {row.numero_piece}
-        </span>
-      ),
-    },
+            </div>
+          ),
+        },
 
-    {
-      header: "Montant",
-      accessor: "statut",
-      render: (_v, row) => (
-        <span className="font-semibold text-green-600">
-          {Number(
-            row.montant || 0
-          ).toLocaleString()}{" "}
-          {row.devise}
-        </span>
-      ),
-    },
+        /* -------------------------------------------------------------- */
+        /* STATUT                                                         */
+        /* -------------------------------------------------------------- */
 
-    {
-      header: "Statut",
-      accessor: "created_at",
-      render: (_v, row) => {
-        const s = String(
-          row.statut || ""
-        );
+        {
+          header:
+            "Statut",
 
-        return (
-          <span
-            className={`px-2 py-1 rounded text-xs font-medium ${getStatusStyle(
-              s
-            )}`}
-          >
-            {s}
-          </span>
-        );
-      },
-    },
+          accessor:
+            "created_at",
 
-    {
-      header: "Date",
-      accessor: "devise",
-      render: (_v, row) => (
-        <span>
-          {new Date(
-            String(
-              row.date_operation ||
-                row.created_at
-            )
-          ).toLocaleDateString(
-            "fr-FR"
-          )}
-        </span>
-      ),
-    },
-  ];
+          render: (
+            _v,
+            row
+          ) => {
+
+            const s =
+              String(
+                row.statut ||
+                  ""
+              );
+
+            return (
+              <span
+                className={`
+                  inline-flex
+                  items-center
+                  rounded-full
+                  border
+                  px-3
+                  py-1
+                  text-xs
+                  font-semibold
+                  ${getStatusStyle(
+                    s
+                  )}
+                `}
+              >
+                {s}
+              </span>
+            );
+          },
+        },
+
+        /* -------------------------------------------------------------- */
+        /* DATE                                                           */
+        /* -------------------------------------------------------------- */
+
+        {
+          header:
+            "Date",
+
+          accessor:
+            "devise",
+
+          render: (
+            _v,
+            row
+          ) => (
+
+            <div
+              className="
+                flex
+                items-center
+                gap-2
+                text-sm
+                text-slate-600
+              "
+            >
+
+              <CalendarRange
+                size={15}
+              />
+
+              {new Date(
+                String(
+                  row.date_operation ||
+                    row.created_at
+                )
+              ).toLocaleDateString(
+                "fr-FR"
+              )}
+
+            </div>
+          ),
+        },
+      ];
+
+  /* ------------------------------------------------------------------------ */
+  /*                                   RESET                                  */
+  /* ------------------------------------------------------------------------ */
+
+  const handleReset =
+    () => {
+
+      setPage(1);
+
+      setStatut("");
+
+      setDateOperation(
+        ""
+      );
+
+      setSelectedAgence(
+        ""
+      );
+    };
+
+  /* ------------------------------------------------------------------------ */
+  /*                                   RENDER                                 */
+  /* ------------------------------------------------------------------------ */
 
   return (
-    <div className="space-y-6">
+    <div
+      className="
+        space-y-6
+      "
+    >
 
-      {/* FILTERS */}
-      <div className="bg-white rounded-xl border p-4">
-        {/* <div className="grid grid-cols-1 md:grid-cols-3 gap-4"> */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      {/* -------------------------------------------------------------- */}
+      {/* FILTERS                                                        */}
+      {/* -------------------------------------------------------------- */}
+
+      <section
+        className="
+          rounded-[28px]
+          border
+          border-slate-200/80
+          bg-white
+          p-5
+        "
+      >
+
+        <div
+          className="
+            mb-5
+            flex
+            items-center
+            gap-2
+          "
+        >
+
+          <Filter
+            size={16}
+            className="
+              text-slate-500
+            "
+          />
+
+          <h2
+            className="
+              text-sm
+              font-semibold
+              text-slate-800
+            "
+          >
+            Filtres avancés
+          </h2>
+
+        </div>
+
+        <div
+          className="
+            grid
+            grid-cols-1
+            gap-4
+            xl:grid-cols-4
+          "
+        >
+
+          {/* STATUS */}
 
           <select
             value={statut}
             onChange={(e) => {
+
               setPage(1);
+
               setStatut(
                 e.target.value
               );
             }}
-            className="w-full border rounded-lg px-3 py-2"
+            className="
+              h-12
+              rounded-2xl
+              border
+              border-slate-200
+              bg-white
+              px-4
+              text-sm
+              text-slate-700
+              outline-none
+              transition-all
+              focus:border-red-400
+              focus:ring-4
+              focus:ring-red-100
+            "
           >
+
             <option value="">
-              Statut
+              Tous les statuts
             </option>
+
             <option value="INITIE">
               INITIE
             </option>
+
             <option value="VALIDE">
               VALIDE
             </option>
+
             <option value="EXECUTE">
               EXECUTE
             </option>
+
             <option value="ANNULE">
               ANNULE
             </option>
+
           </select>
+
+          {/* DATE */}
 
           <input
             type="date"
             value={dateOperation}
             onChange={(e) => {
+
               setPage(1);
+
               setDateOperation(
                 e.target.value
               );
             }}
-            className="w-full border rounded-lg px-3 py-2"
+            className="
+              h-12
+              rounded-2xl
+              border
+              border-slate-200
+              bg-white
+              px-4
+              text-sm
+              text-slate-700
+              outline-none
+              transition-all
+              focus:border-red-400
+              focus:ring-4
+              focus:ring-red-100
+            "
           />
 
+          {/* AGENCE */}
+
           {isGlobalAdmin && (
+
             <select
-              value={selectedAgence}
+              value={
+                selectedAgence
+              }
               onChange={(e) => {
+
                 setPage(1);
 
                 setSelectedAgence(
                   e.target.value
                 );
               }}
-              className="w-full border rounded-lg px-3 py-2"
+              className="
+                h-12
+                rounded-2xl
+                border
+                border-slate-200
+                bg-white
+                px-4
+                text-sm
+                text-slate-700
+                outline-none
+                transition-all
+                focus:border-red-400
+                focus:ring-4
+                focus:ring-red-100
+              "
             >
+
               <option value="">
                 Toutes les agences
               </option>
 
-              {agences.map((agence) => (
-                <option
-                  key={agence.id}
-                  value={agence.id}
-                >
-                  {agence.libelle}
-                </option>
-              ))}
+              {agences.map(
+                (
+                  agence
+                ) => (
+
+                  <option
+                    key={
+                      agence.id
+                    }
+                    value={
+                      agence.id
+                    }
+                  >
+                    {
+                      agence.libelle
+                    }
+                  </option>
+                )
+              )}
+
             </select>
           )}
 
+          {/* RESET */}
+
           <Button
             variant="secondary"
-            onClick={() => {
-              setPage(1);
-              setStatut("");
-              setDateOperation("");
-            }}
+            onClick={
+              handleReset
+            }
+            className="
+              h-12
+              rounded-2xl
+            "
           >
-            Reset
+
+            <RefreshCcw
+              size={16}
+            />
+
+            Réinitialiser
+
           </Button>
+
         </div>
-      </div>
 
-      <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
-        <Table<Retrait>
-          data={retraits}
-          columns={columns}
-          loading={isLoading}
-        />
-      </div>
+      </section>
 
-      {!isLoading &&
-        retraits.length === 0 && (
-          <div className="text-center text-gray-400 py-10">
-            Aucun retrait trouvé
-          </div>
-        )}
+      {/* -------------------------------------------------------------- */}
+      {/* TABLE                                                          */}
+      {/* -------------------------------------------------------------- */}
+
+      <Table<Retrait>
+        data={retraits}
+        columns={columns}
+        loading={isLoading}
+        emptyTitle="Aucun retrait trouvé"
+        emptyDescription="Aucun retrait ne correspond actuellement aux filtres sélectionnés."
+      />
+
+      {/* -------------------------------------------------------------- */}
+      {/* PAGINATION                                                     */}
+      {/* -------------------------------------------------------------- */}
 
       {meta && (
-        <div className="flex justify-center items-center gap-3">
-          <Button
-            variant="secondary"
-            disabled={page === 1}
-            onClick={() =>
-              setPage((p) => p - 1)
-            }
-          >
-            ←
-          </Button>
 
-          <span className="text-sm text-gray-600">
-            Page{" "}
-            <strong>
-              {meta.page}
-            </strong>{" "}
-            / {meta.totalPages}
-          </span>
+        <Pagination
+          page={meta.page}
+          totalPages={
+            meta.totalPages
+          }
+          totalItems={
+            meta.total
+          }
+          perPage={
+            meta.limit
+          }
+          onChange={
+            setPage
+          }
+        />
 
-          <Button
-            variant="secondary"
-            disabled={
-              page >=
-              meta.totalPages
-            }
-            onClick={() =>
-              setPage((p) => p + 1)
-            }
-          >
-            →
-          </Button>
-        </div>
       )}
+
     </div>
   );
 }

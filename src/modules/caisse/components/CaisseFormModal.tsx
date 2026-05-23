@@ -1,13 +1,52 @@
 // src/modules/caisse/components/CaisseFormModal.tsx
 
-import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { useCreateCaisse } from "../hooks/useCaisses";
-import { useAgences } from "../../agence/hooks/useAgences";
-import { useUsers } from "../../auth/hooks/useAuth";
-import { Button, Modal } from "../../../components/ui";
+import {
+  Building2,
+  CircleDollarSign,
+  Shield,
+  User2,
+  Wallet,
+} from "lucide-react";
+
+import {
+  useMemo,
+} from "react";
+
+import {
+  useForm,
+  useWatch,
+} from "react-hook-form";
+
+import {
+  useCreateCaisse,
+} from "../hooks/useCaisses";
+
+import {
+  useAgences,
+} from "../../agence/hooks/useAgences";
+
+import {
+  useUsers,
+} from "../../auth/hooks/useAuth";
+
+import {
+  Button,
+  Modal,
+} from "../../../components/ui";
+
 import AppMessageState from "../../../components/ui/AppMessageState";
-import type { CreateCaisseDto } from "../services/caisse.service";
+
+import {
+  useApiMutationWithFeedback,
+} from "../../../hooks/useApiMutationWithFeedback";
+
+import type {
+  CreateCaisseDto,
+} from "../services/caisse.service";
+
+/* -------------------------------------------------------------------------- */
+/*                                    TYPES                                   */
+/* -------------------------------------------------------------------------- */
 
 type Props = {
   open: boolean;
@@ -24,35 +63,30 @@ type Agence = {
   libelle: string;
 };
 
-type MessageState = {
-  variant:
-    | "error"
-    | "success"
-    | "info"
-    | "warning";
-  title: string;
-  message: string;
-};
-
-type ErrorWithResponse = Error & {
-  response?: {
-    data?: {
-      message?: string;
-    };
-  };
-};
+/* -------------------------------------------------------------------------- */
+/*                                  COMPONENT                                 */
+/* -------------------------------------------------------------------------- */
 
 export default function CaisseFormModal({
   open,
   onClose,
 }: Props) {
+
+  /* ------------------------------------------------------------------------ */
+  /*                                    FORM                                  */
+  /* ------------------------------------------------------------------------ */
+
   const {
     register,
     handleSubmit,
     reset,
     setError,
     clearErrors,
-    formState: { errors },
+    control,
+
+    formState: {
+      errors,
+    },
   } = useForm<CreateCaisseDto>({
     defaultValues: {
       agence_id: "",
@@ -62,14 +96,20 @@ export default function CaisseFormModal({
     },
   });
 
-  const {
-    mutate,
-    isPending,
-  } = useCreateCaisse();
+  const selectedType =
+    useWatch({
+      control,
+      name: "type",
+    });
+
+  /* ------------------------------------------------------------------------ */
+  /*                                   QUERIES                                */
+  /* ------------------------------------------------------------------------ */
 
   const {
     data: agences = [],
-    isLoading: loadingAgences,
+    isLoading:
+      loadingAgences,
   } = useAgences() as {
     data: Agence[];
     isLoading: boolean;
@@ -77,70 +117,143 @@ export default function CaisseFormModal({
 
   const {
     data: users = [],
-    isLoading: loadingUsers,
+    isLoading:
+      loadingUsers,
   } = useUsers() as {
     data: User[];
     isLoading: boolean;
   };
 
-  const [
+  /* ------------------------------------------------------------------------ */
+  /*                                  MUTATION                                */
+  /* ------------------------------------------------------------------------ */
+
+  const createCaisse =
+    useCreateCaisse();
+
+  const {
+    mutate,
+    isPending,
     appMessage,
-    setAppMessage,
-  ] = useState<MessageState | null>(
-    null
-  );
+    clearMessage,
+  } =
+    useApiMutationWithFeedback({
+      mutationFn:
+        createCaisse.mutateAsync,
+
+      successMessage:
+        "Caisse créée avec succès",
+
+      invalidateQueries: [
+        "caisses",
+      ],
+
+      onSuccess: () => {
+
+        reset();
+
+        setTimeout(
+          () => {
+
+            onClose();
+
+            clearMessage();
+
+          },
+          1200
+        );
+      },
+
+      errorMessage:
+        "Impossible de créer cette caisse.",
+    });
+
+  /* ------------------------------------------------------------------------ */
+  /*                                   HELPERS                                */
+  /* ------------------------------------------------------------------------ */
+
+  const filteredUsers =
+    useMemo(
+      () => users || [],
+      [users]
+    );
+
+  /* ------------------------------------------------------------------------ */
+  /*                                  SUBMIT                                  */
+  /* ------------------------------------------------------------------------ */
 
   const onSubmit = (
     data: CreateCaisseDto
   ) => {
+
     /**
-     * =========================
-     * RÈGLES MÉTIER FRONTEND
-     * =========================
-     *
-     * 1. type = AGENT
-     *    → agent_id obligatoire
-     *
-     * 2. type = AGENCE
-     *    → agent_id interdit
+     * ------------------------------------------------
+     * RULES
+     * ------------------------------------------------
      */
 
     if (
-      data.type === "AGENT" &&
+      data.type ===
+        "AGENT" &&
       !data.agent_id
     ) {
-      setError("agent_id", {
-        type: "manual",
-        message:
-          "Un agent est obligatoire pour une caisse AGENT",
-      });
+
+      setError(
+        "agent_id",
+        {
+          type:
+            "manual",
+
+          message:
+            "Un agent est obligatoire pour une caisse AGENT",
+        }
+      );
+
       return;
     }
 
     if (
-      data.type === "AGENCE" &&
+      data.type ===
+        "AGENCE" &&
       data.agent_id
     ) {
-      setError("agent_id", {
-        type: "manual",
-        message:
-          "Une caisse AGENCE ne doit pas avoir d’agent",
-      });
+
+      setError(
+        "agent_id",
+        {
+          type:
+            "manual",
+
+          message:
+            "Une caisse AGENCE ne doit pas contenir d’agent",
+        }
+      );
+
       return;
     }
 
-    clearErrors("agent_id");
+    clearErrors(
+      "agent_id"
+    );
 
     /**
-     * 🔥 payload propre
+     * ------------------------------------------------
+     * PAYLOAD
+     * ------------------------------------------------
      */
 
     const payload = {
-      agence_id: data.agence_id,
-      type: data.type,
-      devise: data.devise,
+      agence_id:
+        data.agence_id,
 
-      ...(data.type === "AGENT" &&
+      type:
+        data.type,
+
+      devise:
+        data.devise,
+
+      ...(data.type ===
+        "AGENT" &&
       data.agent_id
         ? {
             agent_id:
@@ -149,254 +262,432 @@ export default function CaisseFormModal({
         : {}),
     };
 
-    console.log(
-      "🔥 PAYLOAD:",
-      payload
+    mutate(
+      payload as CreateCaisseDto
     );
-
-    mutate(payload as CreateCaisseDto, {
-      onSuccess: () => {
-        setAppMessage({
-          variant: "success",
-          title: "Succès",
-          message:
-            "Caisse créée avec succès",
-        });
-
-        reset();
-        onClose();
-      },
-
-      onError: (
-        error: Error
-      ) => {
-        const apiError =
-          error as ErrorWithResponse;
-
-        setAppMessage({
-          variant: "error",
-          title:
-            "Création refusée",
-          message:
-            apiError
-              ?.response
-              ?.data
-              ?.message ||
-            "Impossible de créer cette caisse",
-        });
-      },
-    });
   };
 
+  /* ------------------------------------------------------------------------ */
+  /*                                   RENDER                                 */
+  /* ------------------------------------------------------------------------ */
+
   return (
+
     <Modal
       open={open}
       onClose={onClose}
+      title="Créer une caisse"
     >
-      <h2 className="text-lg font-semibold mb-4">
-        Créer une caisse
-      </h2>
 
-      {appMessage && (
-        <AppMessageState
-          variant={
-            appMessage.variant
-          }
-          title={
-            appMessage.title
-          }
-          message={
-            appMessage.message
-          }
-          buttonText="Fermer"
-          onAction={() =>
-            setAppMessage(
-              null
-            )
-          }
-        />
-      )}
-
-      <form
-        onSubmit={handleSubmit(
-          onSubmit
-        )}
-        className="space-y-3"
+      <div
+        className="
+          space-y-6
+        "
       >
-        {/* =========================
-            AGENCE
-        ========================= */}
-        <select
-          {...register(
-            "agence_id",
-            {
-              required:
-                "Agence obligatoire",
-            }
-          )}
-          className="w-full border rounded-lg px-3 py-2"
-        >
-          <option value="">
-            {loadingAgences
-              ? "Chargement..."
-              : "Choisir une agence"}
-          </option>
 
-          {agences.map(
-            (a: Agence) => (
-              <option
-                key={a.id}
-                value={a.id}
-              >
-                {a.libelle}
-              </option>
-            )
-          )}
-        </select>
+        {/* MESSAGE */}
 
-        {errors.agence_id && (
-          <p className="text-sm text-red-500">
-            {
-              errors.agence_id
-                .message
+        {appMessage && (
+
+          <AppMessageState
+            variant={
+              appMessage.variant
             }
-          </p>
+            title={
+              appMessage.title
+            }
+            message={
+              appMessage.message
+            }
+            onAction={
+              clearMessage
+            }
+          />
+
         )}
 
-        {/* =========================
-            TYPE
-        ========================= */}
-        <div>
-          <label className="block text-sm font-medium mb-1">
-            Type de caisse
-          </label>
+        {/* FORM */}
 
-          <select
-            {...register(
-              "type",
-              {
-                required:
-                  "Type obligatoire",
-              }
+        <form
+          onSubmit={handleSubmit(
+            onSubmit
+          )}
+          className="
+            space-y-5
+          "
+        >
+
+          {/* -------------------------------------------------------------- */}
+          {/* AGENCE                                                        */}
+          {/* -------------------------------------------------------------- */}
+
+          <div>
+
+            <label
+              className="
+                mb-2
+                flex
+                items-center
+                gap-2
+                text-sm
+                font-medium
+                text-slate-700
+              "
+            >
+
+              <Building2
+                size={16}
+              />
+
+              Agence
+
+            </label>
+
+            <select
+              {...register(
+                "agence_id",
+                {
+                  required:
+                    "Agence obligatoire",
+                }
+              )}
+              className="input"
+            >
+
+              <option value="">
+                {loadingAgences
+                  ? "Chargement..."
+                  : "Choisir une agence"}
+              </option>
+
+              {agences.map(
+                (
+                  agence
+                ) => (
+
+                  <option
+                    key={
+                      agence.id
+                    }
+                    value={
+                      agence.id
+                    }
+                  >
+                    {
+                      agence.libelle
+                    }
+                  </option>
+
+                )
+              )}
+
+            </select>
+
+            {errors.agence_id && (
+
+              <p
+                className="
+                  mt-1
+                  text-xs
+                  text-red-500
+                "
+              >
+                {
+                  errors
+                    .agence_id
+                    .message
+                }
+              </p>
+
             )}
-            className="w-full border rounded-lg px-3 py-2"
-          >
-            <option value="">
-              Choisir un type
-            </option>
 
-            <option value="AGENCE">
-              AGENCE
-            </option>
+          </div>
 
-            <option value="AGENT">
-              AGENT
-            </option>
-          </select>
-        </div>
+          {/* -------------------------------------------------------------- */}
+          {/* TYPE                                                           */}
+          {/* -------------------------------------------------------------- */}
 
-        {errors.type && (
-          <p className="text-sm text-red-500">
-            {errors.type.message}
-          </p>
-        )}
+          <div>
 
-        {/* =========================
-            USER / AGENT
-        ========================= */}
-        <select
-          {...register(
-            "agent_id"
-          )}
-          className="w-full border rounded-lg px-3 py-2"
-        >
-          <option value="">
-            {loadingUsers
-              ? "Chargement..."
-              : "Choisir un agent"
-            }
-          </option>
+            <label
+              className="
+                mb-2
+                flex
+                items-center
+                gap-2
+                text-sm
+                font-medium
+                text-slate-700
+              "
+            >
 
-          {users.map(
-            (u: User) => (
-              <option
-                key={u.id}
-                value={u.id}
-              >
-                {u.user_name}
+              <Shield
+                size={16}
+              />
+
+              Type de caisse
+
+            </label>
+
+            <select
+              {...register(
+                "type",
+                {
+                  required:
+                    "Type obligatoire",
+                }
+              )}
+              className="input"
+            >
+
+              <option value="">
+                Choisir un type
               </option>
-            )
-          )}
-        </select>
 
-        {errors.agent_id && (
-          <p className="text-sm text-red-500">
-            {
-              errors.agent_id
-                .message
-            }
-          </p>
-        )}
+              <option value="AGENCE">
+                AGENCE
+              </option>
 
-        {/* =========================
-            DEVISE
-        ========================= */}
-        <select
-          {...register(
-            "devise",
-            {
-              required:
-                "Devise obligatoire",
-            }
-          )}
-          className="w-full border rounded-lg px-3 py-2"
-        >
-          <option value="">
-            Choisir une devise
-          </option>
+              <option value="AGENT">
+                AGENT
+              </option>
 
-          <option value="CDF">
-            CDF
-          </option>
+            </select>
 
-          <option value="USD">
-            USD
-          </option>
+            {errors.type && (
 
-          <option value="EUR">
-            EUR
-          </option>
-        </select>
+              <p
+                className="
+                  mt-1
+                  text-xs
+                  text-red-500
+                "
+              >
+                {
+                  errors
+                    .type
+                    .message
+                }
+              </p>
 
-        {errors.devise && (
-          <p className="text-sm text-red-500">
-            {
-              errors.devise
-                .message
-            }
-          </p>
-        )}
+            )}
 
-        {/* =========================
-            ACTIONS
-        ========================= */}
-        <div className="flex justify-end gap-2 pt-4">
-          <Button
-            type="button"
-            variant="secondary"
-            onClick={onClose}
+          </div>
+
+          {/* -------------------------------------------------------------- */}
+          {/* AGENT                                                          */}
+          {/* -------------------------------------------------------------- */}
+
+          <div>
+
+            <label
+              className="
+                mb-2
+                flex
+                items-center
+                gap-2
+                text-sm
+                font-medium
+                text-slate-700
+              "
+            >
+
+              <User2
+                size={16}
+              />
+
+              Agent associé
+
+            </label>
+
+            <select
+              {...register(
+                "agent_id"
+              )}
+              disabled={
+                selectedType !==
+                "AGENT"
+              }
+              className={`
+                input
+                ${
+                  selectedType !==
+                  "AGENT"
+                    ? "cursor-not-allowed bg-slate-100"
+                    : ""
+                }
+              `}
+            >
+
+              <option value="">
+                {loadingUsers
+                  ? "Chargement..."
+                  : "Choisir un agent"}
+              </option>
+
+              {filteredUsers.map(
+                (
+                  user
+                ) => (
+
+                  <option
+                    key={
+                      user.id
+                    }
+                    value={
+                      user.id
+                    }
+                  >
+                    {
+                      user.user_name
+                    }
+                  </option>
+
+                )
+              )}
+
+            </select>
+
+            {errors.agent_id && (
+
+              <p
+                className="
+                  mt-1
+                  text-xs
+                  text-red-500
+                "
+              >
+                {
+                  errors
+                    .agent_id
+                    .message
+                }
+              </p>
+
+            )}
+
+          </div>
+
+          {/* -------------------------------------------------------------- */}
+          {/* DEVISE                                                         */}
+          {/* -------------------------------------------------------------- */}
+
+          <div>
+
+            <label
+              className="
+                mb-2
+                flex
+                items-center
+                gap-2
+                text-sm
+                font-medium
+                text-slate-700
+              "
+            >
+
+              <CircleDollarSign
+                size={16}
+              />
+
+              Devise
+
+            </label>
+
+            <select
+              {...register(
+                "devise",
+                {
+                  required:
+                    "Devise obligatoire",
+                }
+              )}
+              className="input"
+            >
+
+              <option value="">
+                Choisir une devise
+              </option>
+
+              <option value="CDF">
+                CDF
+              </option>
+
+              <option value="USD">
+                USD
+              </option>
+
+              <option value="EUR">
+                EUR
+              </option>
+
+            </select>
+
+            {errors.devise && (
+
+              <p
+                className="
+                  mt-1
+                  text-xs
+                  text-red-500
+                "
+              >
+                {
+                  errors
+                    .devise
+                    .message
+                }
+              </p>
+
+            )}
+
+          </div>
+
+          {/* -------------------------------------------------------------- */}
+          {/* ACTIONS                                                        */}
+          {/* -------------------------------------------------------------- */}
+
+          <div
+            className="
+              flex
+              justify-end
+              gap-3
+              border-t
+              border-slate-100
+              pt-5
+            "
           >
-            Annuler
-          </Button>
 
-          <Button
-            type="submit"
-            loading={isPending}
-          >
-            Enregistrer
-          </Button>
-        </div>
-      </form>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={onClose}
+            >
+              Annuler
+            </Button>
+
+            <Button
+              type="submit"
+              loading={
+                isPending
+              }
+            >
+
+              <Wallet
+                size={16}
+              />
+
+              Enregistrer
+
+            </Button>
+
+          </div>
+
+        </form>
+
+      </div>
+
     </Modal>
+
   );
 }

@@ -1,9 +1,21 @@
 // src/modules/admin/pages/AdminDashboard.tsx
 
-import { useState } from "react";
+import {
+  Activity,
+  ArrowUpRight,
+  Clock3,
+  Wallet,
+} from "lucide-react";
+
+import { useMemo, useState } from "react";
+
 import { useAuthStore } from "../../../app/store";
 import DashboardTable from "../components/DashboardTable";
 import { useDashboard } from "../hooks/useDashboard";
+
+/* -------------------------------------------------------------------------- */
+/*                                    PAGE                                    */
+/* -------------------------------------------------------------------------- */
 
 export default function AdminDashboard() {
 
@@ -12,26 +24,24 @@ export default function AdminDashboard() {
       (s) => s.user
     );
 
-  /**
-   * =========================================
-   * 📅 FILTRES PÉRIODE
-   * =========================================
-   */
+  /* -------------------------------------------------------------------------- */
+  /*                                   FILTERS                                  */
+  /* -------------------------------------------------------------------------- */
+
   const [
     dateFrom,
-    setDateFrom
+    setDateFrom,
   ] = useState("");
 
   const [
     dateTo,
-    setDateTo
+    setDateTo,
   ] = useState("");
 
-  /**
-   * =========================================
-   * 📊 DASHBOARD
-   * =========================================
-   */
+  /* -------------------------------------------------------------------------- */
+  /*                                   QUERY                                    */
+  /* -------------------------------------------------------------------------- */
+
   const { data } =
     useDashboard({
       date_from:
@@ -44,11 +54,10 @@ export default function AdminDashboard() {
   const dashboard =
     data?.data;
 
-  /**
-   * =========================================
-   * 👋 GREETING
-   * =========================================
-   */
+  /* -------------------------------------------------------------------------- */
+  /*                                  GREETING                                  */
+  /* -------------------------------------------------------------------------- */
+
   const currentHour =
     new Date().getHours();
 
@@ -57,13 +66,17 @@ export default function AdminDashboard() {
       ? "Bonjour"
       : "Bonsoir";
 
-  /**
-   * =========================================
-   * 📋 TABLE DATA
-   * =========================================
-   */
-  const rows = dashboard
-    ? [
+  /* -------------------------------------------------------------------------- */
+  /*                                   TABLE                                    */
+  /* -------------------------------------------------------------------------- */
+
+  const rows = useMemo(
+    () => {
+
+      if (!dashboard)
+        return [];
+
+      return [
         {
           label:
             "Transfert client",
@@ -98,7 +111,7 @@ export default function AdminDashboard() {
 
         {
           label:
-            "Transferts en attente validation",
+            "Transferts en attente",
 
           volumes:
             dashboard
@@ -114,7 +127,7 @@ export default function AdminDashboard() {
 
         {
           label:
-            "Retraits en attente validation",
+            "Retraits en attente",
 
           volumes:
             dashboard
@@ -127,30 +140,15 @@ export default function AdminDashboard() {
               ?.total_count || 0
           ),
         },
+      ];
+    },
+    [dashboard]
+  );
 
-        // {
-        //   label:
-        //     "Frais d'envoi",
+  /* -------------------------------------------------------------------------- */
+  /*                                  METRICS                                   */
+  /* -------------------------------------------------------------------------- */
 
-        //   volumes:
-        //     dashboard
-        //       .total_frais_transfert_client
-        //       ?.volumes || {},
-
-        //   count: Number(
-        //     dashboard
-        //       .total_frais_transfert_client
-        //       ?.total_count || 0
-        //   ),
-        // },
-      ]
-    : [];
-
-  /**
-   * =========================================
-   * 💰 KPI GLOBAL MULTI-DEVISE
-   * =========================================
-   */
   const totalVolumes =
     rows.reduce(
       (
@@ -165,14 +163,14 @@ export default function AdminDashboard() {
           row.volumes || {}
         ).forEach(
           ([
-            devise,
-            montant
+            currency,
+            amount,
           ]) => {
 
-            acc[devise] =
-              (acc[devise] || 0) +
+            acc[currency] =
+              (acc[currency] || 0) +
               Number(
-                montant || 0
+                amount || 0
               );
           }
         );
@@ -182,11 +180,6 @@ export default function AdminDashboard() {
       {}
     );
 
-  /**
-   * =========================================
-   * 🔢 TOTAL OPÉRATIONS
-   * =========================================
-   */
   const totalOperations =
     rows.reduce(
       (
@@ -200,12 +193,7 @@ export default function AdminDashboard() {
       0
     );
 
-  /**
-   * =========================================
-   * ⏳ TOTAL EN ATTENTE
-   * =========================================
-   */
-  const pendingCount =
+  const pendingOperations =
     Number(
       dashboard
         ?.transfert_en_attente_validation
@@ -217,21 +205,15 @@ export default function AdminDashboard() {
         ?.total_count || 0
     );
 
-    /**
-   * =========================================
-   * 💸 TOTAL FRAIS TRANSFERT CLIENT
-   * =========================================
-   */
   const totalFees =
     dashboard
       ?.total_frais_transfert_client
       ?.volumes || {};
 
-  /**
-   * =========================================
-   * 🔄 RESET FILTERS
-   * =========================================
-   */
+  /* -------------------------------------------------------------------------- */
+  /*                                   ACTIONS                                  */
+  /* -------------------------------------------------------------------------- */
+
   const handleReset =
     () => {
 
@@ -239,380 +221,601 @@ export default function AdminDashboard() {
       setDateTo("");
     };
 
-  return (
-    <div className="space-y-6">
-
-      {/* HEADER */}
-      <div
-        className="
-          relative overflow-hidden
-          bg-gradient-to-br from-white via-white to-indigo-50
-          border border-gray-200
-          rounded-3xl
-          p-7
-          shadow-sm
-        "
-      >
-
-        {/* GLOW */}
-        <div
-          className="
-            absolute -top-10 -right-10
-            w-40 h-40
-            bg-indigo-100/50
-            rounded-full
-            blur-3xl
-            pointer-events-none
-          "
-        />
-
-        <div
-          className="
-            absolute -bottom-8 -left-8
-            w-32 h-32
-            bg-blue-100/40
-            rounded-full
-            blur-2xl
-            pointer-events-none
-          "
-        />
-
-        <div
-          className="
-            relative z-10
-            flex flex-col
-            md:flex-row
-            md:items-center
-            md:justify-between
-            gap-6
-          "
-        >
-
-          {/* LEFT */}
-          <div>
-
-            <p
-              className="
-                text-xs
-                font-semibold
-                uppercase
-                tracking-[0.18em]
-                text-indigo-500
-                mb-2
-              "
-            >
-              Dashboard Administrateur
-            </p>
-
-            <h1
-              className="
-                text-3xl
-                font-bold
-                text-gray-800
-                leading-tight
-              "
-            >
-              {greeting}{" "}
-
-              <span className="text-indigo-600">
-                {user?.user_name ||
-                  "Utilisateur"}
-              </span>{" "}
-
-              👋
-            </h1>
-
-            <p
-              className="
-                text-sm text-gray-500
-                mt-3
-                max-w-xl
-                leading-relaxed
-              "
-            >
-              Voici un aperçu global
-              de vos opérations,
-              validations et mouvements
-              financiers.
-            </p>
-
-          </div>
-
-          {/* RIGHT */}
-          <div
-            className="
-              self-start md:self-center
-              px-4 py-3
-              rounded-2xl
-              bg-white/80
-              border border-gray-200
-              shadow-sm
-              backdrop-blur-sm
-            "
-          >
-
-            <p
-              className="
-                text-xs
-                text-gray-400
-                uppercase
-                font-medium
-              "
-            >
-              Aujourd’hui
-            </p>
-
-            <p
-              className="
-                text-sm
-                font-semibold
-                text-gray-700
-                mt-1
-              "
-            >
-              {new Date()
-                .toLocaleDateString(
-                  "fr-FR",
-                  {
-                    day: "2-digit",
-                    month: "long",
-                    year: "numeric",
-                  }
-                )}
-            </p>
-
-          </div>
-
-        </div>
-      </div>
-
-      {/* KPI */}
-      <div
-        className="
-          grid
-          grid-cols-1
-          md:grid-cols-4
-          gap-4
-        "
-      >
-
-        <Kpi
-          title="Volume total"
-          values={totalVolumes}
-        />
-
-        <Kpi
-          title="Total opérations"
-          values={totalOperations}
-        />
-
-        <Kpi
-          title="En attente validation"
-          values={pendingCount}
-        />
-
-        <Kpi
-          title="Frais d'envoi"
-          values={totalFees}
-        />
-
-      </div>
-
-      {/* TABLE */}
-      <div>
-
-        <h2
-          className="
-            text-sm
-            font-semibold
-            text-gray-600
-            mb-3
-          "
-        >
-          Vue détaillée
-        </h2>
-
-        <DashboardTable
-          data={rows}
-
-          dateFrom={
-            dateFrom
-          }
-
-          dateTo={
-            dateTo
-          }
-
-          onDateFromChange={
-            setDateFrom
-          }
-
-          onDateToChange={
-            setDateTo
-          }
-
-          onReset={
-            handleReset
-          }
-        />
-
-      </div>
-    </div>
-  );
-}
-
-function Kpi({
-  title,
-  values,
-}: {
-  title: string;
-
-  values:
-    | number
-    | Record<
-        string,
-        number
-      >;
-}) {
-
-  /**
-   * =========================================
-   * 🔢 SIMPLE NUMBER
-   * =========================================
-   */
-  if (
-    typeof values ===
-    "number"
-  ) {
-
-    return (
-      <div
-        className="
-          bg-white
-          border
-          rounded-2xl
-          p-5
-          shadow-sm
-        "
-      >
-
-        <p
-          className="
-            text-xs
-            text-gray-400
-            uppercase
-            tracking-wide
-          "
-        >
-          {title}
-        </p>
-
-        <h2
-          className="
-            text-2xl
-            font-bold
-            text-gray-800
-            mt-2
-          "
-        >
-          {values.toLocaleString()}
-        </h2>
-
-      </div>
-    );
-  }
-
-  /**
-   * =========================================
-   * 💰 MULTI DEVISE
-   * =========================================
-   */
-  const entries =
-    Object.entries(
-      values || {}
-    );
+  /* -------------------------------------------------------------------------- */
+  /*                                   RENDER                                   */
+  /* -------------------------------------------------------------------------- */
 
   return (
     <div
       className="
-        bg-white
+        min-h-screen
+        bg-[#f5f7fb00]
+      "
+    >
+
+      <div
+        className="
+          mx-auto
+          max-w-[1700px]
+          px-0
+          py-0
+          space-y-6
+        "
+      >
+
+        {/* ------------------------------------------------------------------ */}
+        {/* HEADER                                                             */}
+        {/* ------------------------------------------------------------------ */}
+
+        <section
+          className="
+            relative
+            overflow-hidden
+            rounded-[28px]
+            border
+            border-slate-200/80
+            bg-white
+            px-8
+            py-7
+            shadow-[0_1px_2px_rgba(16,24,40,0.04)]
+          "
+        >
+
+          <div
+            className="
+              absolute
+              inset-y-0
+              right-0
+              w-[35%]
+              bg-gradient-to-l
+              from-indigo-50/80
+              to-transparent
+              pointer-events-none
+            "
+          />
+
+          <div
+            className="
+              relative
+              flex
+              flex-col
+              gap-8
+              xl:flex-row
+              xl:items-center
+              xl:justify-between
+            "
+          >
+
+            {/* LEFT */}
+
+            <div
+              className="
+                max-w-3xl
+              "
+            >
+
+              <div
+                className="
+                  inline-flex
+                  items-center
+                  gap-2
+                  rounded-full
+                  border
+                  border-indigo-100
+                  bg-indigo-50
+                  px-3
+                  py-1
+                  text-[11px]
+                  font-semibold
+                  uppercase
+                  tracking-[0.18em]
+                  text-indigo-700
+                "
+              >
+                ERP Administration
+              </div>
+
+              <h1
+                className="
+                  mt-5
+                  text-[34px]
+                  font-semibold
+                  tracking-[-0.03em]
+                  text-slate-900
+                "
+              >
+                {greeting},{" "}
+
+                <span
+                  className="
+                    text-indigo-600
+                  "
+                >
+                  {user?.user_name ||
+                    "Administrateur"}
+                </span>
+              </h1>
+
+              <p
+                className="
+                  mt-3
+                  max-w-2xl
+                  text-[15px]
+                  leading-7
+                  text-slate-500
+                "
+              >
+                Supervisez les flux
+                financiers, les opérations
+                multi-agences et les
+                validations critiques depuis
+                une vue consolidée temps réel.
+              </p>
+
+            </div>
+
+            {/* RIGHT */}
+
+            <div
+              className="
+                grid
+                min-w-[320px]
+                grid-cols-2
+                gap-4
+              "
+            >
+
+              <MiniStat
+                label="Date"
+                value={
+                  new Date()
+                    .toLocaleDateString(
+                      "fr-FR",
+                      {
+                        day: "2-digit",
+                        month: "long",
+                        year: "numeric",
+                      }
+                    )
+                }
+              />
+
+              <MiniStat
+                label="Statut"
+                value="Système opérationnel"
+                positive
+              />
+
+            </div>
+
+          </div>
+
+        </section>
+
+        {/* ------------------------------------------------------------------ */}
+        {/* KPI GRID                                                           */}
+        {/* ------------------------------------------------------------------ */}
+
+        <section
+          className="
+            grid
+            grid-cols-1
+            gap-5
+            xl:grid-cols-4
+          "
+        >
+
+          <MetricCard
+            title="Volume global"
+            icon={
+              <Wallet size={18} />
+            }
+            values={totalVolumes}
+          />
+
+          <MetricCard
+            title="Total opérations"
+            icon={
+              <Activity size={18} />
+            }
+            value={totalOperations}
+          />
+
+          <MetricCard
+            title="En attente"
+            icon={
+              <Clock3 size={18} />
+            }
+            value={pendingOperations}
+          />
+
+          <MetricCard
+            title="Frais générés"
+            icon={
+              <ArrowUpRight
+                size={18}
+              />
+            }
+            values={totalFees}
+          />
+
+        </section>
+
+        {/* ------------------------------------------------------------------ */}
+        {/* TABLE SECTION                                                      */}
+        {/* ------------------------------------------------------------------ */}
+
+        <section
+          className="
+            overflow-hidden
+            rounded-[28px]
+            border
+            border-slate-200/80
+            bg-white
+            shadow-[0_1px_2px_rgba(16,24,40,0.04)]
+          "
+        >
+
+          <div
+            className="
+              flex
+              flex-col
+              gap-4
+              border-b
+              border-slate-100
+              px-7
+              py-5
+              lg:flex-row
+              lg:items-center
+              lg:justify-between
+            "
+          >
+
+            <div>
+
+              <h2
+                className="
+                  text-lg
+                  font-semibold
+                  text-slate-900
+                "
+              >
+                Vue opérationnelle
+              </h2>
+
+              <p
+                className="
+                  mt-1
+                  text-sm
+                  text-slate-500
+                "
+              >
+                Analyse consolidée des
+                transactions et volumes
+                financiers.
+              </p>
+
+            </div>
+
+          </div>
+
+          <div
+            className="
+              px-2
+              pb-2
+            "
+          >
+
+            <DashboardTable
+              data={rows}
+              dateFrom={
+                dateFrom
+              }
+              dateTo={
+                dateTo
+              }
+              onDateFromChange={
+                setDateFrom
+              }
+              onDateToChange={
+                setDateTo
+              }
+              onReset={
+                handleReset
+              }
+            />
+
+          </div>
+
+        </section>
+
+      </div>
+
+    </div>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/*                                METRIC CARD                                 */
+/* -------------------------------------------------------------------------- */
+
+function MetricCard({
+  title,
+  icon,
+  value,
+  values,
+}: {
+  title: string;
+
+  icon: React.ReactNode;
+
+  value?: number;
+
+  values?: Record<
+    string,
+    number
+  >;
+}) {
+
+  return (
+    <div
+      className="
+        group
+        relative
+        overflow-hidden
+        rounded-[26px]
         border
+        border-slate-200/80
+        bg-white
+        p-6
+        transition-all
+        duration-300
+        hover:-translate-y-[2px]
+        hover:shadow-xl
+      "
+    >
+
+      <div
+        className="
+          absolute
+          right-0
+          top-0
+          h-28
+          w-28
+          rounded-full
+          bg-indigo-50
+          blur-3xl
+          transition-opacity
+          duration-300
+          group-hover:opacity-100
+        "
+      />
+
+      <div
+        className="
+          relative
+          flex
+          items-start
+          justify-between
+        "
+      >
+
+        <div>
+
+          <p
+            className="
+              text-[12px]
+              font-medium
+              uppercase
+              tracking-[0.14em]
+              text-slate-400
+            "
+          >
+            {title}
+          </p>
+
+        </div>
+
+        <div
+          className="
+            flex
+            h-10
+            w-10
+            items-center
+            justify-center
+            rounded-2xl
+            bg-slate-100
+            text-slate-700
+          "
+        >
+          {icon}
+        </div>
+
+      </div>
+
+      {/* SIMPLE VALUE */}
+
+      {typeof value ===
+      "number" ? (
+
+        <div
+          className="
+            relative
+            mt-7
+          "
+        >
+
+          <h3
+            className="
+              text-4xl
+              font-semibold
+              tracking-[-0.04em]
+              text-slate-900
+            "
+          >
+            {value.toLocaleString()}
+          </h3>
+
+        </div>
+
+      ) : (
+
+        <div
+          className="
+            relative
+            mt-6
+            space-y-3
+          "
+        >
+
+          {Object.entries(
+            values || {}
+          ).length > 0 ? (
+
+            Object.entries(
+              values || {}
+            ).map(
+              ([
+                currency,
+                amount,
+              ]) => (
+
+                <div
+                  key={currency}
+                  className="
+                    flex
+                    items-center
+                    justify-between
+                    rounded-2xl
+                    border
+                    border-slate-100
+                    bg-slate-50/70
+                    px-4
+                    py-3
+                  "
+                >
+
+                  <span
+                    className="
+                      text-sm
+                      font-medium
+                      text-slate-500
+                    "
+                  >
+                    {currency}
+                  </span>
+
+                  <span
+                    className="
+                      text-lg
+                      font-semibold
+                      tracking-[-0.02em]
+                      text-slate-900
+                    "
+                  >
+                    {Number(
+                      amount
+                    ).toLocaleString()}
+                  </span>
+
+                </div>
+              )
+            )
+
+          ) : (
+
+            <div
+              className="
+                rounded-2xl
+                border
+                border-dashed
+                border-slate-200
+                px-4
+                py-5
+                text-sm
+                text-slate-400
+              "
+            >
+              Aucune donnée disponible
+            </div>
+
+          )}
+
+        </div>
+      )}
+
+    </div>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/*                                 MINI STAT                                  */
+/* -------------------------------------------------------------------------- */
+
+function MiniStat({
+  label,
+  value,
+  positive,
+}: {
+  label: string;
+  value: string;
+  positive?: boolean;
+}) {
+
+  return (
+    <div
+      className="
         rounded-2xl
-        p-5
-        shadow-sm
+        border
+        border-slate-200
+        bg-slate-50/70
+        px-4
+        py-4
       "
     >
 
       <p
         className="
-          text-xs
-          text-gray-400
+          text-[11px]
+          font-medium
           uppercase
-          tracking-wide
+          tracking-[0.12em]
+          text-slate-400
         "
       >
-        {title}
+        {label}
       </p>
 
       <div
         className="
-          mt-3
-          space-y-2
+          mt-2
+          flex
+          items-center
+          gap-2
         "
       >
 
-        {entries.length > 0 ? (
-
-          entries.map(
-            ([
-              devise,
-              montant
-            ]) => (
-
-              <div
-                key={devise}
-                className="
-                  flex items-center
-                  justify-between
-                "
-              >
-
-                <span
-                  className="
-                    text-sm
-                    text-gray-500
-                  "
-                >
-                  {devise}
-                </span>
-
-                <span
-                  className="
-                    text-lg
-                    font-bold
-                    text-gray-800
-                  "
-                >
-                  {Number(
-                    montant
-                  ).toLocaleString()}
-                </span>
-
-              </div>
-            )
-          )
-
-        ) : (
+        {positive && (
 
           <span
             className="
-              text-sm
-              text-gray-400
+              h-2
+              w-2
+              rounded-full
+              bg-emerald-500
             "
-          >
-            Aucune donnée
-          </span>
+          />
         )}
+
+        <span
+          className="
+            text-sm
+            font-semibold
+            text-slate-800
+          "
+        >
+          {value}
+        </span>
 
       </div>
 

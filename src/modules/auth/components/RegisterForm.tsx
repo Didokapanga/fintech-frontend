@@ -1,15 +1,46 @@
 // src/modules/auth/components/RegisterForm.tsx
 
-import { useForm } from "react-hook-form";
-import type { RegisterDto } from "../services/auth.service";
-import type { AxiosError } from "axios";
 import { useState } from "react";
-import { useRegister } from "../hooks/useAuth";
-import { useRoles } from "../hooks/useRoles";
-import { useAgences } from "../../agence/hooks/useAgences";
-import AppMessageState from "../../../components/ui/AppMessageState";
+import { useForm } from "react-hook-form";
+import type { AxiosError } from "axios";
 
-// TYPES
+import {
+  Eye,
+  EyeOff,
+  Mail,
+  Phone,
+  ShieldCheck,
+  User2,
+  Lock,
+  Building2,
+} from "lucide-react";
+
+
+
+import {
+  useRegister,
+} from "../hooks/useAuth";
+
+import {
+  useRoles,
+} from "../hooks/useRoles";
+
+import {
+  useAgences,
+} from "../../agence/hooks/useAgences";
+
+import AppMessageState
+from "../../../components/ui/AppMessageState";
+
+import {
+  Button,
+} from "../../../components/ui";
+import type { RegisterDto } from "../services/auth.service";
+
+/* -------------------------------------------------------------------------- */
+/* TYPES                                                                      */
+/* -------------------------------------------------------------------------- */
+
 type Role = {
   id: string;
   role_name: string;
@@ -20,17 +51,42 @@ type Agence = {
   libelle: string;
 };
 
+type RolesResponse = {
+  data: Role[];
+};
+
+type AgencesResponse = {
+  data: Agence[];
+};
+
 type Props = {
   onClose?: () => void;
 };
 
 type MessageState = {
-  variant: "error" | "success" | "info" | "warning";
+  variant:
+    | "error"
+    | "success"
+    | "info"
+    | "warning";
+
   title: string;
+
   message: string;
 };
 
-export default function RegisterForm({ onClose }: Props) {
+/* -------------------------------------------------------------------------- */
+/* COMPONENT                                                                  */
+/* -------------------------------------------------------------------------- */
+
+export default function RegisterForm({
+  onClose,
+}: Props) {
+
+  /* ---------------------------------------------------------------------- */
+  /* FORM                                                                   */
+  /* ---------------------------------------------------------------------- */
+
   const {
     register,
     handleSubmit,
@@ -38,151 +94,594 @@ export default function RegisterForm({ onClose }: Props) {
     reset,
   } = useForm<RegisterDto>();
 
-  const { mutate, isPending } = useRegister();
+  /* ---------------------------------------------------------------------- */
+  /* MUTATION                                                               */
+  /* ---------------------------------------------------------------------- */
 
-  const { data: roles = [] } = useRoles() as {
-    data: Role[];
+  const {
+    mutate,
+    isPending,
+  } = useRegister();
+
+  /* ---------------------------------------------------------------------- */
+  /* DATA                                                                   */
+  /* ---------------------------------------------------------------------- */
+
+  const {
+    data: rolesResponse,
+  } = useRoles() as {
+    data?: Role[] | RolesResponse;
   };
 
-  const { data: agences = [] } = useAgences() as {
-    data: Agence[];
+  const {
+    data: agencesResponse,
+  } = useAgences() as {
+    data?: Agence[] | AgencesResponse;
   };
 
-  const [showPassword, setShowPassword] = useState(false);
+  const roles: Role[] =
+    Array.isArray(
+      rolesResponse
+    )
+      ? rolesResponse
+      : rolesResponse?.data || [];
 
-  const [appMessage, setAppMessage] =
-    useState<MessageState | null>(null);
+  const agences: Agence[] =
+    Array.isArray(
+      agencesResponse
+    )
+      ? agencesResponse
+      : agencesResponse?.data || [];
 
-  const onSubmit = (data: RegisterDto) => {
+  /* ---------------------------------------------------------------------- */
+  /* STATE                                                                  */
+  /* ---------------------------------------------------------------------- */
+
+  const [
+    showPassword,
+    setShowPassword,
+  ] = useState(false);
+
+  const [
+    appMessage,
+    setAppMessage,
+  ] =
+    useState<MessageState | null>(
+      null
+    );
+
+  /* ---------------------------------------------------------------------- */
+  /* SUBMIT                                                                 */
+  /* ---------------------------------------------------------------------- */
+
+  const onSubmit = (
+    data: RegisterDto
+  ) => {
+
     mutate(data, {
+
       onSuccess: () => {
+
         setAppMessage({
           variant: "success",
+
           title: "Succès",
-          message: "Utilisateur créé avec succès",
+
+          message:
+            "Utilisateur créé avec succès",
         });
 
         reset();
-        onClose?.();
+
+        setTimeout(() => {
+          onClose?.();
+        }, 700);
       },
 
-      onError: (error: unknown) => {
+      onError: (
+        error: unknown
+      ) => {
+
         const err =
-          error as AxiosError<{ message?: string }>;
+          error as AxiosError<{
+            message?: string;
+          }>;
 
         setAppMessage({
           variant: "error",
-          title: "Création refusée",
+
+          title:
+            "Création refusée",
+
           message:
-            err.response?.data?.message ||
+            err.response
+              ?.data
+              ?.message ||
             "Erreur lors de la création",
         });
       },
     });
   };
 
+  /* ---------------------------------------------------------------------- */
+  /* RENDER                                                                 */
+  /* ---------------------------------------------------------------------- */
+
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+
+    <form
+      onSubmit={handleSubmit(
+        onSubmit
+      )}
+      className="space-y-5"
+    >
 
       {/* MESSAGE */}
+
       {appMessage && (
+
         <AppMessageState
-          variant={appMessage.variant}
-          title={appMessage.title}
-          message={appMessage.message}
-          onAction={() => setAppMessage(null)}
+          variant={
+            appMessage.variant
+          }
+          title={
+            appMessage.title
+          }
+          message={
+            appMessage.message
+          }
+          onAction={() =>
+            setAppMessage(null)
+          }
         />
+
       )}
 
       {/* USERNAME */}
-      <div>
-        <label className="text-sm">Nom utilisateur</label>
-        <input
-          {...register("user_name", { required: "Champ requis" })}
-          className="input"
-        />
+
+      <div className="space-y-2">
+
+        <label
+          className="
+            text-sm
+            font-medium
+            text-slate-700
+          "
+        >
+          Nom utilisateur
+        </label>
+
+        <div className="relative">
+
+          <User2
+            size={16}
+            className="
+              absolute
+              left-3
+              top-1/2
+              -translate-y-1/2
+              text-slate-400
+            "
+          />
+
+          <input
+            {...register(
+              "user_name",
+              {
+                required:
+                  "Champ requis",
+              }
+            )}
+            placeholder="Ex: DKAPANGA"
+            className="
+              w-full
+              rounded-xl
+              border
+              border-slate-200
+              bg-white
+              py-3
+              pl-10
+              pr-4
+              text-sm
+              outline-none
+              transition-all
+              focus:border-indigo-400
+              focus:ring-4
+              focus:ring-indigo-100
+            "
+          />
+
+        </div>
+
         {errors.user_name && (
+
           <p className="text-xs text-red-500">
-            {errors.user_name.message}
+            {
+              errors.user_name
+                .message
+            }
           </p>
+
         )}
+
       </div>
 
       {/* PHONE */}
-      <div>
-        <label className="text-sm">Téléphone</label>
-        <input
-          {...register("phone", { required: "Champ requis" })}
-          className="input"
-        />
+
+      <div className="space-y-2">
+
+        <label
+          className="
+            text-sm
+            font-medium
+            text-slate-700
+          "
+        >
+          Téléphone
+        </label>
+
+        <div className="relative">
+
+          <Phone
+            size={16}
+            className="
+              absolute
+              left-3
+              top-1/2
+              -translate-y-1/2
+              text-slate-400
+            "
+          />
+
+          <input
+            {...register(
+              "phone",
+              {
+                required:
+                  "Champ requis",
+              }
+            )}
+            placeholder="+243..."
+            className="
+              w-full
+              rounded-xl
+              border
+              border-slate-200
+              bg-white
+              py-3
+              pl-10
+              pr-4
+              text-sm
+              outline-none
+              transition-all
+              focus:border-indigo-400
+              focus:ring-4
+              focus:ring-indigo-100
+            "
+          />
+
+        </div>
+
       </div>
 
       {/* EMAIL */}
-      <div>
-        <label className="text-sm">Email</label>
-        <input
-          {...register("email", { required: "Champ requis" })}
-          className="input"
-        />
+
+      <div className="space-y-2">
+
+        <label
+          className="
+            text-sm
+            font-medium
+            text-slate-700
+          "
+        >
+          Adresse email
+        </label>
+
+        <div className="relative">
+
+          <Mail
+            size={16}
+            className="
+              absolute
+              left-3
+              top-1/2
+              -translate-y-1/2
+              text-slate-400
+            "
+          />
+
+          <input
+            type="email"
+            {...register(
+              "email",
+              {
+                required:
+                  "Champ requis",
+              }
+            )}
+            placeholder="email@exemple.com"
+            className="
+              w-full
+              rounded-xl
+              border
+              border-slate-200
+              bg-white
+              py-3
+              pl-10
+              pr-4
+              text-sm
+              outline-none
+              transition-all
+              focus:border-indigo-400
+              focus:ring-4
+              focus:ring-indigo-100
+            "
+          />
+
+        </div>
+
       </div>
 
       {/* PASSWORD */}
-      <div>
-        <label className="text-sm">Mot de passe</label>
+
+      <div className="space-y-2">
+
+        <label
+          className="
+            text-sm
+            font-medium
+            text-slate-700
+          "
+        >
+          Mot de passe
+        </label>
 
         <div className="relative">
+
+          <Lock
+            size={16}
+            className="
+              absolute
+              left-3
+              top-1/2
+              -translate-y-1/2
+              text-slate-400
+            "
+          />
+
           <input
-            type={showPassword ? "text" : "password"}
-            {...register("password", { required: "Champ requis" })}
-            className="input pr-10"
+            type={
+              showPassword
+                ? "text"
+                : "password"
+            }
+            {...register(
+              "password",
+              {
+                required:
+                  "Champ requis",
+              }
+            )}
+            placeholder="********"
+            className="
+              w-full
+              rounded-xl
+              border
+              border-slate-200
+              bg-white
+              py-3
+              pl-10
+              pr-12
+              text-sm
+              outline-none
+              transition-all
+              focus:border-indigo-400
+              focus:ring-4
+              focus:ring-indigo-100
+            "
           />
 
           <button
             type="button"
-            onClick={() => setShowPassword((s) => !s)}
-            className="absolute right-3 top-2"
+            onClick={() =>
+              setShowPassword(
+                (s) => !s
+              )
+            }
+            className="
+              absolute
+              right-3
+              top-1/2
+              -translate-y-1/2
+              text-slate-500
+            "
           >
-            {showPassword ? "🙈" : "👁️"}
+
+            {showPassword ? (
+              <EyeOff size={17} />
+            ) : (
+              <Eye size={17} />
+            )}
+
           </button>
+
         </div>
+
       </div>
 
       {/* ROLE */}
-      <div>
-        <label className="text-sm">Rôle</label>
-        <select {...register("role_id")} className="input">
-          <option value="">Choisir</option>
 
-          {roles.map((role) => (
-            <option key={role.id} value={role.id}>
-              {role.role_name}
+      <div className="space-y-2">
+
+        <label
+          className="
+            text-sm
+            font-medium
+            text-slate-700
+          "
+        >
+          Rôle
+        </label>
+
+        <div className="relative">
+
+          <ShieldCheck
+            size={16}
+            className="
+              absolute
+              left-3
+              top-1/2
+              -translate-y-1/2
+              text-slate-400
+            "
+          />
+
+          <select
+            {...register(
+              "role_id",
+              {
+                required:
+                  "Champ requis",
+              }
+            )}
+            className="
+              w-full
+              appearance-none
+              rounded-xl
+              border
+              border-slate-200
+              bg-white
+              py-3
+              pl-10
+              pr-4
+              text-sm
+              outline-none
+              transition-all
+              focus:border-indigo-400
+              focus:ring-4
+              focus:ring-indigo-100
+            "
+          >
+
+            <option value="">
+              Choisir un rôle
             </option>
-          ))}
-        </select>
+
+            {roles.map(
+              (role) => (
+
+                <option
+                  key={role.id}
+                  value={role.id}
+                >
+                  {
+                    role.role_name
+                  }
+                </option>
+
+              )
+            )}
+
+          </select>
+
+        </div>
+
       </div>
 
       {/* AGENCE */}
-      <div>
-        <label className="text-sm">Agence</label>
-        <select {...register("agence_id")} className="input">
-          <option value="">Choisir</option>
 
-          {agences.map((a) => (
-            <option key={a.id} value={a.id}>
-              {a.libelle}
+      <div className="space-y-2">
+
+        <label
+          className="
+            text-sm
+            font-medium
+            text-slate-700
+          "
+        >
+          Agence
+        </label>
+
+        <div className="relative">
+
+          <Building2
+            size={16}
+            className="
+              absolute
+              left-3
+              top-1/2
+              -translate-y-1/2
+              text-slate-400
+            "
+          />
+
+          <select
+            {...register(
+              "agence_id",
+              {
+                required:
+                  "Champ requis",
+              }
+            )}
+            className="
+              w-full
+              appearance-none
+              rounded-xl
+              border
+              border-slate-200
+              bg-white
+              py-3
+              pl-10
+              pr-4
+              text-sm
+              outline-none
+              transition-all
+              focus:border-indigo-400
+              focus:ring-4
+              focus:ring-indigo-100
+            "
+          >
+
+            <option value="">
+              Choisir une agence
             </option>
-          ))}
-        </select>
+
+            {agences.map(
+              (a) => (
+
+                <option
+                  key={a.id}
+                  value={a.id}
+                >
+                  {a.libelle}
+                </option>
+
+              )
+            )}
+
+          </select>
+
+        </div>
+
       </div>
 
       {/* BUTTON */}
-      <button
+
+      <Button
         type="submit"
-        disabled={isPending}
-        className="btn-primary w-full"
+        loading={isPending}
+        className="
+          w-full
+          bg-indigo-600
+          hover:bg-indigo-700
+        "
       >
-        {isPending ? "Création..." : "Créer un utilisateur"}
-      </button>
+        {isPending
+          ? "Création..."
+          : "Créer un utilisateur"}
+      </Button>
+
     </form>
   );
 }

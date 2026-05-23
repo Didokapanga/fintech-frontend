@@ -1,45 +1,143 @@
 // src/modules/transfert-caisse/pages/TransfertCaissePage.tsx
 
-import { useState } from "react";
-import { Button, Table } from "../../../components/ui";
-import type { Column } from "../../../components/ui/Table.types";
+import {
+  ArrowRightLeft,
+  CalendarRange,
+  Landmark,
+  Plus,
+  RefreshCcw,
+  Wallet,
+} from "lucide-react";
 
-import { useTransfertsCaisse } from "../hooks/useTransfertCaisse";
+import {
+  useMemo,
+  useState,
+} from "react";
+
+import {
+  Button,
+  Table,
+} from "../../../components/ui";
+
+import type {
+  Column,
+} from "../../../components/ui/Table.types";
+
+import {
+  useCaisses,
+} from "../../caisse/hooks/useCaisses";
+
+import {
+  useTransfertsCaisse,
+} from "../hooks/useTransfertCaisse";
+
 import type {
   TransfertCaisse,
 } from "../services/transfertCaisse.service";
-import TransfertCaisseModal from "../components/transfertCaisseModal";
-import { useCaisses } from "../../caisse/hooks/useCaisses";
 
+import TransfertCaisseModal from "../components/transfertCaisseModal";
+import Pagination from "../../../components/ui/Pagination";
+
+/* -------------------------------------------------------------------------- */
+/*                                    PAGE                                    */
+/* -------------------------------------------------------------------------- */
 
 export default function TransfertCaissePage() {
-  const [open, setOpen] = useState(false);
-  const [page, setPage] = useState(1);
 
-  // 🔥 FILTERS
-  const [devise, setDevise] = useState("");
-  const [statut, setStatut] = useState("");
-  const [dateOperation, setDateOperation] = useState("");
+  /* ------------------------------------------------------------------------ */
+  /*                                   STATE                                  */
+  /* ------------------------------------------------------------------------ */
 
-  // ✅ QUERY AVEC FILTRES
-  const { data, isLoading } = useTransfertsCaisse(
+  const [
+    open,
+    setOpen,
+  ] =
+    useState(false);
+
+  const [
     page,
-    10,
-    {
-      devise,
-      statut,
-      date_operation: dateOperation,
-    }
-  );
- 
+    setPage,
+  ] =
+    useState(1);
+
+  const [
+    devise,
+    setDevise,
+  ] =
+    useState("");
+
+  const [
+    statut,
+    setStatut,
+  ] =
+    useState("");
+
+  const [
+    dateOperation,
+    setDateOperation,
+  ] =
+    useState("");
+
+  /* ------------------------------------------------------------------------ */
+  /*                                   QUERY                                  */
+  /* ------------------------------------------------------------------------ */
+
   const {
-    data: caissesResponse,
-  } = useCaisses(1, 100);
+    data,
+    isLoading,
+  } =
+    useTransfertsCaisse(
+      page,
+      10,
+      {
+        devise,
+        statut,
+        date_operation:
+          dateOperation,
+      }
+    );
+
+  /* ------------------------------------------------------------------------ */
+  /*                                  CAISSES                                 */
+  /* ------------------------------------------------------------------------ */
+
+  const {
+    data:
+      caissesResponse,
+  } =
+    useCaisses(
+      1,
+      100
+    );
 
   const caissesData =
-    caissesResponse?.data || [];
+    useMemo(
+      () =>
+        caissesResponse?.data ||
+        [],
+      [caissesResponse]
+    );
 
-  // 🔥 helper affichage caisse
+  /* ------------------------------------------------------------------------ */
+  /*                               TRANSFERTS                                 */
+  /* ------------------------------------------------------------------------ */
+
+  const transferts =
+    useMemo<
+      TransfertCaisse[]
+    >(
+      () =>
+        data?.data ?? [],
+      [data]
+    );
+
+  const meta =
+    data?.meta;
+
+  /* ------------------------------------------------------------------------ */
+  /*                             HELPER CAISSE                                */
+  /* ------------------------------------------------------------------------ */
+
   const getCaisseInfo = (
     caisseId: string
   ) => {
@@ -48,10 +146,13 @@ export default function TransfertCaissePage() {
       caissesData.find(
         (c: {
           id: string;
+
           code_caisse?: string;
+
           agence?: {
             libelle?: string;
           };
+
           agence_libelle?: string;
         }) =>
           String(c.id) ===
@@ -59,6 +160,7 @@ export default function TransfertCaissePage() {
       );
 
     if (!caisse) {
+
       return {
         code: "-",
         agence: "-",
@@ -67,307 +169,873 @@ export default function TransfertCaissePage() {
 
     return {
       code:
-        caisse.code_caisse || "-",
+        caisse.code_caisse ||
+        "-",
 
       agence:
-        caisse.agence?.libelle ||
+        caisse.agence
+          ?.libelle ||
         caisse.agence_libelle ||
         "-",
     };
   };
 
-  const transferts: TransfertCaisse[] =
-    data?.data ?? [];
+  /* ------------------------------------------------------------------------ */
+  /*                              STATUS STYLE                                */
+  /* ------------------------------------------------------------------------ */
 
-  const meta = data?.meta;
+  const getStatusStyle = (
+    status: string
+  ) => {
 
-  const getStatusStyle = (status: string) => {
     switch (status) {
+
       case "INITIE":
-        return "bg-yellow-100 text-yellow-700";
+        return `
+          border-yellow-200
+          bg-yellow-50
+          text-yellow-700
+        `;
 
       case "VALIDE":
-        return "bg-blue-100 text-blue-700";
+        return `
+          border-blue-200
+          bg-blue-50
+          text-blue-700
+        `;
 
       case "EXECUTE":
-        return "bg-green-100 text-green-700";
+        return `
+          border-emerald-200
+          bg-emerald-50
+          text-emerald-700
+        `;
 
       case "REJETE":
-        return "bg-red-100 text-red-700";
+        return `
+          border-red-200
+          bg-red-50
+          text-red-700
+        `;
 
       default:
-        return "bg-gray-100 text-gray-600";
+        return `
+          border-slate-200
+          bg-slate-100
+          text-slate-600
+        `;
     }
   };
 
-  const columns: Column<TransfertCaisse>[] = [
-    {
-      header: "Référence",
-      accessor: "code_reference",
-      render: (value) => (
-        <span className="text-xs font-mono text-gray-600">
-          {value}
-        </span>
-      ),
-    },
-    {
-      header: "Caisse source",
-      accessor: "caisse_source_id",
-      render: (value) => {
-        const info = getCaisseInfo(String(value));
+  /* ------------------------------------------------------------------------ */
+  /*                                  COLUMNS                                 */
+  /* ------------------------------------------------------------------------ */
 
-        return (
-          <div className="flex flex-col">
-            <span className="font-medium text-gray-800">
-              {info.code}
-            </span>
+  const columns:
+    Column<TransfertCaisse>[] =
+      [
 
-            {/* <span className="text-xs text-gray-500">
-              {info.agence}
-            </span> */}
-          </div>
-        );
-      },
-    },
+        /* -------------------------------------------------------------- */
+        /* REF                                                            */
+        /* -------------------------------------------------------------- */
 
-    {
-      header: "Caisse destination",
-      accessor: "caisse_destination_id",
-      render: (value) => {
-        const info = getCaisseInfo(String(value));
+        {
+          header:
+            "Référence",
 
-        return (
-          <div className="flex flex-col">
-            <span className="font-medium text-gray-800">
-              {info.code}
-            </span>
+          accessor:
+            "code_reference",
 
-            {/* <span className="text-xs text-gray-500">
-              {info.agence}
-            </span> */}
-          </div>
-        );
-      },
-    },
+          render: (
+            value
+          ) => (
 
-    {
-      header: "Montant",
-      accessor: "montant",
-      render: (value, row) => {
-        const montant =
-          typeof value === "number"
-            ? value
-            : Number(value);
+            <div
+              className="
+                flex
+                flex-col
+              "
+            >
 
-        return (
-          <span className="font-semibold text-green-600">
-            {montant.toLocaleString()} {row.devise}
-          </span>
-        );
-      },
-    },
-
-    {
-      header: "Statut",
-      accessor: "statut",
-      render: (value) => (
-        <span
-          className={`px-2 py-1 rounded text-xs font-medium ${getStatusStyle(
-            String(value)
-          )}`}
-        >
-          {String(value)}
-        </span>
-      ),
-    },
-
-    {
-      header: "Date",
-      accessor: "date_operation",
-        render: (value) => {
-          if (!value) {
-            return (
-              <span className="text-sm text-gray-400">
-                -
+              <span
+                className="
+                  font-mono
+                  text-xs
+                  font-semibold
+                  tracking-wide
+                  text-slate-700
+                "
+              >
+                {value}
               </span>
-            );
-          }
 
-          const date = new Date(String(value));
+              <span
+                className="
+                  mt-1
+                  text-[11px]
+                  text-slate-400
+                "
+              >
+                Transaction
+              </span>
 
-          return (
-            <span className="text-sm text-gray-600">
-              {date.toLocaleDateString("fr-FR")}
-            </span>
-          );
+            </div>
+          ),
         },
-    },
-  ];
+
+        /* -------------------------------------------------------------- */
+        /* SOURCE                                                         */
+        /* -------------------------------------------------------------- */
+
+        {
+          header:
+            "Caisse source",
+
+          accessor:
+            "caisse_source_id",
+
+          render: (
+            value
+          ) => {
+
+            const info =
+              getCaisseInfo(
+                String(value)
+              );
+
+            return (
+              <div
+                className="
+                  flex
+                  flex-col
+                "
+              >
+
+                <span
+                  className="
+                    font-semibold
+                    text-slate-800
+                  "
+                >
+                  {info.code}
+                </span>
+
+                <span
+                  className="
+                    mt-1
+                    text-xs
+                    text-slate-400
+                  "
+                >
+                  {
+                    info.agence
+                  }
+                </span>
+
+              </div>
+            );
+          },
+        },
+
+        /* -------------------------------------------------------------- */
+        /* DESTINATION                                                    */
+        /* -------------------------------------------------------------- */
+
+        {
+          header:
+            "Caisse destination",
+
+          accessor:
+            "caisse_destination_id",
+
+          render: (
+            value
+          ) => {
+
+            const info =
+              getCaisseInfo(
+                String(value)
+              );
+
+            return (
+              <div
+                className="
+                  flex
+                  flex-col
+                "
+              >
+
+                <span
+                  className="
+                    font-semibold
+                    text-slate-800
+                  "
+                >
+                  {info.code}
+                </span>
+
+                <span
+                  className="
+                    mt-1
+                    text-xs
+                    text-slate-400
+                  "
+                >
+                  {
+                    info.agence
+                  }
+                </span>
+
+              </div>
+            );
+          },
+        },
+
+        /* -------------------------------------------------------------- */
+        /* MONTANT                                                        */
+        /* -------------------------------------------------------------- */
+
+        {
+          header:
+            "Montant",
+
+          accessor:
+            "montant",
+
+          render: (
+            value,
+            row
+          ) => {
+
+            const montant =
+              typeof value ===
+              "number"
+                ? value
+                : Number(
+                    value
+                  );
+
+            return (
+              <div
+                className="
+                  flex
+                  flex-col
+                "
+              >
+
+                <span
+                  className="
+                    text-base
+                    font-semibold
+                    text-emerald-600
+                  "
+                >
+                  {montant.toLocaleString()}{" "}
+                  {row.devise}
+                </span>
+
+                <span
+                  className="
+                    mt-1
+                    text-[11px]
+                    text-slate-400
+                  "
+                >
+                  Mouvement caisse
+                </span>
+
+              </div>
+            );
+          },
+        },
+
+        /* -------------------------------------------------------------- */
+        /* STATUS                                                         */
+        /* -------------------------------------------------------------- */
+
+        {
+          header:
+            "Statut",
+
+          accessor:
+            "statut",
+
+          render: (
+            value
+          ) => (
+
+            <span
+              className={`
+                inline-flex
+                items-center
+                rounded-full
+                border
+                px-3
+                py-1
+                text-xs
+                font-semibold
+                ${getStatusStyle(
+                  String(
+                    value
+                  )
+                )}
+              `}
+            >
+              {String(
+                value
+              )}
+            </span>
+          ),
+        },
+
+        /* -------------------------------------------------------------- */
+        /* DATE                                                           */
+        /* -------------------------------------------------------------- */
+
+        {
+          header:
+            "Date",
+
+          accessor:
+            "date_operation",
+
+          render: (
+            value
+          ) => {
+
+            if (!value) {
+
+              return (
+                <span
+                  className="
+                    text-sm
+                    text-slate-400
+                  "
+                >
+                  -
+                </span>
+              );
+            }
+
+            const date =
+              new Date(
+                String(
+                  value
+                )
+              );
+
+            return (
+              <div
+                className="
+                  flex
+                  items-center
+                  gap-2
+                  text-sm
+                  text-slate-600
+                "
+              >
+
+                <CalendarRange
+                  size={15}
+                />
+
+                {date.toLocaleDateString(
+                  "fr-FR"
+                )}
+
+              </div>
+            );
+          },
+        },
+      ];
+
+  /* ------------------------------------------------------------------------ */
+  /*                                   RESET                                  */
+  /* ------------------------------------------------------------------------ */
+
+  const handleReset =
+    () => {
+
+      setPage(1);
+
+      setDevise("");
+
+      setStatut("");
+
+      setDateOperation(
+        ""
+      );
+    };
+
+  /* ------------------------------------------------------------------------ */
+  /*                                   RENDER                                 */
+  /* ------------------------------------------------------------------------ */
 
   return (
-    <div className="space-y-6">
+    <div
+      className="
+        min-h-screen
+        bg-[#f5f7fb]
+      "
+    >
 
-      {/* HEADER */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-semibold text-gray-800">
-            Transferts caisse
-          </h1>
+      <div
+        className="
+          mx-auto
+          max-w-[1700px]
+          space-y-6
+          px-4
+          py-4
+        "
+      >
 
-          <p className="text-sm text-gray-500">
-            Historique des transferts entre caisses
-          </p>
-        </div>
+        {/* -------------------------------------------------------------- */}
+        {/* HEADER                                                         */}
+        {/* -------------------------------------------------------------- */}
 
-        <Button
-          onClick={() => setOpen(true)}
-          className="bg-indigo-600 hover:bg-indigo-700"
+        <section
+          className="
+            relative
+            overflow-hidden
+            rounded-[32px]
+            border
+            border-slate-200/80
+            bg-white
+            px-8
+            py-8
+          "
         >
-          + Nouveau transfert
-        </Button>
-      </div>
 
-      {/* 🔥 FILTRES */}
-      <div className="bg-white rounded-xl border shadow-sm p-4">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          {/* GLOW */}
 
-          {/* DEVISE */}
-          <select
-            value={devise}
-            onChange={(e) => {
-              setPage(1);
-              setDevise(e.target.value);
-            }}
-            className="input"
-          >
-            <option value="">
-              Toutes devises
-            </option>
-
-            <option value="USD">
-              USD
-            </option>
-
-            <option value="CDF">
-              CDF
-            </option>
-          </select>
-
-          {/* STATUT */}
-          <select
-            value={statut}
-            onChange={(e) => {
-              setPage(1);
-              setStatut(e.target.value);
-            }}
-            className="input"
-          >
-            <option value="">
-              Tous statuts
-            </option>
-
-            <option value="INITIE">
-              INITIE
-            </option>
-
-            <option value="VALIDE">
-              VALIDE
-            </option>
-
-            <option value="EXECUTE">
-              EXECUTE
-            </option>
-
-            <option value="REJETE">
-              REJETE
-            </option>
-          </select>
-
-          {/* DATE */}
-          <input
-            type="date"
-            value={dateOperation}
-            onChange={(e) => {
-              setPage(1);
-              setDateOperation(e.target.value);
-            }}
-            className="input"
+          <div
+            className="
+              absolute
+              right-0
+              top-0
+              h-72
+              w-72
+              rounded-full
+              bg-indigo-50
+              blur-3xl
+            "
           />
 
-          {/* RESET */}
-          <Button
-            variant="secondary"
-            onClick={() => {
-              setPage(1);
-              setDevise("");
-              setStatut("");
-              setDateOperation("");
-            }}
+          <div
+            className="
+              relative
+              flex
+              flex-col
+              gap-6
+              xl:flex-row
+              xl:items-center
+              xl:justify-between
+            "
           >
-            Reset
-          </Button>
 
-        </div>
-      </div>
+            {/* LEFT */}
 
-      {/* TABLE */}
-      <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
+            <div>
+
+              <div
+                className="
+                  inline-flex
+                  items-center
+                  gap-2
+                  rounded-full
+                  border
+                  border-indigo-100
+                  bg-indigo-50
+                  px-3
+                  py-1
+                  text-[11px]
+                  font-semibold
+                  uppercase
+                  tracking-[0.14em]
+                  text-indigo-700
+                "
+              >
+
+                <ArrowRightLeft
+                  size={13}
+                />
+
+                Flux financiers
+
+              </div>
+
+              <h1
+                className="
+                  mt-5
+                  text-[38px]
+                  font-semibold
+                  tracking-[-0.04em]
+                  text-slate-900
+                "
+              >
+                Transferts caisse
+              </h1>
+
+              <p
+                className="
+                  mt-3
+                  max-w-3xl
+                  text-sm
+                  leading-7
+                  text-slate-500
+                "
+              >
+                Supervisez les mouvements
+                financiers entre les
+                différentes caisses du
+                réseau.
+              </p>
+
+            </div>
+
+            {/* RIGHT */}
+
+            <div
+              className="
+                flex
+                flex-col
+                gap-4
+                xl:items-end
+              "
+            >
+
+              <div
+                className="
+                  inline-flex
+                  items-center
+                  gap-3
+                  rounded-2xl
+                  border
+                  border-slate-200
+                  bg-slate-50
+                  px-5
+                  py-3
+                "
+              >
+
+                <Wallet
+                  size={18}
+                  className="
+                    text-slate-400
+                  "
+                />
+
+                <div>
+
+                  <p
+                    className="
+                      text-[11px]
+                      font-semibold
+                      uppercase
+                      tracking-[0.12em]
+                      text-slate-400
+                    "
+                  >
+                    Total transferts
+                  </p>
+
+                  <p
+                    className="
+                      mt-1
+                      text-lg
+                      font-semibold
+                      text-slate-900
+                    "
+                  >
+                    {
+                      meta?.total || 0
+                    }
+                  </p>
+
+                </div>
+
+              </div>
+
+              <Button
+                onClick={() =>
+                  setOpen(true)
+                }
+                className="
+                  h-14
+                  rounded-2xl
+                  bg-indigo-600
+                  px-6
+                  hover:bg-indigo-700
+                "
+              >
+
+                <Plus
+                  size={17}
+                />
+
+                Nouveau transfert
+
+              </Button>
+
+            </div>
+
+          </div>
+
+        </section>
+
+        {/* -------------------------------------------------------------- */}
+        {/* FILTERS                                                        */}
+        {/* -------------------------------------------------------------- */}
+
+        <section
+          className="
+            rounded-[32px]
+            border
+            border-slate-200/80
+            bg-white
+            p-5
+          "
+        >
+
+          <div
+            className="
+              mb-5
+              flex
+              items-center
+              gap-2
+            "
+          >
+
+            <Landmark
+              size={16}
+              className="
+                text-slate-500
+              "
+            />
+
+            <h2
+              className="
+                text-sm
+                font-semibold
+                text-slate-800
+              "
+            >
+              Filtres avancés
+            </h2>
+
+          </div>
+
+          <div
+            className="
+              grid
+              grid-cols-1
+              gap-4
+              xl:grid-cols-4
+            "
+          >
+
+            {/* DEVISE */}
+
+            <select
+              value={devise}
+              onChange={(e) => {
+
+                setPage(1);
+
+                setDevise(
+                  e.target.value
+                );
+              }}
+              className="
+                h-12
+                rounded-2xl
+                border
+                border-slate-200
+                bg-white
+                px-4
+                text-sm
+                text-slate-700
+                outline-none
+                transition-all
+                focus:border-indigo-400
+                focus:ring-4
+                focus:ring-indigo-100
+              "
+            >
+
+              <option value="">
+                Toutes devises
+              </option>
+
+              <option value="USD">
+                USD
+              </option>
+
+              <option value="CDF">
+                CDF
+              </option>
+
+            </select>
+
+            {/* STATUS */}
+
+            <select
+              value={statut}
+              onChange={(e) => {
+
+                setPage(1);
+
+                setStatut(
+                  e.target.value
+                );
+              }}
+              className="
+                h-12
+                rounded-2xl
+                border
+                border-slate-200
+                bg-white
+                px-4
+                text-sm
+                text-slate-700
+                outline-none
+                transition-all
+                focus:border-indigo-400
+                focus:ring-4
+                focus:ring-indigo-100
+              "
+            >
+
+              <option value="">
+                Tous statuts
+              </option>
+
+              <option value="INITIE">
+                INITIE
+              </option>
+
+              <option value="VALIDE">
+                VALIDE
+              </option>
+
+              <option value="EXECUTE">
+                EXECUTE
+              </option>
+
+              <option value="REJETE">
+                REJETE
+              </option>
+
+            </select>
+
+            {/* DATE */}
+
+            <input
+              type="date"
+              value={
+                dateOperation
+              }
+              onChange={(e) => {
+
+                setPage(1);
+
+                setDateOperation(
+                  e.target.value
+                );
+              }}
+              className="
+                h-12
+                rounded-2xl
+                border
+                border-slate-200
+                bg-white
+                px-4
+                text-sm
+                text-slate-700
+                outline-none
+                transition-all
+                focus:border-indigo-400
+                focus:ring-4
+                focus:ring-indigo-100
+              "
+            />
+
+            {/* RESET */}
+
+            <Button
+              variant="secondary"
+              onClick={
+                handleReset
+              }
+              className="
+                h-12
+                rounded-2xl
+              "
+            >
+
+              <RefreshCcw
+                size={16}
+              />
+
+              Réinitialiser
+
+            </Button>
+
+          </div>
+
+        </section>
+
+        {/* -------------------------------------------------------------- */}
+        {/* TABLE                                                          */}
+        {/* -------------------------------------------------------------- */}
+
         <Table<TransfertCaisse>
           data={transferts}
           columns={columns}
           loading={isLoading}
+          emptyTitle="Aucun transfert trouvé"
+          emptyDescription="Aucun mouvement de caisse ne correspond actuellement aux filtres sélectionnés."
         />
-      </div>
 
-      {/* EMPTY */}
-      {!isLoading &&
-        transferts.length === 0 && (
-          <div className="text-center text-gray-400 py-10">
-            Aucun transfert trouvé
-          </div>
+        {/* -------------------------------------------------------------- */}
+        {/* PAGINATION                                                     */}
+        {/* -------------------------------------------------------------- */}
+
+        {meta && (
+
+          <Pagination
+            page={meta.page}
+            totalPages={
+              meta.totalPages
+            }
+            totalItems={
+              meta.total
+            }
+            perPage={
+              meta.limit
+            }
+            onChange={
+              setPage
+            }
+          />
+
         )}
 
-      {/* PAGINATION */}
-      {meta && (
-        <div className="flex justify-center items-center gap-3">
+      </div>
 
-          <Button
-            variant="secondary"
-            disabled={page === 1}
-            onClick={() =>
-              setPage((p) => p - 1)
-            }
-          >
-            ←
-          </Button>
+      {/* -------------------------------------------------------------- */}
+      {/* MODAL                                                          */}
+      {/* -------------------------------------------------------------- */}
 
-          <span className="text-sm text-gray-600">
-            Page <strong>{meta.page}</strong>
-            {" / "}
-            {meta.totalPages}
-          </span>
-
-          <Button
-            variant="secondary"
-            disabled={
-              page >= meta.totalPages
-            }
-            onClick={() =>
-              setPage((p) => p + 1)
-            }
-          >
-            →
-          </Button>
-
-        </div>
-      )}
-
-      {/* MODAL */}
       {open && (
+
         <TransfertCaisseModal
           open={open}
-          onClose={() => setOpen(false)}
+          onClose={() =>
+            setOpen(false)
+          }
         />
+
       )}
 
     </div>

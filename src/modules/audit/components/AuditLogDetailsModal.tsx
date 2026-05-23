@@ -1,6 +1,16 @@
 // src/modules/audit/components/AuditLogDetailsModal.tsx
 
 import {
+  Activity,
+  Clock3,
+  Database,
+  Globe,
+  MonitorSmartphone,
+  ShieldCheck,
+  User2,
+} from "lucide-react";
+
+import {
   Modal,
   Button,
 } from "../../../components/ui";
@@ -8,6 +18,10 @@ import {
 import type {
   AuditLog,
 } from "../types/audit-log.types";
+
+/* -------------------------------------------------------------------------- */
+/*                                    TYPES                                   */
+/* -------------------------------------------------------------------------- */
 
 type JsonData =
   | Record<string, unknown>
@@ -24,6 +38,35 @@ type Props = {
 
   log: AuditLog | null;
 };
+
+/* -------------------------------------------------------------------------- */
+/*                              STATUS STYLES                                 */
+/* -------------------------------------------------------------------------- */
+
+const ACTION_STYLES: Record<
+  string,
+  string
+> = {
+
+  CREATE:
+    "bg-emerald-100 text-emerald-700",
+
+  UPDATE:
+    "bg-blue-100 text-blue-700",
+
+  DELETE:
+    "bg-red-100 text-red-700",
+
+  LOGIN:
+    "bg-indigo-100 text-indigo-700",
+
+  VALIDATION:
+    "bg-orange-100 text-orange-700",
+};
+
+/* -------------------------------------------------------------------------- */
+/*                                   MODAL                                    */
+/* -------------------------------------------------------------------------- */
 
 export default function AuditLogDetailsModal({
   open,
@@ -43,6 +86,7 @@ export default function AuditLogDetailsModal({
       value === null ||
       value === undefined
     ) {
+
       return "Aucune donnée";
     }
 
@@ -53,41 +97,171 @@ export default function AuditLogDetailsModal({
     );
   };
 
+  const badgeClass =
+    ACTION_STYLES[
+      log.action?.toUpperCase()
+    ] ||
+
+    "bg-slate-100 text-slate-700";
+
   return (
+
     <Modal
       open={open}
       onClose={onClose}
     >
 
-      <div className="space-y-5">
+      <div className="space-y-6">
 
+        {/* ====================================================== */}
         {/* HEADER */}
-        <div>
+        {/* ====================================================== */}
 
-          <h2 className="text-xl font-semibold text-gray-800">
-            Détails Audit Log
-          </h2>
+        <div
+          className="
+            flex
+            flex-col
+            gap-5
+            rounded-[28px]
+            border
+            border-slate-200
+            bg-gradient-to-br
+            from-white
+            to-slate-50
+            p-6
+          "
+        >
 
-          <p className="text-sm text-gray-500 mt-1">
-            {log.summary}
-          </p>
+          <div
+            className="
+              flex
+              flex-col
+              gap-5
+              lg:flex-row
+              lg:items-start
+              lg:justify-between
+            "
+          >
+
+            {/* LEFT */}
+
+            <div className="flex gap-4">
+
+              <div
+                className="
+                  flex
+                  h-14
+                  w-14
+                  items-center
+                  justify-center
+                  rounded-2xl
+                  bg-indigo-50
+                  text-indigo-600
+                "
+              >
+
+                <ShieldCheck
+                  size={24}
+                />
+
+              </div>
+
+              <div>
+
+                <div
+                  className={`
+                    inline-flex
+                    items-center
+                    gap-2
+                    rounded-full
+                    px-3
+                    py-1
+                    text-[11px]
+                    font-semibold
+                    uppercase
+                    tracking-[0.14em]
+                    ${badgeClass}
+                  `}
+                >
+
+                  <Activity
+                    size={12}
+                  />
+
+                  {log.action}
+
+                </div>
+
+                <h2
+                  className="
+                    mt-4
+                    text-2xl
+                    font-semibold
+                    tracking-[-0.03em]
+                    text-slate-900
+                  "
+                >
+                  Détails Audit Log
+                </h2>
+
+                <p
+                  className="
+                    mt-2
+                    text-sm
+                    leading-6
+                    text-slate-500
+                  "
+                >
+                  {log.summary}
+                </p>
+
+              </div>
+
+            </div>
+
+          </div>
 
         </div>
 
+        {/* ====================================================== */}
         {/* INFOS */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* ====================================================== */}
+
+        <div
+          className="
+            grid
+            grid-cols-1
+            gap-4
+            md:grid-cols-2
+          "
+        >
 
           <InfoCard
+            icon={
+              <Activity
+                size={16}
+              />
+            }
             label="Action"
             value={log.action}
           />
 
           <InfoCard
+            icon={
+              <Database
+                size={16}
+              />
+            }
             label="Table"
             value={log.table_name}
           />
 
           <InfoCard
+            icon={
+              <ShieldCheck
+                size={16}
+              />
+            }
             label="Référence"
             value={
               log.code_reference ||
@@ -96,15 +270,27 @@ export default function AuditLogDetailsModal({
           />
 
           <InfoCard
+            icon={
+              <Clock3
+                size={16}
+              />
+            }
             label="Date"
             value={
               new Date(
                 log.created_at
-              ).toLocaleString()
+              ).toLocaleString(
+                "fr-FR"
+              )
             }
           />
 
           <InfoCard
+            icon={
+              <User2
+                size={16}
+              />
+            }
             label="Utilisateur"
             value={
               log.user
@@ -114,7 +300,12 @@ export default function AuditLogDetailsModal({
           />
 
           <InfoCard
-            label="IP"
+            icon={
+              <Globe
+                size={16}
+              />
+            }
+            label="Adresse IP"
             value={
               log.ip_address ||
               "-"
@@ -123,81 +314,212 @@ export default function AuditLogDetailsModal({
 
         </div>
 
+        {/* ====================================================== */}
         {/* USER AGENT */}
-        <div>
+        {/* ====================================================== */}
 
-          <h3 className="text-sm font-semibold text-gray-700 mb-2">
-            User Agent
-          </h3>
+        <section
+          className="
+            rounded-[26px]
+            border
+            border-slate-200
+            bg-white
+            p-5
+          "
+        >
+
+          <div className="flex items-center gap-3">
+
+            <div
+              className="
+                flex
+                h-10
+                w-10
+                items-center
+                justify-center
+                rounded-2xl
+                bg-slate-100
+                text-slate-600
+              "
+            >
+
+              <MonitorSmartphone
+                size={18}
+              />
+
+            </div>
+
+            <div>
+
+              <h3
+                className="
+                  text-sm
+                  font-semibold
+                  text-slate-900
+                "
+              >
+                User Agent
+              </h3>
+
+              <p
+                className="
+                  text-xs
+                  text-slate-500
+                "
+              >
+                Informations navigateur/appareil
+              </p>
+
+            </div>
+
+          </div>
 
           <div
             className="
-              bg-gray-50
+              mt-4
+              rounded-2xl
               border
-              rounded-xl
-              p-3
+              border-slate-200
+              bg-slate-50
+              p-4
+              font-mono
               text-xs
-              text-gray-600
+              leading-6
+              text-slate-600
               break-all
             "
           >
+
             {log.user_agent ||
               "-"}
+
           </div>
 
-        </div>
+        </section>
 
-        {/* OLD DATA */}
-        <div>
+        {/* ====================================================== */}
+        {/* CHANGES */}
+        {/* ====================================================== */}
 
-          <h3 className="text-sm font-semibold text-gray-700 mb-2">
-            Anciennes données
-          </h3>
+        <div
+          className="
+            grid
+            grid-cols-1
+            gap-5
+            xl:grid-cols-2
+          "
+        >
 
-          <pre
+          {/* OLD */}
+
+          <section
             className="
+              overflow-hidden
+              rounded-[26px]
+              border
+              border-red-100
               bg-red-50
-              border border-red-100
-              rounded-xl
-              p-4
-              text-xs
-              overflow-auto
-              max-h-80
             "
           >
-            {prettyJson(
-              log.changes?.old
-            )}
-          </pre>
 
-        </div>
+            <div
+              className="
+                border-b
+                border-red-100
+                px-5
+                py-4
+              "
+            >
 
-        {/* NEW DATA */}
-        <div>
+              <h3
+                className="
+                  text-sm
+                  font-semibold
+                  text-red-700
+                "
+              >
+                Anciennes données
+              </h3>
 
-          <h3 className="text-sm font-semibold text-gray-700 mb-2">
-            Nouvelles données
-          </h3>
+            </div>
 
-          <pre
+            <pre
+              className="
+                max-h-[420px]
+                overflow-auto
+                p-5
+                text-xs
+                leading-6
+                text-red-950
+              "
+            >
+
+              {prettyJson(
+                log.changes?.old
+              )}
+
+            </pre>
+
+          </section>
+
+          {/* NEW */}
+
+          <section
             className="
+              overflow-hidden
+              rounded-[26px]
+              border
+              border-emerald-100
               bg-emerald-50
-              border border-emerald-100
-              rounded-xl
-              p-4
-              text-xs
-              overflow-auto
-              max-h-80
             "
           >
-            {prettyJson(
-              log.changes?.new
-            )}
-          </pre>
+
+            <div
+              className="
+                border-b
+                border-emerald-100
+                px-5
+                py-4
+              "
+            >
+
+              <h3
+                className="
+                  text-sm
+                  font-semibold
+                  text-emerald-700
+                "
+              >
+                Nouvelles données
+              </h3>
+
+            </div>
+
+            <pre
+              className="
+                max-h-[420px]
+                overflow-auto
+                p-5
+                text-xs
+                leading-6
+                text-emerald-950
+              "
+            >
+
+              {prettyJson(
+                log.changes?.new
+              )}
+
+            </pre>
+
+          </section>
 
         </div>
 
-        {/* ACTION */}
+        {/* ====================================================== */}
+        {/* ACTIONS */}
+        {/* ====================================================== */}
+
         <div className="flex justify-end pt-2">
 
           <Button
@@ -215,31 +537,80 @@ export default function AuditLogDetailsModal({
   );
 }
 
+/* -------------------------------------------------------------------------- */
+/*                                INFO CARD                                   */
+/* -------------------------------------------------------------------------- */
+
 function InfoCard({
   label,
   value,
+  icon,
 }: {
   label: string;
   value: string;
+  icon: React.ReactNode;
 }) {
 
   return (
+
     <div
       className="
-        bg-gray-50
+        rounded-[24px]
         border
-        rounded-2xl
-        p-4
+        border-slate-200
+        bg-white
+        p-5
       "
     >
 
-      <p className="text-xs uppercase text-gray-400 mb-1">
-        {label}
-      </p>
+      <div className="flex items-center gap-3">
 
-      <p className="text-sm font-medium text-gray-700 break-all">
-        {value}
-      </p>
+        <div
+          className="
+            flex
+            h-10
+            w-10
+            items-center
+            justify-center
+            rounded-2xl
+            bg-slate-100
+            text-slate-600
+          "
+        >
+
+          {icon}
+
+        </div>
+
+        <div>
+
+          <p
+            className="
+              text-[11px]
+              font-semibold
+              uppercase
+              tracking-[0.14em]
+              text-slate-400
+            "
+          >
+            {label}
+          </p>
+
+          <p
+            className="
+              mt-1
+              text-sm
+              font-medium
+              text-slate-700
+              break-all
+            "
+          >
+            {value}
+          </p>
+
+        </div>
+
+      </div>
 
     </div>
   );

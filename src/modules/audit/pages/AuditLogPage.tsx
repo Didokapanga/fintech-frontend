@@ -2,6 +2,14 @@
 
 import { useState } from "react";
 
+import {
+  Activity,
+  FileSearch,
+  ShieldCheck,
+} from "lucide-react";
+
+import Pagination from "../../../components/ui/Pagination";
+
 import AuditLogFiltersComponent
 from "../components/AuditLogFilters";
 
@@ -30,17 +38,11 @@ export default function AuditLogPage() {
     filters,
     setFilters,
   ] = useState<AuditLogFilters>({
-
     page: 1,
-
     limit: 10,
-
     action: "",
-
     table_name: "",
-
     date_from: "",
-
     date_to: "",
   });
 
@@ -122,145 +124,365 @@ export default function AuditLogPage() {
   };
 
   return (
-    <div className="space-y-5">
 
-      {/* HEADER */}
-      <div>
+    <div className="space-y-6">
 
-        <h1 className="text-2xl font-bold">
-          Audit Logs
-        </h1>
+      {/* ====================================================== */}
+      {/* HERO */}
+      {/* ====================================================== */}
 
-        <p className="text-sm text-gray-500 mt-1">
-          Historique des actions
-          système et métier
-        </p>
+      <section
+        className="
+          relative
+          overflow-hidden
+          rounded-[30px]
+          border
+          border-slate-200
+          bg-white
+          p-7
+          shadow-sm
+        "
+      >
 
-      </div>
+        <div
+          className="
+            absolute
+            right-0
+            top-0
+            h-72
+            w-72
+            rounded-full
+            bg-indigo-50
+            blur-3xl
+          "
+        />
 
+        <div
+          className="
+            relative
+            flex
+            flex-col
+            gap-8
+            xl:flex-row
+            xl:items-center
+            xl:justify-between
+          "
+        >
+
+          {/* LEFT */}
+
+          <div>
+
+            <div
+              className="
+                inline-flex
+                items-center
+                gap-2
+                rounded-full
+                border
+                border-indigo-100
+                bg-indigo-50
+                px-3
+                py-1
+                text-[11px]
+                font-semibold
+                uppercase
+                tracking-[0.14em]
+                text-indigo-700
+              "
+            >
+
+              <ShieldCheck
+                size={13}
+              />
+
+              Audit & traçabilité
+
+            </div>
+
+            <h1
+              className="
+                mt-5
+                text-[38px]
+                font-semibold
+                tracking-[-0.04em]
+                text-slate-900
+              "
+            >
+              Journal d’audit
+            </h1>
+
+            <p
+              className="
+                mt-4
+                max-w-3xl
+                text-sm
+                leading-7
+                text-slate-500
+              "
+            >
+              Consultez l’historique complet
+              des actions système et métiers
+              effectuées sur la plateforme.
+            </p>
+
+          </div>
+
+          {/* RIGHT */}
+
+          <div
+            className="
+              grid
+              grid-cols-2
+              gap-4
+            "
+          >
+
+            {/* CARD 1 */}
+
+            <div
+              className="
+                rounded-3xl
+                border
+                border-slate-200
+                bg-slate-50
+                p-5
+              "
+            >
+
+              <div
+                className="
+                  flex
+                  h-11
+                  w-11
+                  items-center
+                  justify-center
+                  rounded-2xl
+                  bg-indigo-100
+                  text-indigo-600
+                "
+              >
+
+                <Activity
+                  size={18}
+                />
+
+              </div>
+
+              <p
+                className="
+                  mt-4
+                  text-xs
+                  font-semibold
+                  uppercase
+                  tracking-[0.12em]
+                  text-slate-400
+                "
+              >
+                Activité
+              </p>
+
+              <h3
+                className="
+                  mt-1
+                  text-base
+                  font-semibold
+                  text-slate-900
+                "
+              >
+                Historique système
+              </h3>
+
+            </div>
+
+            {/* CARD 2 */}
+
+            <div
+              className="
+                rounded-3xl
+                border
+                border-slate-200
+                bg-slate-50
+                p-5
+              "
+            >
+
+              <div
+                className="
+                  flex
+                  h-11
+                  w-11
+                  items-center
+                  justify-center
+                  rounded-2xl
+                  bg-blue-100
+                  text-blue-600
+                "
+              >
+
+                <FileSearch
+                  size={18}
+                />
+
+              </div>
+
+              <p
+                className="
+                  mt-4
+                  text-xs
+                  font-semibold
+                  uppercase
+                  tracking-[0.12em]
+                  text-slate-400
+                "
+              >
+                Contrôle
+              </p>
+
+              <h3
+                className="
+                  mt-1
+                  text-base
+                  font-semibold
+                  text-slate-900
+                "
+              >
+                Suivi détaillé
+              </h3>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </section>
+
+      {/* ====================================================== */}
       {/* FILTERS */}
-      <AuditLogFiltersComponent
-        filters={filters}
-        onChange={
-          handleFiltersChange
-        }
-      />
+      {/* ====================================================== */}
 
+      <section
+        className="
+          rounded-[30px]
+          border
+          border-slate-200
+          bg-white
+          p-6
+          shadow-sm
+        "
+      >
+
+        <AuditLogFiltersComponent
+          filters={filters}
+          onChange={
+            handleFiltersChange
+          }
+        />
+
+      </section>
+
+      {/* ====================================================== */}
       {/* TABLE */}
-      <AuditLogTable
-        data={logs}
-        onDetails={
-          handleOpenDetails
-        }
-      />
+      {/* ====================================================== */}
 
+      <section
+        className="
+          overflow-hidden
+          rounded-[30px]
+          border
+          border-slate-200
+          bg-white
+          shadow-sm
+        "
+      >
+
+        <AuditLogTable
+          data={logs}
+          onDetails={
+            handleOpenDetails
+          }
+        />
+
+      </section>
+
+      {/* ====================================================== */}
       {/* LOADING */}
+      {/* ====================================================== */}
+
       {isLoading && (
 
-        <div className="text-sm text-gray-500">
-          Chargement...
+        <div
+          className="
+            rounded-2xl
+            border
+            border-slate-200
+            bg-white
+            py-8
+            text-center
+            text-sm
+            text-slate-500
+          "
+        >
+
+          Chargement des audit logs...
+
         </div>
       )}
 
+      {/* ====================================================== */}
       {/* EMPTY */}
+      {/* ====================================================== */}
+
       {!isLoading &&
         logs.length === 0 && (
 
         <div
           className="
-            text-center
-            text-gray-500
-            py-10
-            bg-white
             rounded-2xl
             border
+            border-dashed
+            border-slate-300
+            bg-white
+            py-12
+            text-center
+            text-sm
+            text-slate-500
           "
         >
+
           Aucun audit log trouvé
+
         </div>
       )}
 
+      {/* ====================================================== */}
       {/* PAGINATION */}
+      {/* ====================================================== */}
+
       {meta && (
 
-        <div
-          className="
-            flex items-center
-            justify-center
-            gap-3
-          "
-        >
+        <Pagination
+          page={meta.page}
+          totalPages={meta.totalPages}
+          onChange={(newPage) =>
+            setFilters(
+              (
+                prev: AuditLogFilters
+              ) => ({
+                ...prev,
+                page: newPage,
+              })
+            )
+          }
+        />
 
-          <button
-            disabled={
-              (filters.page || 1) <= 1
-            }
-            onClick={() =>
-              setFilters(
-                (
-                  prev: AuditLogFilters
-                ) => ({
-                  ...prev,
-                  page:
-                    (prev.page || 1) - 1,
-                })
-              )
-            }
-            className="
-              px-4 py-2
-              rounded-xl
-              border
-              bg-white
-              text-sm
-              disabled:opacity-50
-            "
-          >
-            ←
-          </button>
-
-          <span className="text-sm text-gray-600">
-            Page{" "}
-            <strong>
-              {meta.page}
-            </strong>{" "}
-            /{" "}
-            {meta.totalPages}
-          </span>
-
-          <button
-            disabled={
-              (filters.page || 1) >=
-              meta.totalPages
-            }
-            onClick={() =>
-              setFilters(
-                (
-                  prev: AuditLogFilters
-                ) => ({
-                  ...prev,
-                  page:
-                    (prev.page || 1) + 1,
-                })
-              )
-            }
-            className="
-              px-4 py-2
-              rounded-xl
-              border
-              bg-white
-              text-sm
-              disabled:opacity-50
-            "
-          >
-            →
-          </button>
-
-        </div>
       )}
 
-      {/* =========================================
+      {/* ======================================================
           MODAL DETAILS
-      ========================================= */}
+      ====================================================== */}
+
       <AuditLogDetailsModal
         open={openDetails}
         onClose={() =>

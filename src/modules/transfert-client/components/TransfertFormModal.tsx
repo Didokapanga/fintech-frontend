@@ -1,16 +1,51 @@
 // src/modules/transfert-client/components/TransfertFormModal.tsx
 
+import {
+  ArrowRightLeft,
+  Building2,
+  CalendarRange,
+  CreditCard,
+  Landmark,
+  Phone,
+  Send,
+  User2,
+  Wallet,
+} from "lucide-react";
+
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { useCaisses } from "../../caisse/hooks/useCaisses";
-import { useAgences } from "../../agence/hooks/useAgences";
-import { Button, Input, Modal } from "../../../components/ui";
+
+import {
+  Button,
+  Input,
+  Modal,
+} from "../../../components/ui";
+
 import AppMessageState from "../../../components/ui/AppMessageState";
-import { useCreateTransfertClient } from "../hooks/useTransfert";
+
+import {
+  useCreateTransfertClient,
+} from "../hooks/useTransfert";
+
 import type {
   CreateTransfertClientDto,
 } from "../services/transfert.service";
-import { useAuthStore } from "../../../app/store";
+
+import {
+  useCaisses,
+} from "../../caisse/hooks/useCaisses";
+
+import {
+  useAgences,
+} from "../../agence/hooks/useAgences";
+
+import {
+  useAuthStore,
+} from "../../../app/store";
+
+/* -------------------------------------------------------------------------- */
+/*                                   TYPES                                    */
+/* -------------------------------------------------------------------------- */
 
 type Caisse = {
   id: string;
@@ -36,96 +71,147 @@ type MessageState = {
     | "warning";
 
   title: string;
+
   message: string;
 };
 
-type ErrorWithResponse = Error & {
-  response?: {
-    data?: {
-      message?: string;
+type ErrorWithResponse =
+  Error & {
+    response?: {
+      data?: {
+        message?: string;
+      };
     };
   };
-};
 
-type CreateTransfertResponse = {
-  code_secret: string;
-};
+type CreateTransfertResponse =
+  {
+    code_secret: string;
+  };
+
+/* -------------------------------------------------------------------------- */
+/*                                    PAGE                                    */
+/* -------------------------------------------------------------------------- */
 
 export default function TransfertFormModal({
   open,
   onClose,
 }: Props) {
+
+  /* ------------------------------------------------------------------------ */
+  /*                                    FORM                                  */
+  /* ------------------------------------------------------------------------ */
+
   const {
     register,
     handleSubmit,
     reset,
-    formState: { errors },
-  } = useForm<CreateTransfertClientDto>();
+    formState: {
+      errors,
+    },
+  } =
+    useForm<CreateTransfertClientDto>();
+
+  /* ------------------------------------------------------------------------ */
+  /*                                   STORE                                  */
+  /* ------------------------------------------------------------------------ */
+
+  const user =
+    useAuthStore(
+      (s) => s.user
+    );
+
+  /* ------------------------------------------------------------------------ */
+  /*                                  QUERIES                                 */
+  /* ------------------------------------------------------------------------ */
 
   const {
     mutate,
     isPending,
-  } = useCreateTransfertClient();
+  } =
+    useCreateTransfertClient();
 
-  const user = useAuthStore(
-    (s) => s.user
-  );
-
-  /**
-   * ✅ FIX PAGINATION
-   */
   const {
-    data: caisseResponse,
-  } = useCaisses();
+    data:
+      caisseResponse,
+  } =
+    useCaisses();
 
-  const caisses: Caisse[] =
-    caisseResponse?.data || [];
+  const caisses:
+    Caisse[] =
+      caisseResponse?.data ||
+      [];
 
-  /**
-   * ✅ AGENCES
-   */
   const {
-    data: agences = [],
-  } = useAgences() as {
-    data: Agence[];
-  };
+    data: agences =
+      [],
+  } =
+    useAgences() as {
+      data: Agence[];
+    };
+
+  /* ------------------------------------------------------------------------ */
+  /*                                  MESSAGE                                 */
+  /* ------------------------------------------------------------------------ */
 
   const [
     appMessage,
     setAppMessage,
-  ] = useState<MessageState | null>(
-    null
-  );
+  ] =
+    useState<MessageState | null>(
+      null
+    );
+
+  /* ------------------------------------------------------------------------ */
+  /*                                  SUBMIT                                  */
+  /* ------------------------------------------------------------------------ */
 
   const onSubmit = (
     data: CreateTransfertClientDto
   ) => {
-    if (!user?.agence_id) {
+
+    if (
+      !user?.agence_id
+    ) {
+
       setAppMessage({
-        variant: "error",
-        title: "Erreur",
+        variant:
+          "error",
+
+        title:
+          "Erreur système",
+
         message:
-          "Agence utilisateur introuvable",
+          "Agence utilisateur introuvable.",
       });
 
       return;
     }
 
-    const payload: CreateTransfertClientDto =
-      {
-        ...data,
-        agence_exp:
-          user.agence_id,
-      };
+    const payload:
+      CreateTransfertClientDto =
+        {
+          ...data,
+
+          agence_exp:
+            user.agence_id,
+        };
 
     mutate(payload, {
+
       onSuccess: (
-        res: CreateTransfertResponse
+        res:
+          CreateTransfertResponse
       ) => {
+
         setAppMessage({
-          variant: "success",
-          title: "Succès",
-          message: `Transfert effectué.\nCode secret: ${res.code_secret}`,
+          variant:
+            "success",
+
+          title:
+            "Transfert effectué",
+
+          message: `Le transfert a été enregistré avec succès.\nCode secret : ${res.code_secret}`,
         });
 
         reset();
@@ -136,359 +222,1129 @@ export default function TransfertFormModal({
       onError: (
         error: Error
       ) => {
+
         const apiError =
           error as ErrorWithResponse;
 
         setAppMessage({
-          variant: "error",
+          variant:
+            "error",
+
           title:
             "Transfert refusé",
+
           message:
-            apiError?.response
-              ?.data?.message ||
-            "Impossible d’effectuer ce transfert",
+            apiError
+              ?.response
+              ?.data
+              ?.message ||
+            "Impossible d’effectuer ce transfert.",
         });
       },
     });
   };
+
+  /* ------------------------------------------------------------------------ */
+  /*                                   RENDER                                 */
+  /* ------------------------------------------------------------------------ */
 
   return (
     <Modal
       open={open}
       onClose={onClose}
     >
-      <h2 className="text-xl font-semibold mb-6">
-        Transfert client
-      </h2>
 
-      {appMessage && (
-        <AppMessageState
-          variant={
-            appMessage.variant
-          }
-          title={
-            appMessage.title
-          }
-          message={
-            appMessage.message
-          }
-          onAction={() =>
-            setAppMessage(null)
-          }
-        />
-      )}
-
-      <form
-        onSubmit={handleSubmit(
-          onSubmit
-        )}
-        className="space-y-6"
+      <div
+        className="
+          flex
+          max-h-[92vh]
+          flex-col
+        "
       >
-        {/* CAISSE + DEVISE */}
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <select
-              {...register(
-                "caisse_id",
-                {
-                  required:
-                    "La caisse est obligatoire",
-                }
-              )}
-              className="input w-full"
-            >
-              <option value="">
-                Sélectionner une caisse
-              </option>
 
-              {caisses.map(
-                (c) => (
-                  <option
-                    key={c.id}
-                    value={c.id}
-                  >
-                    {
-                      c.code_caisse
-                    }{" "}
-                    {c.devise
-                      ? `(${c.devise})`
-                      : ""}
-                  </option>
-                )
-              )}
-            </select>
+        {/* -------------------------------------------------------------- */}
+        {/* HEADER                                                         */}
+        {/* -------------------------------------------------------------- */}
 
-            {errors.caisse_id && (
-              <p className="text-red-500 text-xs mt-1">
-                {
-                  errors
-                    .caisse_id
-                    .message
-                }
-              </p>
-            )}
-          </div>
+        <div
+          className="
+            border-b
+            border-slate-200
+            px-8
+            py-6
+          "
+        >
 
-          <select
-            {...register(
-              "devise"
-            )}
-            className="input"
+          <div
+            className="
+              inline-flex
+              items-center
+              gap-2
+              rounded-full
+              border
+              border-indigo-100
+              bg-indigo-50
+              px-3
+              py-1
+              text-[11px]
+              font-semibold
+              uppercase
+              tracking-[0.14em]
+              text-indigo-700
+            "
           >
-            <option value="">
-              Devise
-            </option>
 
-            <option value="USD">
-              USD
-            </option>
+            <ArrowRightLeft
+              size={13}
+            />
 
-            <option value="CDF">
-              CDF
-            </option>
-          </select>
-        </div>
+            Flux financier
 
-        {/* AGENCES */}
-        <div className="grid grid-cols-2 gap-4">
-          <input
-            value={
-              agences.find(
-                (a) =>
-                  a.id ===
-                  user?.agence_id
-              )?.libelle || ""
-            }
-            disabled
-            className="input bg-gray-100 cursor-not-allowed"
-          />
+          </div>
 
-          <select
-            {...register(
-              "agence_dest"
-            )}
-            className="input"
+          <h2
+            className="
+              mt-4
+              text-3xl
+              font-semibold
+              tracking-[-0.03em]
+              text-slate-900
+            "
           >
-            <option value="">
-              Agence destination
-            </option>
+            Nouveau transfert client
+          </h2>
 
-            {agences
-              .filter(
-                (a) =>
-                  a.id !==
-                  user?.agence_id
-              )
-              .map((a) => (
-                <option
-                  key={a.id}
-                  value={a.id}
-                >
-                  {a.libelle}
-                </option>
-              ))}
-          </select>
+          <p
+            className="
+              mt-2
+              text-sm
+              leading-6
+              text-slate-500
+            "
+          >
+            Enregistrez une nouvelle
+            opération de transfert
+            inter-agence.
+          </p>
+
         </div>
 
-        {/* EXPEDITEUR */}
-        <div className="border rounded-xl p-4 space-y-3">
-          <h3 className="font-medium text-sm text-gray-600">
-            Expéditeur
-          </h3>
+        {/* -------------------------------------------------------------- */}
+        {/* BODY                                                           */}
+        {/* -------------------------------------------------------------- */}
 
-          <div className="grid grid-cols-3 gap-2">
-            <Input
-              placeholder="Nom"
-              {...register(
-                "exp_nom"
-              )}
-            />
+        <div
+          className="
+            flex-1
+            px-8
+            py-7
+          "
+        >
 
-            <Input
-              placeholder="Postnom"
-              {...register(
-                "exp_postnom"
-              )}
-            />
+          {appMessage && (
 
-            <Input
-              placeholder="Prénom"
-              {...register(
-                "exp_prenom"
-              )}
-            />
-          </div>
-
-          <Input
-            placeholder="Téléphone"
-            {...register(
-              "exp_phone"
-            )}
-          />
-
-          <div className="grid grid-cols-2 gap-2">
-            <select
-              {...register(
-                "exp_type_piece"
-              )}
-              className="input"
-            >
-              <option value="">
-                Type pièce
-              </option>
-
-              <option value="CARTE D'ELECTEUR">
-                Carte d'électeur
-              </option>
-
-              <option value="PASSEPORT">
-                Passeport
-              </option>
-            </select>
-
-            <Input
-              placeholder="Numéro pièce"
-              {...register(
-                "exp_numero_piece"
-              )}
-            />
-          </div>
-        </div>
-
-        {/* DESTINATAIRE */}
-        <div className="border rounded-xl p-4 space-y-3">
-          <h3 className="font-medium text-sm text-gray-600">
-            Destinataire
-          </h3>
-
-          <div className="grid grid-cols-3 gap-2">
-            <Input
-              placeholder="Nom"
-              {...register(
-                "dest_nom"
-              )}
-            />
-
-            <Input
-              placeholder="Postnom"
-              {...register(
-                "dest_postnom"
-              )}
-            />
-
-            <Input
-              placeholder="Prénom"
-              {...register(
-                "dest_prenom"
-              )}
-            />
-          </div>
-
-          <Input
-            placeholder="Téléphone"
-            {...register(
-              "dest_phone"
-            )}
-          />
-
-          <div className="grid grid-cols-2 gap-2">
-            <select
-              {...register(
-                "dest_type_piece"
-              )}
-              className="input"
-            >
-              <option value="">
-                Type pièce
-              </option>
-
-              <option value="CARTE D'ELECTEUR">
-                Carte d'électeur
-              </option>
-
-              <option value="PASSEPORT">
-                Passeport
-              </option>
-            </select>
-
-            <Input
-              placeholder="Numéro pièce"
-              {...register(
-                "dest_numero_piece"
-              )}
-            />
-          </div>
-        </div>
-
-        {/* MONTANT + DATE */}
-        <div className="grid grid-cols-2 gap-2">
-          <Input
-            type="number"
-            label="Montant"
-            {...register(
-              "montant"
-            )}
-          />
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Date opération
-            </label>
-
-            <input
-              type="date"
-              {...register(
-                "date_operation",
-                {
-                  required: true,
-                }
-              )}
+            <div
               className="
-                w-full border rounded-lg px-3 py-2
-                focus:outline-none focus:ring-2
-                focus:ring-indigo-500
+                mb-6
               "
-            />
-          </div>
-        </div>
+            >
 
-        {/* FRAIS */}
-        <div className="grid grid-cols-2 gap-2">
-          <Input
-            type="number"
-            label="Frais"
-            {...register(
-              "frais"
+              <AppMessageState
+                variant={
+                  appMessage.variant
+                }
+                title={
+                  appMessage.title
+                }
+                message={
+                  appMessage.message
+                }
+                onAction={() =>
+                  setAppMessage(
+                    null
+                  )
+                }
+              />
+
+            </div>
+          )}
+
+          <form
+            onSubmit={handleSubmit(
+              onSubmit
             )}
-          />
+            className="
+              space-y-7
+            "
+          >
 
-          <Input
-            type="number"
-            label="Commission"
-            {...register(
-              "commission"
-            )}
-          />
+            {/* ---------------------------------------------------------- */}
+            {/* CONFIGURATION                                              */}
+            {/* ---------------------------------------------------------- */}
+
+            <FormSection
+              title="Configuration"
+              description="Informations principales du transfert."
+              icon={
+                <Wallet
+                  size={18}
+                />
+              }
+            >
+
+              <div
+                className="
+                  grid
+                  grid-cols-1
+                  gap-5
+                  xl:grid-cols-2
+                "
+              >
+
+                {/* CAISSE */}
+
+                <Field>
+
+                  <Label>
+                    Caisse source
+                  </Label>
+
+                  <select
+                    {...register(
+                      "caisse_id",
+                      {
+                        required:
+                          "La caisse est obligatoire",
+                      }
+                    )}
+                    className="
+                      form-select
+                    "
+                  >
+
+                    <option value="">
+                      Sélectionner une caisse
+                    </option>
+
+                    {caisses.map(
+                      (
+                        caisse
+                      ) => (
+
+                        <option
+                          key={
+                            caisse.id
+                          }
+                          value={
+                            caisse.id
+                          }
+                        >
+                          {
+                            caisse.code_caisse
+                          }{" "}
+                          {caisse.devise
+                            ? `(${caisse.devise})`
+                            : ""}
+                        </option>
+                      )
+                    )}
+
+                  </select>
+
+                  <FieldError>
+                    {
+                      errors
+                        .caisse_id
+                        ?.message
+                    }
+                  </FieldError>
+
+                </Field>
+
+                {/* DEVISE */}
+
+                <Field>
+
+                  <Label>
+                    Devise
+                  </Label>
+
+                  <select
+                    {...register(
+                      "devise"
+                    )}
+                    className="
+                      form-select
+                    "
+                  >
+
+                    <option value="">
+                      Sélectionner
+                    </option>
+
+                    <option value="USD">
+                      USD
+                    </option>
+
+                    <option value="CDF">
+                      CDF
+                    </option>
+
+                  </select>
+
+                </Field>
+
+              </div>
+
+              {/* AGENCES */}
+
+              <div
+                className="
+                  mt-5
+                  grid
+                  grid-cols-1
+                  gap-5
+                  xl:grid-cols-2
+                "
+              >
+
+                <Field>
+
+                  <Label>
+                    Agence source
+                  </Label>
+
+                  <div
+                    className="
+                      flex
+                      h-12
+                      items-center
+                      gap-3
+                      rounded-2xl
+                      border
+                      border-slate-200
+                      bg-slate-100
+                      px-4
+                      text-sm
+                      font-medium
+                      text-slate-600
+                    "
+                  >
+
+                    <Building2
+                      size={16}
+                    />
+
+                    {agences.find(
+                      (
+                        agence
+                      ) =>
+                        agence.id ===
+                        user?.agence_id
+                    )?.libelle ||
+                      "-"}
+
+                  </div>
+
+                </Field>
+
+                <Field>
+
+                  <Label>
+                    Agence destination
+                  </Label>
+
+                  <select
+                    {...register(
+                      "agence_dest"
+                    )}
+                    className="
+                      form-select
+                    "
+                  >
+
+                    <option value="">
+                      Sélectionner une agence
+                    </option>
+
+                    {agences
+                      .filter(
+                        (
+                          agence
+                        ) =>
+                          agence.id !==
+                          user?.agence_id
+                      )
+                      .map(
+                        (
+                          agence
+                        ) => (
+
+                          <option
+                            key={
+                              agence.id
+                            }
+                            value={
+                              agence.id
+                            }
+                          >
+                            {
+                              agence.libelle
+                            }
+                          </option>
+                        )
+                      )}
+
+                  </select>
+
+                </Field>
+
+              </div>
+
+            </FormSection>
+
+            {/* ---------------------------------------------------------- */}
+            {/* EXPEDITEUR                                                 */}
+            {/* ---------------------------------------------------------- */}
+
+            <FormSection
+              title="Expéditeur"
+              description="Informations du client expéditeur."
+              icon={
+                <User2
+                  size={18}
+                />
+              }
+            >
+
+              <div
+                className="
+                  grid
+                  grid-cols-1
+                  gap-5
+                  xl:grid-cols-3
+                "
+              >
+
+                <Input
+                  label="Nom"
+                  placeholder="Nom"
+                  {...register(
+                    "exp_nom"
+                  )}
+                />
+
+                <Input
+                  label="Postnom"
+                  placeholder="Postnom"
+                  {...register(
+                    "exp_postnom"
+                  )}
+                />
+
+                <Input
+                  label="Prénom"
+                  placeholder="Prénom"
+                  {...register(
+                    "exp_prenom"
+                  )}
+                />
+
+              </div>
+
+              <div
+                className="
+                  mt-5
+                "
+              >
+
+                <Label>
+                  Téléphone
+                </Label>
+
+                <div
+                  className="
+                    relative
+                  "
+                >
+
+                  <Phone
+                    size={16}
+                    className="
+                      absolute
+                      left-4
+                      top-1/2
+                      -translate-y-1/2
+                      text-slate-400
+                    "
+                  />
+
+                  <input
+                    type="text"
+                    placeholder="+243..."
+                    {...register(
+                      "exp_phone"
+                    )}
+                    className="
+                      h-12
+                      w-full
+                      rounded-2xl
+                      border
+                      border-slate-200
+                      bg-white
+                      pl-11
+                      pr-4
+                      text-sm
+                      text-slate-700
+                      outline-none
+                      transition-all
+                      focus:border-indigo-400
+                      focus:ring-4
+                      focus:ring-indigo-100
+                    "
+                  />
+
+                </div>
+
+              </div>
+
+              <div
+                className="
+                  mt-5
+                  grid
+                  grid-cols-1
+                  gap-5
+                  xl:grid-cols-2
+                "
+              >
+
+                <Field>
+
+                  <Label>
+                    Type de pièce
+                  </Label>
+
+                  <select
+                    {...register(
+                      "exp_type_piece"
+                    )}
+                    className="
+                      form-select
+                    "
+                  >
+
+                    <option value="">
+                      Sélectionner
+                    </option>
+
+                    <option value="CARTE D'ELECTEUR">
+                      Carte d'électeur
+                    </option>
+
+                    <option value="PASSEPORT">
+                      Passeport
+                    </option>
+
+                  </select>
+
+                </Field>
+
+                <div>
+
+                  <Label>
+                    Numéro pièce
+                  </Label>
+
+                  <div
+                    className="
+                      relative
+                    "
+                  >
+
+                    <CreditCard
+                      size={16}
+                      className="
+                        absolute
+                        left-4
+                        top-1/2
+                        -translate-y-1/2
+                        text-slate-400
+                      "
+                    />
+
+                    <input
+                      type="text"
+                      placeholder="Numéro d'identification"
+                      {...register(
+                        "exp_numero_piece"
+                      )}
+                      className="
+                        h-12
+                        w-full
+                        rounded-2xl
+                        border
+                        border-slate-200
+                        bg-white
+                        pl-11
+                        pr-4
+                        text-sm
+                        text-slate-700
+                        outline-none
+                        transition-all
+                        focus:border-indigo-400
+                        focus:ring-4
+                        focus:ring-indigo-100
+                      "
+                    />
+
+                  </div>
+
+                </div>
+
+              </div>
+
+            </FormSection>
+
+            {/* ---------------------------------------------------------- */}
+            {/* DESTINATAIRE                                               */}
+            {/* ---------------------------------------------------------- */}
+
+            <FormSection
+              title="Destinataire"
+              description="Informations du client bénéficiaire."
+              icon={
+                <Send
+                  size={18}
+                />
+              }
+            >
+
+              <div
+                className="
+                  grid
+                  grid-cols-1
+                  gap-5
+                  xl:grid-cols-3
+                "
+              >
+
+                <Input
+                  label="Nom"
+                  placeholder="Nom"
+                  {...register(
+                    "dest_nom"
+                  )}
+                />
+
+                <Input
+                  label="Postnom"
+                  placeholder="Postnom"
+                  {...register(
+                    "dest_postnom"
+                  )}
+                />
+
+                <Input
+                  label="Prénom"
+                  placeholder="Prénom"
+                  {...register(
+                    "dest_prenom"
+                  )}
+                />
+
+              </div>
+
+              <div
+                className="
+                  mt-5
+                "
+              >
+
+                <Label>
+                  Téléphone
+                </Label>
+
+                <div
+                  className="
+                    relative
+                  "
+                >
+
+                  <Phone
+                    size={16}
+                    className="
+                      absolute
+                      left-4
+                      top-1/2
+                      -translate-y-1/2
+                      text-slate-400
+                    "
+                  />
+
+                  <input
+                    type="text"
+                    placeholder="+243..."
+                    {...register(
+                      "dest_phone"
+                    )}
+                    className="
+                      h-12
+                      w-full
+                      rounded-2xl
+                      border
+                      border-slate-200
+                      bg-white
+                      pl-11
+                      pr-4
+                      text-sm
+                      text-slate-700
+                      outline-none
+                      transition-all
+                      focus:border-indigo-400
+                      focus:ring-4
+                      focus:ring-indigo-100
+                    "
+                  />
+
+                </div>
+
+              </div>
+
+              <div
+                className="
+                  mt-5
+                  grid
+                  grid-cols-1
+                  gap-5
+                  xl:grid-cols-2
+                "
+              >
+
+                <Field>
+
+                  <Label>
+                    Type de pièce
+                  </Label>
+
+                  <select
+                    {...register(
+                      "dest_type_piece"
+                    )}
+                    className="
+                      form-select
+                    "
+                  >
+
+                    <option value="">
+                      Sélectionner
+                    </option>
+
+                    <option value="CARTE D'ELECTEUR">
+                      Carte d'électeur
+                    </option>
+
+                    <option value="PASSEPORT">
+                      Passeport
+                    </option>
+
+                  </select>
+
+                </Field>
+
+                <div>
+
+                  <Label>
+                    Numéro pièce
+                  </Label>
+
+                  <div
+                    className="
+                      relative
+                    "
+                  >
+
+                    <CreditCard
+                      size={16}
+                      className="
+                        absolute
+                        left-4
+                        top-1/2
+                        -translate-y-1/2
+                        text-slate-400
+                      "
+                    />
+
+                    <input
+                      type="text"
+                      placeholder="Numéro d'identification"
+                      {...register(
+                        "dest_numero_piece"
+                      )}
+                      className="
+                        h-12
+                        w-full
+                        rounded-2xl
+                        border
+                        border-slate-200
+                        bg-white
+                        pl-11
+                        pr-4
+                        text-sm
+                        text-slate-700
+                        outline-none
+                        transition-all
+                        focus:border-indigo-400
+                        focus:ring-4
+                        focus:ring-indigo-100
+                      "
+                    />
+
+                  </div>
+
+                </div>
+
+              </div>
+
+            </FormSection>
+
+            {/* ---------------------------------------------------------- */}
+            {/* FINANCE                                                    */}
+            {/* ---------------------------------------------------------- */}
+
+            <FormSection
+              title="Détails financiers"
+              description="Informations liées au montant et aux frais."
+              icon={
+                <Landmark
+                  size={18}
+                />
+              }
+            >
+
+              <div
+                className="
+                  grid
+                  grid-cols-1
+                  gap-5
+                  xl:grid-cols-2
+                "
+              >
+
+                <Input
+                  type="number"
+                  label="Montant"
+                  placeholder="0.00"
+                  {...register(
+                    "montant"
+                  )}
+                />
+
+                <div>
+
+                  <Label>
+                    Date opération
+                  </Label>
+
+                  <div
+                    className="
+                      relative
+                    "
+                  >
+
+                    <CalendarRange
+                      size={16}
+                      className="
+                        absolute
+                        left-4
+                        top-1/2
+                        -translate-y-1/2
+                        text-slate-400
+                      "
+                    />
+
+                    <input
+                      type="date"
+                      {...register(
+                        "date_operation",
+                        {
+                          required:
+                            true,
+                        }
+                      )}
+                      className="
+                        h-12
+                        w-full
+                        rounded-2xl
+                        border
+                        border-slate-200
+                        bg-white
+                        pl-11
+                        pr-4
+                        text-sm
+                        text-slate-700
+                        outline-none
+                        transition-all
+                        focus:border-indigo-400
+                        focus:ring-4
+                        focus:ring-indigo-100
+                      "
+                    />
+
+                  </div>
+
+                </div>
+
+              </div>
+
+              <div
+                className="
+                  mt-5
+                  grid
+                  grid-cols-1
+                  gap-5
+                  xl:grid-cols-2
+                "
+              >
+
+                <Input
+                  type="number"
+                  label="Frais"
+                  placeholder="0.00"
+                  {...register(
+                    "frais"
+                  )}
+                />
+
+                <Input
+                  type="number"
+                  label="Commission"
+                  placeholder="0.00"
+                  {...register(
+                    "commission"
+                  )}
+                />
+
+              </div>
+
+            </FormSection>
+
+            {/* ---------------------------------------------------------- */}
+            {/* FOOTER                                                     */}
+            {/* ---------------------------------------------------------- */}
+
+            <div
+              className="
+                flex
+                items-center
+                justify-end
+                gap-3
+                border-t
+                border-slate-200
+                pt-6
+              "
+            >
+
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={onClose}
+                className="
+                  h-12
+                  rounded-2xl
+                  px-5
+                "
+              >
+                Annuler
+              </Button>
+
+              <Button
+                type="submit"
+                loading={
+                  isPending
+                }
+                className="
+                  h-12
+                  rounded-2xl
+                  bg-indigo-600
+                  px-5
+                  hover:bg-indigo-700
+                "
+              >
+
+                <Send
+                  size={16}
+                />
+
+                Envoyer le transfert
+
+              </Button>
+
+            </div>
+
+          </form>
+
         </div>
 
-        {/* ACTIONS */}
-        <div className="flex justify-end gap-2">
-          <Button
-            type="button"
-            variant="secondary"
-            onClick={onClose}
-          >
-            Annuler
-          </Button>
+      </div>
 
-          <Button
-            type="submit"
-            loading={isPending}
-          >
-            Envoyer
-          </Button>
-        </div>
-      </form>
     </Modal>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/*                               FORM SECTION                                 */
+/* -------------------------------------------------------------------------- */
+
+function FormSection({
+  title,
+  description,
+  icon,
+  children,
+}: {
+  title: string;
+  description: string;
+  icon: React.ReactNode;
+  children: React.ReactNode;
+}) {
+
+  return (
+    <section
+      className="
+        rounded-[28px]
+        border
+        border-slate-200
+        bg-slate-50/60
+        p-6
+      "
+    >
+
+      <div
+        className="
+          mb-6
+          flex
+          items-start
+          gap-4
+        "
+      >
+
+        <div
+          className="
+            flex
+            h-11
+            w-11
+            items-center
+            justify-center
+            rounded-2xl
+            bg-white
+            text-slate-700
+            shadow-sm
+          "
+        >
+          {icon}
+        </div>
+
+        <div>
+
+          <h3
+            className="
+              text-base
+              font-semibold
+              text-slate-900
+            "
+          >
+            {title}
+          </h3>
+
+          <p
+            className="
+              mt-1
+              text-sm
+              text-slate-500
+            "
+          >
+            {description}
+          </p>
+
+        </div>
+
+      </div>
+
+      {children}
+
+    </section>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/*                                   FIELD                                    */
+/* -------------------------------------------------------------------------- */
+
+function Field({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+
+  return (
+    <div
+      className="
+        flex
+        flex-col
+      "
+    >
+      {children}
+    </div>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/*                                   LABEL                                    */
+/* -------------------------------------------------------------------------- */
+
+function Label({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+
+  return (
+    <label
+      className="
+        mb-2
+        block
+        text-sm
+        font-semibold
+        text-slate-700
+      "
+    >
+      {children}
+    </label>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/*                                FIELD ERROR                                 */
+/* -------------------------------------------------------------------------- */
+
+function FieldError({
+  children,
+}: {
+  children?: React.ReactNode;
+}) {
+
+  if (!children)
+    return null;
+
+  return (
+    <span
+      className="
+        mt-2
+        text-xs
+        font-medium
+        text-red-500
+      "
+    >
+      {children}
+    </span>
   );
 }

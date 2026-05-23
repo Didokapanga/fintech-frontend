@@ -1,230 +1,827 @@
 // src/modules/validation/components/ValidationClientTab.tsx
 
-import { useState } from "react";
-import { Button, Table } from "../../../components/ui";
-import type { Column } from "../../../components/ui/Table.types";
+import {
+  Check,
+  Clock3,
+  Landmark,
+  Phone,
+  ShieldAlert,
+  User2,
+  X,
+} from "lucide-react";
 
-import { useAgences } from "../../agence/hooks/useAgences";
+import {
+  useMemo,
+  useState,
+} from "react";
+
+import {
+  Button,
+  Table,
+} from "../../../components/ui";
+
+import type {
+  Column,
+} from "../../../components/ui/Table.types";
+
+import AppMessageState from "../../../components/ui/AppMessageState";
+
+import {
+  useAuthStore,
+} from "../../../app/store";
+
+import {
+  useAgences,
+} from "../../agence/hooks/useAgences";
+
+import {
+  useApiMutationWithFeedback,
+} from "../../../hooks/useApiMutationWithFeedback";
+
 import {
   useValidateOperation,
   useValidationList,
 } from "../hooks/useValidation";
-import type { TransfertClient } from "../services/validation.service";
-import { useAuthStore } from "../../../app/store";
 
-import { useApiMutationWithFeedback } from "../../../hooks/useApiMutationWithFeedback";
-import AppMessageState from "../../../components/ui/AppMessageState";
+import type {
+  TransfertClient,
+} from "../services/validation.service";
+
+import Pagination from "../../../components/ui/Pagination";
+
+/* -------------------------------------------------------------------------- */
+/*                                   TYPES                                    */
+/* -------------------------------------------------------------------------- */
 
 type Agence = {
   id: string;
+
   libelle: string;
 };
 
+/* -------------------------------------------------------------------------- */
+/*                                  COMPONENT                                 */
+/* -------------------------------------------------------------------------- */
+
 export default function ValidationClientTab() {
-  const [page] = useState(1);
 
-  const user = useAuthStore((s) => s.user);
-  const role = user?.role_name?.toUpperCase() || "";
+  /* ------------------------------------------------------------------------ */
+  /*                                   STATE                                  */
+  /* ------------------------------------------------------------------------ */
 
-  const canValidate = ["ADMIN", "N+1", "N+2"].includes(role);
+  const [
+    page,
+    setPage,
+  ] = useState(1);
 
-  // ✅ DATA
-  const { data, isLoading } = useValidationList(page, 10);
+  /* ------------------------------------------------------------------------ */
+  /*                                    AUTH                                  */
+  /* ------------------------------------------------------------------------ */
 
-  const validateOperation = useValidateOperation();
+  const user =
+    useAuthStore(
+      (s) => s.user
+    );
 
-  // ✅ 🔥 AJOUT PROPRE
+  const role =
+    user
+      ?.role_name
+      ?.toUpperCase() || "";
+
+  const canValidate =
+    [
+      "ADMIN",
+      "N+1",
+      "N+2",
+    ].includes(role);
+
+  /* ------------------------------------------------------------------------ */
+  /*                                   DATA                                   */
+  /* ------------------------------------------------------------------------ */
+
+  const {
+    data,
+    isLoading,
+  } =
+    useValidationList(
+      page,
+      10
+    );
+
+  const transferts =
+    useMemo(
+      () =>
+        data?.data ?? [],
+      [data]
+    );
+
+    const meta = data?.meta;
+
+  /* ------------------------------------------------------------------------ */
+  /*                                  AGENCES                                 */
+  /* ------------------------------------------------------------------------ */
+
+  const {
+    data:
+      agencesData,
+  } =
+    useAgences();
+
+  const agences:
+    Agence[] =
+      (
+        agencesData as
+          Agence[]
+      ) ?? [];
+
+  const getAgenceName =
+    (
+      id: string
+    ) => {
+
+      const agence =
+        agences.find(
+          (
+            a
+          ) =>
+            a.id === id
+        );
+
+      return (
+        agence
+          ?.libelle ||
+        "-"
+      );
+    };
+
+  /* ------------------------------------------------------------------------ */
+  /*                                VALIDATION                                */
+  /* ------------------------------------------------------------------------ */
+
+  const validateOperation =
+    useValidateOperation();
+
   const {
     mutate,
     appMessage,
     clearMessage,
     isPending,
-  } = useApiMutationWithFeedback({
-    mutationFn: validateOperation.mutateAsync,
+  } =
+    useApiMutationWithFeedback(
+      {
+        mutationFn:
+          validateOperation.mutateAsync,
 
-    successMessage: "Validation effectuée avec succès",
+        successMessage:
+          "Validation effectuée avec succès",
 
-    invalidateQueries: ["validation-client"],
-  });
+        invalidateQueries:
+          [
+            "validation-client",
+          ],
+      }
+    );
 
-  const transferts = data?.data ?? [];
+  const handleValidate =
+    (
+      id: string
+    ) => {
 
-  const { data: agencesData } = useAgences();
-  const agences: Agence[] = (agencesData as Agence[]) ?? [];
+      mutate({
+        operation_type:
+          "TRANSFERT_CLIENT",
 
-  const getAgenceName = (id: string) => {
-    const a = agences.find((a) => a.id === id);
-    return a?.libelle || "-";
-  };
+        reference_id:
+          id,
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "INITIE":
-        return "bg-yellow-100 text-yellow-700";
-      case "APPROUVE":
-      case "EXECUTE":
-        return "bg-green-100 text-green-700";
-      case "REJETE":
-        return "bg-red-100 text-red-700";
-      default:
-        return "bg-gray-100 text-gray-600";
-    }
-  };
+        decision:
+          "APPROUVE",
 
-  // ACTIONS (LOGIQUE INTACTE)
-  const handleValidate = (id: string) => {
-    mutate({
-      operation_type: "TRANSFERT_CLIENT",
-      reference_id: id,
-      decision: "APPROUVE",
-      niveau: "N1",
-    });
-  };
+        niveau:
+          "N1",
+      });
+    };
 
-  const handleReject = (id: string) => {
-    mutate({
-      operation_type: "TRANSFERT_CLIENT",
-      reference_id: id,
-      decision: "REJETE",
-      niveau: "N1",
-    });
-  };
+  const handleReject =
+    (
+      id: string
+    ) => {
 
-  // COLUMNS
-  const columns: Column<TransfertClient>[] = [
-    {
-      header: "Expéditeur",
-      accessor: "id",
-      render: (_v, row) => (
-        <div className="flex flex-col">
-          <span className="font-medium text-gray-800">
-            {row.exp_nom || "-"} {row.exp_postnom || ""}
-          </span>
-          <span className="text-xs text-gray-500">
-            {row.exp_phone || "-"}
-          </span>
-        </div>
-      ),
-    },
+      mutate({
+        operation_type:
+          "TRANSFERT_CLIENT",
 
-    {
-      header: "Destinataire",
-      accessor: "client_exp",
-      render: (_v, row) => (
-        <div className="flex flex-col">
-          <span className="font-medium text-gray-800">
-            {row.dest_nom || "-"} {row.dest_postnom || ""}
-          </span>
-          <span className="text-xs text-gray-500">
-            {row.dest_phone || "-"}
-          </span>
-        </div>
-      ),
-    },
+        reference_id:
+          id,
 
-    {
-      header: "Agence",
-      accessor: "agence_exp",
-      render: (value) => getAgenceName(String(value)),
-    },
+        decision:
+          "REJETE",
 
-    {
-      header: "Montant",
-      accessor: "montant",
-      render: (value, row) => {
-        const montant =
-          typeof value === "number"
-            ? value
-            : parseFloat(String(value) || "0");
+        niveau:
+          "N1",
+      });
+    };
 
-        return (
-          <span className="text-green-600 font-semibold">
-            {montant.toLocaleString()} {row.devise}
-          </span>
-        );
-      },
-    },
+  /* ------------------------------------------------------------------------ */
+  /*                                  HELPERS                                 */
+  /* ------------------------------------------------------------------------ */
 
-    {
-      header: "Statut",
-      accessor: "statut",
-      render: (value) => (
-        <span
-          className={`px-2 py-1 rounded text-xs ${getStatusBadge(
-            String(value)
-          )}`}
-        >
-          {value}
-        </span>
-      ),
-    },
+  const getStatusBadge =
+    (
+      status: string
+    ) => {
 
-    {
-      header: "Date",
-      accessor: "created_at",
-      render: (value) =>
-        new Date(String(value)).toLocaleString(),
-    },
+      switch (
+        status
+      ) {
 
-    {
-      header: "Actions",
-      accessor: "client_dest",
-      render: (_v, row) =>
-        canValidate ? (
-          <div className="flex gap-2">
-            <Button
-              onClick={() => handleValidate(String(row.id))}
-              loading={isPending}
-            >
-              Valider
-            </Button>
+        case "INITIE":
 
-            <Button
-              variant="danger"
-              onClick={() => handleReject(String(row.id))}
-              loading={isPending}
-            >
-              Rejeter
-            </Button>
-          </div>
-        ) : (
-          <span className="text-gray-400 text-sm italic">
-            Lecture seule
-          </span>
-        ),
-    },
-  ];
+          return `
+            bg-amber-50
+            text-amber-700
+            border
+            border-amber-200
+          `;
+
+        case "APPROUVE":
+          return `
+            bg-emerald-50
+            text-emerald-700
+            border
+            border-emerald-200
+          `;
+
+        case "EXECUTE":
+          return `
+            bg-emerald-50
+            text-emerald-700
+            border
+            border-emerald-200
+          `;
+
+        case "REJETE":
+
+          return `
+            bg-red-50
+            text-red-700
+            border
+            border-red-200
+          `;
+
+        default:
+
+          return `
+            bg-slate-100
+            text-slate-600
+            border
+            border-slate-200
+          `;
+      }
+    };
+
+  /* ------------------------------------------------------------------------ */
+  /*                                  COLUMNS                                 */
+  /* ------------------------------------------------------------------------ */
+
+  const columns:
+    Column<TransfertClient>[] =
+      [
+        {
+          header:
+            "Expéditeur",
+
+          accessor:
+            "id",
+
+          render:
+            (
+              _v,
+              row
+            ) => (
+
+              <div
+                className="
+                  flex
+                  min-w-[220px]
+                  items-start
+                  gap-3
+                "
+              >
+
+                <div
+                  className="
+                    mt-0.5
+                    flex
+                    h-10
+                    w-10
+                    items-center
+                    justify-center
+                    rounded-xl
+                    bg-slate-100
+                    text-slate-600
+                  "
+                >
+
+                  <User2
+                    size={16}
+                  />
+
+                </div>
+
+                <div
+                  className="
+                    flex
+                    flex-col
+                  "
+                >
+
+                  <span
+                    className="
+                      font-semibold
+                      text-slate-800
+                    "
+                  >
+                    {row.exp_nom ||
+                      "-"}{" "}
+
+                    {
+                      row.exp_postnom ||
+                      ""
+                    }
+                  </span>
+
+                  <span
+                    className="
+                      mt-1
+                      inline-flex
+                      items-center
+                      gap-1.5
+                      text-xs
+                      text-slate-500
+                    "
+                  >
+
+                    <Phone
+                      size={12}
+                    />
+
+                    {row.exp_phone ||
+                      "-"}
+
+                  </span>
+
+                </div>
+
+              </div>
+
+            ),
+        },
+
+        {
+          header:
+            "Destinataire",
+
+          accessor:
+            "client_exp",
+
+          render:
+            (
+              _v,
+              row
+            ) => (
+
+              <div
+                className="
+                  flex
+                  min-w-[220px]
+                  items-start
+                  gap-3
+                "
+              >
+
+                <div
+                  className="
+                    mt-0.5
+                    flex
+                    h-10
+                    w-10
+                    items-center
+                    justify-center
+                    rounded-xl
+                    bg-indigo-50
+                    text-indigo-600
+                  "
+                >
+
+                  <Landmark
+                    size={16}
+                  />
+
+                </div>
+
+                <div
+                  className="
+                    flex
+                    flex-col
+                  "
+                >
+
+                  <span
+                    className="
+                      font-semibold
+                      text-slate-800
+                    "
+                  >
+                    {row.dest_nom ||
+                      "-"}{" "}
+
+                    {
+                      row.dest_postnom ||
+                      ""
+                    }
+                  </span>
+
+                  <span
+                    className="
+                      mt-1
+                      inline-flex
+                      items-center
+                      gap-1.5
+                      text-xs
+                      text-slate-500
+                    "
+                  >
+
+                    <Phone
+                      size={12}
+                    />
+
+                    {row.dest_phone ||
+                      "-"}
+
+                  </span>
+
+                </div>
+
+              </div>
+
+            ),
+        },
+
+        {
+          header:
+            "Agence",
+
+          accessor:
+            "agence_exp",
+
+          render:
+            (
+              value
+            ) => (
+
+              <div
+                className="
+                  inline-flex
+                  rounded-xl
+                  border
+                  border-slate-200
+                  bg-slate-50
+                  px-3
+                  py-2
+                  text-sm
+                  font-medium
+                  text-slate-700
+                "
+              >
+                {getAgenceName(
+                  String(
+                    value
+                  )
+                )}
+              </div>
+
+            ),
+        },
+
+        {
+          header:
+            "Montant",
+
+          accessor:
+            "montant",
+
+          render:
+            (
+              value,
+              row
+            ) => {
+
+              const montant =
+                typeof value ===
+                "number"
+                  ? value
+                  : parseFloat(
+                      String(
+                        value
+                      ) ||
+                        "0"
+                    );
+
+              return (
+                <span
+                  className="
+                    text-base
+                    font-bold
+                    text-emerald-600
+                  "
+                >
+                  {montant.toLocaleString()}{" "}
+                  {row.devise}
+                </span>
+              );
+            },
+        },
+
+        {
+          header:
+            "Statut",
+
+          accessor:
+            "statut",
+
+          render:
+            (
+              value
+            ) => (
+
+              <span
+                className={`
+                  inline-flex
+                  items-center
+                  gap-2
+                  rounded-full
+                  px-3
+                  py-1.5
+                  text-xs
+                  font-semibold
+                  ${getStatusBadge(
+                    String(
+                      value
+                    )
+                  )}
+                `}
+              >
+
+                <Clock3
+                  size={12}
+                />
+
+                {String(
+                  value
+                )}
+
+              </span>
+
+            ),
+        },
+
+        {
+          header:
+            "Date",
+
+          accessor:
+            "created_at",
+
+          render:
+            (
+              value
+            ) => (
+
+              <div
+                className="
+                  whitespace-nowrap
+                  text-sm
+                  text-slate-600
+                "
+              >
+                {new Date(
+                  String(
+                    value
+                  )
+                ).toLocaleString(
+                  "fr-FR"
+                )}
+              </div>
+
+            ),
+        },
+
+        {
+          header:
+            "Actions",
+
+          accessor:
+            "client_dest",
+
+          render:
+            (
+              _v,
+              row
+            ) =>
+
+              canValidate
+                ? (
+
+                  <div
+                    className="
+                      flex
+                      items-center
+                      gap-2
+                    "
+                  >
+
+                    <Button
+                      onClick={() =>
+                        handleValidate(
+                          String(
+                            row.id
+                          )
+                        )
+                      }
+                      loading={
+                        isPending
+                      }
+                    >
+                      <Check
+                        size={15}
+                      />
+
+                      Valider
+                    </Button>
+
+                    <Button
+                      variant="danger"
+                      onClick={() =>
+                        handleReject(
+                          String(
+                            row.id
+                          )
+                        )
+                      }
+                      loading={
+                        isPending
+                      }
+                    >
+                      <X
+                        size={15}
+                      />
+
+                      Rejeter
+                    </Button>
+
+                  </div>
+
+                )
+                : (
+
+                  <div
+                    className="
+                      text-sm
+                      italic
+                      text-slate-400
+                    "
+                  >
+                    Lecture seule
+                  </div>
+
+                ),
+        },
+      ];
+
+  /* ------------------------------------------------------------------------ */
+  /*                                   RENDER                                 */
+  /* ------------------------------------------------------------------------ */
 
   return (
-    <div className="space-y-4">
+    <div
+      className="
+        space-y-5
+      "
+    >
 
-      {/* ✅ MESSAGE */}
       {appMessage && (
+
         <AppMessageState
-          variant={appMessage.variant}
-          title={appMessage.title}
-          message={appMessage.message}
-          onAction={clearMessage}
+          variant={
+            appMessage.variant
+          }
+          title={
+            appMessage.title
+          }
+          message={
+            appMessage.message
+          }
+          onAction={
+            clearMessage
+          }
         />
+
       )}
 
       {!canValidate && (
-        <div className="text-xs text-gray-400">
-          Vous êtes en mode lecture seule
+
+        <div
+          className="
+            flex
+            items-center
+            gap-2
+            rounded-2xl
+            border
+            border-amber-200
+            bg-amber-50
+            px-4
+            py-3
+            text-sm
+            text-amber-700
+          "
+        >
+
+          <ShieldAlert
+            size={16}
+          />
+
+          Vous êtes actuellement
+          en mode lecture seule.
+
         </div>
+
       )}
 
-      <Table<TransfertClient>
-        data={transferts}
-        columns={columns}
-        loading={isLoading}
-      />
+      <div
+        className="
+          overflow-hidden
+          rounded-[28px]
+          border
+          border-slate-200
+          bg-white
+        "
+      >
 
-      {!isLoading && transferts.length === 0 && (
-        <div className="text-center text-gray-500 py-6">
-          Aucun transfert à afficher
-        </div>
+        <Table<TransfertClient>
+          data={
+            transferts
+          }
+          columns={
+            columns
+          }
+          loading={
+            isLoading
+          }
+        />
+
+      </div>
+
+      {!isLoading &&
+        transferts.length ===
+          0 && (
+
+          <div
+            className="
+              rounded-2xl
+              border
+              border-dashed
+              border-slate-200
+              bg-white
+              py-14
+              text-center
+            "
+          >
+
+            <p
+              className="
+                text-sm
+                text-slate-500
+              "
+            >
+              Aucun transfert
+              en attente de validation.
+            </p>
+
+          </div>
+
+        )}
+
+      {meta && (
+
+        <Pagination
+          page={page}
+          onChange={setPage}
+        />
+
       )}
+
     </div>
   );
 }

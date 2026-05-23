@@ -1,5 +1,10 @@
 // src/modules/validation-log/pages/ValidationLogPage.tsx
 
+import {
+  Activity,
+  ShieldCheck,
+} from "lucide-react";
+
 import { useState }
 from "react";
 
@@ -20,8 +25,20 @@ import type {
   ValidationLogFilters,
 } from "../types/validation-log.types";
 
+import Pagination
+from "../../../components/ui/Pagination";
+
+/* -------------------------------------------------------------------------- */
+/*                                    PAGE                                    */
+/* -------------------------------------------------------------------------- */
+
 export default function ValidationLogPage() {
 
+  /**
+   * =========================================
+   * FILTERS
+   * =========================================
+   */
   const [
     filters,
     setFilters,
@@ -36,6 +53,11 @@ export default function ValidationLogPage() {
     date_to: "",
   });
 
+  /**
+   * =========================================
+   * MODAL
+   * =========================================
+   */
   const [
     selectedLog,
     setSelectedLog,
@@ -49,6 +71,11 @@ export default function ValidationLogPage() {
     setOpenDetails,
   ] = useState(false);
 
+  /**
+   * =========================================
+   * QUERY
+   * =========================================
+   */
   const {
     data,
     isLoading,
@@ -60,6 +87,11 @@ export default function ValidationLogPage() {
   const meta =
     data?.data?.meta;
 
+  /**
+   * =========================================
+   * OPEN DETAILS
+   * =========================================
+   */
   const handleOpenDetails = (
     log: ValidationLog
   ) => {
@@ -69,139 +101,408 @@ export default function ValidationLogPage() {
     setOpenDetails(true);
   };
 
+  /**
+   * =========================================
+   * PAGINATION
+   * =========================================
+   */
+  const handlePageChange = (
+    page: number
+  ) => {
+
+    setFilters(
+      (
+        prev
+      ) => ({
+        ...prev,
+        page,
+      })
+    );
+  };
+
   return (
-    <div className="space-y-5">
 
-      {/* HEADER */}
-      <div>
+    <div className="space-y-6">
 
-        <h1 className="text-2xl font-bold">
-          Validation Logs
-        </h1>
+      {/* -------------------------------------------------------------- */}
+      {/* HERO                                                           */}
+      {/* -------------------------------------------------------------- */}
 
-        <p className="text-sm text-gray-500 mt-1">
-          Historique des validations
-          système et métier
-        </p>
+      <section
+        className="
+          relative
+          overflow-hidden
+          rounded-[32px]
+          border
+          border-slate-200/80
+          bg-white
+          px-8
+          py-8
+        "
+      >
 
-      </div>
-
-      {/* FILTERS */}
-      <ValidationLogFiltersComponent
-        filters={filters}
-        onChange={setFilters}
-      />
-
-      {/* TABLE */}
-      <ValidationLogTable
-        data={logs}
-        onDetails={
-          handleOpenDetails
-        }
-      />
-
-      {/* LOADING */}
-      {isLoading && (
-        <div className="text-sm text-gray-500">
-          Chargement...
-        </div>
-      )}
-
-      {/* EMPTY */}
-      {!isLoading &&
-        logs.length === 0 && (
+        {/* GLOW */}
 
         <div
           className="
-            text-center
-            text-gray-500
-            py-10
-            bg-white
-            rounded-2xl
-            border
+            absolute
+            right-0
+            top-0
+            h-72
+            w-72
+            rounded-full
+            bg-indigo-50
+            blur-3xl
           "
-        >
-          Aucun validation log trouvé
-        </div>
-      )}
-
-      {/* PAGINATION */}
-      {meta && (
+        />
 
         <div
           className="
-            flex items-center
-            justify-center
-            gap-3
+            relative
+            flex
+            flex-col
+            gap-8
+            xl:flex-row
+            xl:items-center
+            xl:justify-between
           "
         >
 
-          <button
-            disabled={
-              (filters.page || 1) <= 1
-            }
-            onClick={() =>
-              setFilters(
-                (
-                  prev: ValidationLogFilters
-                ) => ({
-                  ...prev,
-                  page:
-                    (prev.page || 1) - 1,
-                })
-              )
-            }
+          {/* LEFT */}
+
+          <div>
+
+            <div
+              className="
+                inline-flex
+                items-center
+                gap-2
+                rounded-full
+                border
+                border-indigo-100
+                bg-indigo-50
+                px-3
+                py-1
+                text-[11px]
+                font-semibold
+                uppercase
+                tracking-[0.14em]
+                text-indigo-700
+              "
+            >
+
+              <ShieldCheck
+                size={13}
+              />
+
+              Workflow sécurisé
+
+            </div>
+
+            <h1
+              className="
+                mt-5
+                text-[38px]
+                font-semibold
+                tracking-[-0.04em]
+                text-slate-900
+              "
+            >
+              Validation Logs
+            </h1>
+
+            <p
+              className="
+                mt-4
+                max-w-3xl
+                text-sm
+                leading-7
+                text-slate-500
+              "
+            >
+              Consultez l’historique
+              complet des validations,
+              approbations et rejets
+              effectués dans le système.
+            </p>
+
+          </div>
+
+          {/* RIGHT */}
+
+          <div
             className="
-              px-4 py-2
-              rounded-xl
-              border
-              bg-white
-              text-sm
+              grid
+              grid-cols-2
+              gap-4
             "
           >
-            ←
-          </button>
 
-          <span className="text-sm text-gray-600">
-            Page{" "}
-            <strong>
-              {meta.page}
-            </strong>{" "}
-            /{" "}
-            {meta.totalPages}
-          </span>
+            <div
+              className="
+                rounded-3xl
+                border
+                border-slate-200
+                bg-slate-50
+                p-5
+              "
+            >
 
-          <button
-            disabled={
-              (filters.page || 1) >=
-              meta.totalPages
-            }
-            onClick={() =>
-              setFilters(
-                (
-                  prev: ValidationLogFilters
-                ) => ({
-                  ...prev,
-                  page:
-                    (prev.page || 1) + 1,
-                })
-              )
-            }
-            className="
-              px-4 py-2
-              rounded-xl
-              border
-              bg-white
-              text-sm
-            "
-          >
-            →
-          </button>
+              <div
+                className="
+                  flex
+                  h-11
+                  w-11
+                  items-center
+                  justify-center
+                  rounded-2xl
+                  bg-indigo-100
+                  text-indigo-600
+                "
+              >
+
+                <Activity
+                  size={18}
+                />
+
+              </div>
+
+              <p
+                className="
+                  mt-4
+                  text-xs
+                  font-semibold
+                  uppercase
+                  tracking-[0.12em]
+                  text-slate-400
+                "
+              >
+                Historique
+              </p>
+
+              <h3
+                className="
+                  mt-1
+                  text-base
+                  font-semibold
+                  text-slate-900
+                "
+              >
+                Logs métier
+              </h3>
+
+            </div>
+
+            <div
+              className="
+                rounded-3xl
+                border
+                border-slate-200
+                bg-slate-50
+                p-5
+              "
+            >
+
+              <div
+                className="
+                  flex
+                  h-11
+                  w-11
+                  items-center
+                  justify-center
+                  rounded-2xl
+                  bg-emerald-100
+                  text-emerald-600
+                "
+              >
+
+                <ShieldCheck
+                  size={18}
+                />
+
+              </div>
+
+              <p
+                className="
+                  mt-4
+                  text-xs
+                  font-semibold
+                  uppercase
+                  tracking-[0.12em]
+                  text-slate-400
+                "
+              >
+                Sécurité
+              </p>
+
+              <h3
+                className="
+                  mt-1
+                  text-base
+                  font-semibold
+                  text-slate-900
+                "
+              >
+                Contrôle hiérarchique
+              </h3>
+
+            </div>
+
+          </div>
 
         </div>
-      )}
 
-      {/* MODAL */}
+      </section>
+
+      {/* -------------------------------------------------------------- */}
+      {/* CONTENT                                                        */}
+      {/* -------------------------------------------------------------- */}
+
+      <section
+        className="
+          rounded-[32px]
+          border
+          border-slate-200/80
+          bg-white
+          p-6
+        "
+      >
+
+        {/* HEADER */}
+
+        <div
+          className="
+            mb-6
+            flex
+            items-center
+            justify-between
+            gap-4
+            flex-wrap
+          "
+        >
+
+          <div>
+
+            <h2
+              className="
+                text-lg
+                font-semibold
+                text-slate-900
+              "
+            >
+              Journal des validations
+            </h2>
+
+            <p
+              className="
+                mt-1
+                text-sm
+                text-slate-500
+              "
+            >
+              Analysez les opérations
+              validées, rejetées ou
+              approuvées dans le système.
+            </p>
+
+          </div>
+
+        </div>
+
+        {/* FILTERS */}
+
+        <ValidationLogFiltersComponent
+          filters={filters}
+          onChange={setFilters}
+        />
+
+        {/* TABLE */}
+
+        <div className="mt-6">
+
+          <ValidationLogTable
+            data={logs}
+            onDetails={
+              handleOpenDetails
+            }
+          />
+
+        </div>
+
+        {/* LOADING */}
+
+        {isLoading && (
+
+          <div
+            className="
+              py-8
+              text-center
+              text-sm
+              text-slate-500
+            "
+          >
+            Chargement...
+          </div>
+        )}
+
+        {/* EMPTY */}
+
+        {!isLoading &&
+          logs.length === 0 && (
+
+          <div
+            className="
+              mt-6
+              rounded-3xl
+              border
+              border-dashed
+              border-slate-200
+              bg-slate-50
+              py-14
+              text-center
+            "
+          >
+
+            <p
+              className="
+                text-sm
+                font-medium
+                text-slate-500
+              "
+            >
+              Aucun validation log trouvé
+            </p>
+
+          </div>
+        )}
+
+        {/* PAGINATION */}
+
+        {meta && (
+
+          <div className="mt-6">
+
+            <Pagination
+              page={
+                meta.page
+              }
+              totalPages={
+                meta.totalPages
+              }
+              onChange={
+                handlePageChange
+              }
+            />
+
+          </div>
+        )}
+
+      </section>
+
+      {/* -------------------------------------------------------------- */}
+      {/* MODAL                                                          */}
+      {/* -------------------------------------------------------------- */}
+
       <ValidationLogDetailsModal
         open={openDetails}
         onClose={() =>

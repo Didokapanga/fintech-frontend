@@ -1,20 +1,59 @@
 // src/modules/retrait/components/RetraitForm.tsx
 
-import { useForm } from "react-hook-form";
-import { Button, Input } from "../../../components/ui";
-import AppMessageState from "../../../components/ui/AppMessageState";
-import { useRetrait } from "../hooks/useRetrait";
-import { useCaisses } from "../../caisse/hooks/useCaisses";
-import type { AxiosError } from "axios";
-import { useAuthStore } from "../../../app/store";
-import { useEffect, useMemo, useState } from "react";
+import {
+  ArrowDownCircle,
+  CalendarRange,
+  CreditCard,
+  LockKeyhole,
+  Wallet,
+} from "lucide-react";
 
-// TYPES
+import {
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
+
+import {
+  useForm,
+} from "react-hook-form";
+
+import type {
+  AxiosError,
+} from "axios";
+
+import {
+  Button,
+  Input,
+} from "../../../components/ui";
+
+import AppMessageState from "../../../components/ui/AppMessageState";
+
+import {
+  useRetrait,
+} from "../hooks/useRetrait";
+
+import {
+  useCaisses,
+} from "../../caisse/hooks/useCaisses";
+
+import {
+  useAuthStore,
+} from "../../../app/store";
+
+/* -------------------------------------------------------------------------- */
+/*                                   TYPES                                    */
+/* -------------------------------------------------------------------------- */
+
 type Caisse = {
   id: string;
+
   code_caisse: string;
+
   solde: number;
+
   devise: string;
+
   type?: string;
 };
 
@@ -24,9 +63,13 @@ type SelectedTransfert = {
 
 type FormData = {
   code_reference: string;
+
   code_secret: string;
+
   caisse_id: string;
+
   numero_piece: string;
+
   date_operation: string;
 };
 
@@ -42,74 +85,101 @@ type MessageState = {
     | "warning";
 
   title: string;
+
   message: string;
 };
 
-type PaginatedCaissesResponse = {
-  data: Caisse[];
-  total: number;
-  page: number;
-  limit: number;
-  totalPages: number;
-};
+type PaginatedCaissesResponse =
+  {
+    data: Caisse[];
+
+    total: number;
+
+    page: number;
+
+    limit: number;
+
+    totalPages: number;
+  };
+
+/* -------------------------------------------------------------------------- */
+/*                                   PAGE                                     */
+/* -------------------------------------------------------------------------- */
 
 export default function RetraitForm({
   selected,
 }: Props) {
+
+  /* ------------------------------------------------------------------------ */
+  /*                                    FORM                                  */
+  /* ------------------------------------------------------------------------ */
 
   const {
     register,
     handleSubmit,
     reset,
     setValue,
-  } = useForm<FormData>();
+  } =
+    useForm<FormData>();
+
+  /* ------------------------------------------------------------------------ */
+  /*                                   STORE                                  */
+  /* ------------------------------------------------------------------------ */
+
+  const user =
+    useAuthStore(
+      (s) => s.user
+    );
+
+  /* ------------------------------------------------------------------------ */
+  /*                                  MUTATION                                */
+  /* ------------------------------------------------------------------------ */
 
   const {
     mutate,
     isPending,
-  } = useRetrait();
+  } =
+    useRetrait();
 
-  /**
-   * =========================================
-   * 🔥 CAISSES
-   * =========================================
-   */
+  /* ------------------------------------------------------------------------ */
+  /*                                   CAISSES                                */
+  /* ------------------------------------------------------------------------ */
+
   const {
     data: response,
-  } = useCaisses(
-    1,
-    100
-  ) as {
-    data?: PaginatedCaissesResponse;
-  };
+  } =
+    useCaisses(
+      1,
+      100
+    ) as {
+      data?: PaginatedCaissesResponse;
+    };
 
-  /**
-   * =========================================
-   * 🔥 DATA STABLE
-   * =========================================
-   */
-  const caisses: Caisse[] =
-    useMemo(
-      () => response?.data || [],
-      [response]
-    );
+  const caisses:
+    Caisse[] =
+      useMemo(
+        () =>
+          response?.data ||
+          [],
+        [response]
+      );
 
-  const user = useAuthStore(
-    (s) => s.user
-  );
+  /* ------------------------------------------------------------------------ */
+  /*                                  MESSAGE                                 */
+  /* ------------------------------------------------------------------------ */
 
   const [
     appMessage,
     setAppMessage,
-  ] = useState<MessageState | null>(
-    null
-  );
+  ] =
+    useState<MessageState | null>(
+      null
+    );
 
-  /**
-   * =========================================
-   * AUTO REF
-   * =========================================
-   */
+  /* ------------------------------------------------------------------------ */
+  /*                             AUTO REF                                     */
+  /* ------------------------------------------------------------------------ */
+
   useEffect(() => {
 
     if (selected) {
@@ -125,16 +195,16 @@ export default function RetraitForm({
     setValue,
   ]);
 
-  /**
-   * =========================================
-   * DATE PAR DEFAUT
-   * =========================================
-   */
+  /* ------------------------------------------------------------------------ */
+  /*                              DEFAULT DATE                                */
+  /* ------------------------------------------------------------------------ */
+
   useEffect(() => {
 
-    const today = new Date()
-      .toISOString()
-      .split("T")[0];
+    const today =
+      new Date()
+        .toISOString()
+        .split("T")[0];
 
     setValue(
       "date_operation",
@@ -143,11 +213,10 @@ export default function RetraitForm({
 
   }, [setValue]);
 
-  /**
-   * =========================================
-   * 🚀 SUBMIT
-   * =========================================
-   */
+  /* ------------------------------------------------------------------------ */
+  /*                                  SUBMIT                                  */
+  /* ------------------------------------------------------------------------ */
+
   const onSubmit = (
     data: FormData
   ) => {
@@ -155,10 +224,14 @@ export default function RetraitForm({
     if (!user?.id) {
 
       setAppMessage({
-        variant: "error",
-        title: "Erreur",
+        variant:
+          "error",
+
+        title:
+          "Erreur système",
+
         message:
-          "Utilisateur non connecté",
+          "Utilisateur non connecté.",
       });
 
       return;
@@ -166,7 +239,10 @@ export default function RetraitForm({
 
     const payload = {
       ...data,
-      created_by: user.id,
+
+      created_by:
+        user.id,
+
       user_agent:
         navigator.userAgent,
     };
@@ -178,10 +254,14 @@ export default function RetraitForm({
       ) => {
 
         setAppMessage({
-          variant: "success",
-          title: "Succès",
+          variant:
+            "success",
+
+          title:
+            "Retrait validé",
+
           message:
-            `Retrait initié avec succès : ${res.montant}`,
+            `Le retrait a été initié avec succès. Montant : ${res.montant}`,
         });
 
         reset({
@@ -202,164 +282,493 @@ export default function RetraitForm({
           }>;
 
         setAppMessage({
-          variant: "error",
+          variant:
+            "error",
+
           title:
             "Retrait refusé",
+
           message:
             error.response
               ?.data
               ?.message ||
-            "Erreur lors du retrait",
+            "Erreur lors du retrait.",
         });
       },
     });
   };
 
+  /* ------------------------------------------------------------------------ */
+  /*                                   RENDER                                 */
+  /* ------------------------------------------------------------------------ */
+
   return (
-    <form
-      onSubmit={handleSubmit(
-        onSubmit
-      )}
+    <div
       className="
-        bg-white
-        p-6
-        rounded-xl
-        shadow
-        space-y-4
+        mx-auto
+        w-full
+        max-w-[1100px]
       "
     >
 
-      <h2 className="text-lg font-semibold text-center">
-        Retrait client
-      </h2>
-
-      {/* MESSAGE */}
-      {appMessage && (
-        <AppMessageState
-          variant={
-            appMessage.variant
-          }
-          title={
-            appMessage.title
-          }
-          message={
-            appMessage.message
-          }
-          onAction={() =>
-            setAppMessage(
-              null
-            )
-          }
-        />
-      )}
-
-      {/* CODE REF */}
-      <Input
-        label="Code référence"
-        {...register(
-          "code_reference",
-          {
-            required: true,
-          }
-        )}
-      />
-
-      {/* CODE SECRET */}
-      <Input
-        label="Code secret"
-        type="password"
-        {...register(
-          "code_secret",
-          {
-            required: true,
-          }
-        )}
-      />
-
-      {/* NUMERO PIECE */}
-      <Input
-        label="Numéro de pièce"
-        {...register(
-          "numero_piece",
-          {
-            required: true,
-          }
-        )}
-      />
-
-      {/* DATE */}
-      <div>
-
-        <label className="block text-sm font-medium mb-1">
-          Date opération
-        </label>
-
-        <input
-          type="date"
-          {...register(
-            "date_operation",
-            {
-              required: true,
-            }
-          )}
-          className="
-            w-full
-            border
-            rounded-lg
-            px-3
-            py-2
-          "
-        />
-      </div>
-
-      {/* CAISSE */}
-      <select
-        {...register(
-          "caisse_id",
-          {
-            required: true,
-          }
+      <form
+        onSubmit={handleSubmit(
+          onSubmit
         )}
         className="
-          w-full
-          border
-          rounded-lg
-          px-3
-          py-2
+          space-y-8
         "
       >
 
-        <option value="">
-          Sélectionner une caisse
-        </option>
+        {/* -------------------------------------------------------------- */}
+        {/* HEADER                                                         */}
+        {/* -------------------------------------------------------------- */}
 
-        {caisses.map(
-          (
-            c: Caisse
-          ) => (
+        
 
-            <option
-              key={c.id}
-              value={c.id}
-            >
-              {c.code_caisse} (
-              {c.solde}{" "}
-              {c.devise})
-            </option>
-          )
+        {/* -------------------------------------------------------------- */}
+        {/* MESSAGE                                                        */}
+        {/* -------------------------------------------------------------- */}
+
+        {appMessage && (
+
+          <AppMessageState
+            variant={
+              appMessage.variant
+            }
+            title={
+              appMessage.title
+            }
+            message={
+              appMessage.message
+            }
+            onAction={() =>
+              setAppMessage(
+                null
+              )
+            }
+          />
+
         )}
-      </select>
 
-      {/* SUBMIT */}
-      <Button
-        type="submit"
-        loading={
-          isPending
-        }
-        className="w-full"
-      >
-        Valider le retrait
-      </Button>
-    </form>
+        {/* -------------------------------------------------------------- */}
+        {/* FORM SECTION                                                   */}
+        {/* -------------------------------------------------------------- */}
+
+        <section
+          className="
+            rounded-[32px]
+            border
+            border-slate-200/80
+            bg-white
+            p-8
+          "
+        >
+
+          <div
+            className="
+              mb-8
+              flex
+              items-start
+              gap-4
+            "
+          >
+
+            <div
+              className="
+                flex
+                h-12
+                w-12
+                items-center
+                justify-center
+                rounded-2xl
+                bg-red-50
+                text-red-600
+              "
+            >
+
+              <Wallet
+                size={20}
+              />
+
+            </div>
+
+            <div>
+
+              <h2
+                className="
+                  text-lg
+                  font-semibold
+                  text-slate-900
+                "
+              >
+                Informations du retrait
+              </h2>
+
+              <p
+                className="
+                  mt-1
+                  text-sm
+                  text-slate-500
+                "
+              >
+                Saisissez les informations
+                nécessaires pour traiter
+                le retrait.
+              </p>
+
+            </div>
+
+          </div>
+
+          {/* ---------------------------------------------------------- */}
+          {/* GRID                                                       */}
+          {/* ---------------------------------------------------------- */}
+
+          <div
+            className="
+              flex
+              flex-col
+              gap-6
+            "
+          >
+
+            {/* CODE REF */}
+
+            <Input
+              label="Code référence"
+              placeholder="TRF-XXXX"
+              {...register(
+                "code_reference",
+                {
+                  required:
+                    true,
+                }
+              )}
+            />
+
+            {/* CODE SECRET */}
+
+            <div>
+
+              <label
+                className="
+                  mb-2
+                  block
+                  text-sm
+                  font-semibold
+                  text-slate-700
+                "
+              >
+                Code secret
+              </label>
+
+              <div
+                className="
+                  relative
+                "
+              >
+
+                <LockKeyhole
+                  size={16}
+                  className="
+                    absolute
+                    left-4
+                    top-1/2
+                    -translate-y-1/2
+                    text-slate-400
+                  "
+                />
+
+                <input
+                  type="password"
+                  placeholder="••••••"
+                  {...register(
+                    "code_secret",
+                    {
+                      required:
+                        true,
+                    }
+                  )}
+                  className="
+                    h-14
+                    w-full
+                    rounded-2xl
+                    border
+                    border-slate-200
+                    bg-white
+                    pl-11
+                    pr-4
+                    text-sm
+                    text-slate-700
+                    outline-none
+                    transition-all
+                    focus:border-red-400
+                    focus:ring-4
+                    focus:ring-red-100
+                  "
+                />
+
+              </div>
+
+            </div>
+
+            {/* NUMERO PIECE */}
+
+            <div>
+
+              <label
+                className="
+                  mb-2
+                  block
+                  text-sm
+                  font-semibold
+                  text-slate-700
+                "
+              >
+                Numéro de pièce
+              </label>
+
+              <div
+                className="
+                  relative
+                "
+              >
+
+                <CreditCard
+                  size={16}
+                  className="
+                    absolute
+                    left-4
+                    top-1/2
+                    -translate-y-1/2
+                    text-slate-400
+                  "
+                />
+
+                <input
+                  type="text"
+                  placeholder="Numéro pièce"
+                  {...register(
+                    "numero_piece",
+                    {
+                      required:
+                        true,
+                    }
+                  )}
+                  className="
+                    h-14
+                    w-full
+                    rounded-2xl
+                    border
+                    border-slate-200
+                    bg-white
+                    pl-11
+                    pr-4
+                    text-sm
+                    text-slate-700
+                    outline-none
+                    transition-all
+                    focus:border-red-400
+                    focus:ring-4
+                    focus:ring-red-100
+                  "
+                />
+
+              </div>
+
+            </div>
+
+            {/* DATE */}
+
+            <div>
+
+              <label
+                className="
+                  mb-2
+                  block
+                  text-sm
+                  font-semibold
+                  text-slate-700
+                "
+              >
+                Date opération
+              </label>
+
+              <div
+                className="
+                  relative
+                "
+              >
+
+                <CalendarRange
+                  size={16}
+                  className="
+                    absolute
+                    left-4
+                    top-1/2
+                    -translate-y-1/2
+                    text-slate-400
+                  "
+                />
+
+                <input
+                  type="date"
+                  {...register(
+                    "date_operation",
+                    {
+                      required:
+                        true,
+                    }
+                  )}
+                  className="
+                    h-14
+                    w-full
+                    rounded-2xl
+                    border
+                    border-slate-200
+                    bg-white
+                    pl-11
+                    pr-4
+                    text-sm
+                    text-slate-700
+                    outline-none
+                    transition-all
+                    focus:border-red-400
+                    focus:ring-4
+                    focus:ring-red-100
+                  "
+                />
+
+              </div>
+
+            </div>
+
+          </div>
+
+          {/* ---------------------------------------------------------- */}
+          {/* CAISSE                                                     */}
+          {/* ---------------------------------------------------------- */}
+
+          <div
+            className="
+              mt-6
+            "
+          >
+
+            <label
+              className="
+                mb-2
+                block
+                text-sm
+                font-semibold
+                text-slate-700
+              "
+            >
+              Caisse de retrait
+            </label>
+
+            <select
+              {...register(
+                "caisse_id",
+                {
+                  required:
+                    true,
+                }
+              )}
+              className="
+                h-14
+                w-full
+                rounded-2xl
+                border
+                border-slate-200
+                bg-white
+                px-4
+                text-sm
+                text-slate-700
+                outline-none
+                transition-all
+                focus:border-red-400
+                focus:ring-4
+                focus:ring-red-100
+              "
+            >
+
+              <option value="">
+                Sélectionner une caisse
+              </option>
+
+              {caisses.map(
+                (
+                  caisse
+                ) => (
+
+                  <option
+                    key={
+                      caisse.id
+                    }
+                    value={
+                      caisse.id
+                    }
+                  >
+                    {
+                      caisse.code_caisse
+                    }{" "}
+                    •{" "}
+                    {
+                      caisse.solde
+                    }{" "}
+                    {
+                      caisse.devise
+                    }
+                  </option>
+                )
+              )}
+
+            </select>
+
+          </div>
+
+          {/* ---------------------------------------------------------- */}
+          {/* ACTIONS                                                    */}
+          {/* ---------------------------------------------------------- */}
+
+          <div
+            className="
+              mt-8
+              flex
+              justify-end
+            "
+          >
+
+            <Button
+              type="submit"
+              loading={
+                isPending
+              }
+              className="
+                h-14
+                rounded-2xl
+                bg-red-600
+                px-7
+                hover:bg-red-700
+              "
+            >
+
+              <ArrowDownCircle
+                size={17}
+              />
+
+              Valider le retrait
+
+            </Button>
+
+          </div>
+
+        </section>
+
+      </form>
+
+    </div>
   );
 }

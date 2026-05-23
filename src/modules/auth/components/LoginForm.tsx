@@ -1,170 +1,529 @@
 // src/modules/auth/components/LoginForm.tsx
 
-import { useForm } from "react-hook-form";
-import { useLogin } from "../hooks/useAuth";
-import type { LoginDto } from "../types";
-import { useAuthStore } from "../../../app/store";
 import { useState } from "react";
 
-import { useApiMutationWithFeedback } from "../../../hooks/useApiMutationWithFeedback";
-import AppMessageState from "../../../components/ui/AppMessageState";
+import {
+  Eye,
+  EyeOff,
+  Lock,
+  User2,
+  ArrowRight,
+} from "lucide-react";
+
+import { useForm }
+from "react-hook-form";
+
+import {
+  useLogin,
+} from "../hooks/useAuth";
+
+import type {
+  LoginDto,
+} from "../types";
+
+import {
+  useAuthStore,
+} from "../../../app/store";
+
+import {
+  useApiMutationWithFeedback,
+} from "../../../hooks/useApiMutationWithFeedback";
+
+import AppMessageState
+from "../../../components/ui/AppMessageState";
+
+/* ======================================================== */
+/* TYPES */
+/* ======================================================== */
 
 type LoginResponse = {
   token: string;
+
   user: {
     id: string;
+
     user_name: string;
+
     role_name: string;
+
     agence_id?: string;
+
     agence_name?: string;
+
     code_agence?: string;
   };
 };
 
+/* ======================================================== */
+/* COMPONENT */
+/* ======================================================== */
+
 export default function LoginForm() {
+
+  /* ====================================================== */
+  /* FORM */
+  /* ====================================================== */
+
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    formState: {
+      errors,
+    },
   } = useForm<LoginDto>();
 
-  const loginMutation = useLogin();
+  /* ====================================================== */
+  /* STORE */
+  /* ====================================================== */
 
-  const setAuth = useAuthStore((s) => s.setAuth);
+  const setAuth =
+    useAuthStore(
+      (s) => s.setAuth
+    );
 
-  const [showPassword, setShowPassword] = useState(false);
+  /* ====================================================== */
+  /* STATE */
+  /* ====================================================== */
 
-  // ✅ 🔥 HOOK CENTRALISÉ
+  const [
+    showPassword,
+    setShowPassword,
+  ] = useState(false);
+
+  /* ====================================================== */
+  /* LOGIN */
+  /* ====================================================== */
+
+  const loginMutation =
+    useLogin();
+
   const {
     mutate,
     isPending,
     appMessage,
     clearMessage,
-  } = useApiMutationWithFeedback<LoginResponse, LoginDto>({
-    mutationFn: loginMutation.mutateAsync,
+  } =
+    useApiMutationWithFeedback<
+      LoginResponse,
+      LoginDto
+    >({
 
-    successMessage: "Connexion réussie",
+      mutationFn:
+        loginMutation.mutateAsync,
 
-    onSuccess: (res) => {
-      // 🔐 stockage auth
-      setAuth({
-      token: res.token,
-      user: {
-        id: res.user.id,
-        user_name: res.user.user_name,
-        role_name: res.user.role_name,
+      successMessage:
+        "Connexion réussie",
 
-        agence_id:
-          res.user.agence_id,
+      errorMessage:
+        "Identifiants invalides",
 
-        agence_name:
-          res.user.agence_name,
+      onSuccess: (
+        res
+      ) => {
 
-        // ✅ AJOUT
-        code_agence:
-          res.user.code_agence,
+        setAuth({
+
+          token:
+            res.token,
+
+          user: {
+
+            id:
+              res.user.id,
+
+            user_name:
+              res.user.user_name,
+
+            role_name:
+              res.user.role_name,
+
+            agence_id:
+              res.user.agence_id,
+
+            agence_name:
+              res.user.agence_name,
+
+            code_agence:
+              res.user.code_agence,
+          },
+        });
+
+        window.location.href =
+          "/";
       },
     });
 
-      // 🔥 redirection
-      window.location.href = "/";
-    },
+  /* ====================================================== */
+  /* SUBMIT */
+  /* ====================================================== */
 
-    errorMessage: "Identifiants invalides",
-  });
+  const onSubmit = (
+    data: LoginDto
+  ) => {
 
-  const onSubmit = (data: LoginDto) => {
     mutate(data);
   };
 
-  return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+  /* ====================================================== */
+  /* RENDER */
+  /* ====================================================== */
 
-      {/* MESSAGE */}
+  return (
+
+    <form
+      onSubmit={handleSubmit(
+        onSubmit
+      )}
+      className="space-y-6"
+    >
+
+      {/* ================================================== */}
+      {/* ALERT */}
+      {/* ================================================== */}
+
       {appMessage && (
+
         <AppMessageState
-          variant={appMessage.variant}
-          title={appMessage.title}
-          message={appMessage.message}
-          onAction={clearMessage}
+          variant={
+            appMessage.variant
+          }
+          title={
+            appMessage.title
+          }
+          message={
+            appMessage.message
+          }
+          onAction={
+            clearMessage
+          }
         />
+
       )}
 
+      {/* ================================================== */}
       {/* USERNAME */}
-      <div className="space-y-1">
-        <label className="text-sm font-medium text-gray-700">
+      {/* ================================================== */}
+
+      <div className="space-y-2">
+
+        <label
+          className="
+            text-sm
+            font-semibold
+            text-slate-700
+          "
+        >
           Nom utilisateur
         </label>
 
-        <input
-          {...register("user_name", { required: "Champ requis" })}
-          placeholder="ex: admin"
-          className={`
-            w-full px-4 py-2.5 rounded-xl border
-            bg-gray-50 text-gray-800
-            focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white
-            transition
-            ${errors.user_name ? "border-red-500" : "border-gray-200"}
-          `}
-        />
+        <div className="relative">
+
+          <div
+            className="
+              pointer-events-none
+              absolute
+              left-4
+              top-1/2
+              -translate-y-1/2
+              text-slate-400
+            "
+          >
+
+            <User2 size={18} />
+
+          </div>
+
+          <input
+            {...register(
+              "user_name",
+              {
+                required:
+                  "Le nom utilisateur est requis",
+              }
+            )}
+
+            placeholder="Entrez votre identifiant"
+
+            className={`
+              w-full
+              rounded-2xl
+              border
+              bg-slate-50
+              py-3.5
+              pl-12
+              pr-4
+              text-sm
+              text-slate-800
+              outline-none
+              transition-all
+              focus:border-indigo-400
+              focus:bg-white
+              focus:ring-4
+              focus:ring-indigo-100
+              ${
+                errors.user_name
+                  ? "border-red-400"
+                  : "border-slate-200"
+              }
+            `}
+          />
+
+        </div>
 
         {errors.user_name && (
-          <p className="text-red-500 text-xs">
-            {errors.user_name.message}
+
+          <p
+            className="
+              text-xs
+              font-medium
+              text-red-500
+            "
+          >
+            {
+              errors.user_name
+                .message
+            }
           </p>
+
         )}
+
       </div>
 
+      {/* ================================================== */}
       {/* PASSWORD */}
-      <div className="space-y-1">
-        <label className="text-sm font-medium text-gray-700">
+      {/* ================================================== */}
+
+      <div className="space-y-2">
+
+        <label
+          className="
+            text-sm
+            font-semibold
+            text-slate-700
+          "
+        >
           Mot de passe
         </label>
 
         <div className="relative">
+
+          {/* LEFT ICON */}
+
+          <div
+            className="
+              pointer-events-none
+              absolute
+              left-4
+              top-1/2
+              -translate-y-1/2
+              text-slate-400
+            "
+          >
+
+            <Lock size={18} />
+
+          </div>
+
+          {/* INPUT */}
+
           <input
-            {...register("password", { required: "Champ requis" })}
-            type={showPassword ? "text" : "password"}
+            {...register(
+              "password",
+              {
+                required:
+                  "Le mot de passe est requis",
+              }
+            )}
+
+            type={
+              showPassword
+                ? "text"
+                : "password"
+            }
+
             placeholder="••••••••"
+
             className={`
-              w-full px-4 py-2.5 pr-10 rounded-xl border
-              bg-gray-50 text-gray-800
-              focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white
-              transition
-              ${errors.password ? "border-red-500" : "border-gray-200"}
+              w-full
+              rounded-2xl
+              border
+              bg-slate-50
+              py-3.5
+              pl-12
+              pr-12
+              text-sm
+              text-slate-800
+              outline-none
+              transition-all
+              focus:border-indigo-400
+              focus:bg-white
+              focus:ring-4
+              focus:ring-indigo-100
+              ${
+                errors.password
+                  ? "border-red-400"
+                  : "border-slate-200"
+              }
             `}
           />
 
+          {/* TOGGLE */}
+
           <button
             type="button"
-            onClick={() => setShowPassword((s) => !s)}
-            className="absolute inset-y-0 right-3 flex items-center text-gray-400 hover:text-gray-600 transition"
+
+            onClick={() =>
+              setShowPassword(
+                (s) => !s
+              )
+            }
+
+            className="
+              absolute
+              right-4
+              top-1/2
+              -translate-y-1/2
+              text-slate-400
+              transition-all
+              hover:text-slate-600
+            "
           >
-            {showPassword ? "🙈" : "👁️"}
+
+            {showPassword ? (
+              <EyeOff size={18} />
+            ) : (
+              <Eye size={18} />
+            )}
+
           </button>
+
         </div>
 
         {errors.password && (
-          <p className="text-red-500 text-xs">
-            {errors.password.message}
+
+          <p
+            className="
+              text-xs
+              font-medium
+              text-red-500
+            "
+          >
+            {
+              errors.password
+                .message
+            }
           </p>
+
         )}
+
       </div>
 
-      {/* BUTTON */}
-      <button
-        type="submit"
-        disabled={isPending}
+      {/* ================================================== */}
+      {/* OPTIONS */}
+      {/* ================================================== */}
+
+      <div
         className="
-          w-full py-2.5 rounded-xl font-medium text-white
-          bg-gradient-to-r from-indigo-600 to-blue-500
-          hover:from-indigo-700 hover:to-blue-600
-          transition-all duration-200
-          shadow-md hover:shadow-lg
-          disabled:opacity-70 disabled:cursor-not-allowed
+          flex
+          items-center
+          justify-between
+          gap-3
+          text-sm
         "
       >
-        {isPending ? "Connexion..." : "Se connecter"}
+
+        <label
+          className="
+            flex
+            items-center
+            gap-2
+            text-slate-500
+          "
+        >
+
+          <input
+            type="checkbox"
+            className="
+              rounded
+              border-slate-300
+              text-indigo-600
+              focus:ring-indigo-500
+            "
+          />
+
+          Se souvenir de moi
+
+        </label>
+
+        <button
+          type="button"
+          className="
+            font-medium
+            text-indigo-600
+            transition-all
+            hover:text-indigo-700
+          "
+        >
+          Assistance
+        </button>
+
+      </div>
+
+      {/* ================================================== */}
+      {/* BUTTON */}
+      {/* ================================================== */}
+
+      <button
+        type="submit"
+
+        disabled={
+          isPending
+        }
+
+        className="
+          group
+          flex
+          w-full
+          items-center
+          justify-center
+          gap-2
+          rounded-2xl
+          bg-gradient-to-r
+          from-indigo-600
+          to-blue-500
+          px-4
+          py-3.5
+          text-sm
+          font-semibold
+          text-white
+          shadow-lg
+          shadow-indigo-200
+          transition-all
+          hover:scale-[1.01]
+          hover:from-indigo-700
+          hover:to-blue-600
+          disabled:cursor-not-allowed
+          disabled:opacity-70
+          disabled:hover:scale-100
+        "
+      >
+
+        {isPending ? (
+          "Connexion..."
+        ) : (
+          <>
+            Se connecter
+
+            <ArrowRight
+              size={16}
+              className="
+                transition-transform
+                group-hover:translate-x-0.5
+              "
+            />
+          </>
+        )}
+
       </button>
 
     </form>

@@ -1,34 +1,56 @@
 // src/modules/caisse/components/CaisseTab.tsx
 
-import { useState } from "react";
+import {
+  Building2,
+  CircleDollarSign,
+  Lock,
+  LockOpen,
+  Pencil,
+  Plus,
+  Trash2,
+  Wallet2,
+} from "lucide-react";
+
+import {
+  useMemo,
+  useState,
+} from "react";
 
 import {
   useCaisses,
+  useCloseCaisse,
   useDeleteCaisse,
   useOpenCaisse,
-  useCloseCaisse,
 } from "../hooks/useCaisses";
 
-import type { Caisse } from "../types";
+import type {
+  Caisse,
+} from "../types";
 
 import {
   Button,
   Table,
 } from "../../../components/ui";
 
-import ConfirmModal from "../../../components/ui/ConfirmModal";
-
-import AppMessageState from "../../../components/ui/AppMessageState";
-
 import type {
   Column,
 } from "../../../components/ui/Table.types";
+
+import Pagination from "../../../components/ui/Pagination";
+
+import ConfirmModal from "../../../components/ui/ConfirmModal";
+
+import AppMessageState from "../../../components/ui/AppMessageState";
 
 import CaisseStatusBadge from "./CaisseStatusBadge";
 
 import MouvementFormModal from "../../mouvement/components/MouvementFormModal";
 
 import CaisseFormModal from "./CaisseFormModal";
+
+/* -------------------------------------------------------------------------- */
+/*                                    TYPES                                   */
+/* -------------------------------------------------------------------------- */
 
 type MessageState = {
   variant:
@@ -42,87 +64,54 @@ type MessageState = {
   message: string;
 };
 
-type ErrorWithResponse = Error & {
-  response?: {
-    data?: {
-      message?: string;
+type ErrorWithResponse =
+  Error & {
+    response?: {
+      data?: {
+        message?: string;
+      };
     };
   };
-};
 
-type PaginatedCaissesResponse = {
-  data: Caisse[];
+type PaginatedCaissesResponse =
+  {
+    data: Caisse[];
 
-  meta?: {
-    total: number;
-    page: number;
-    limit: number;
-    totalPages: number;
+    meta?: {
+      total: number;
+
+      page: number;
+
+      limit: number;
+
+      totalPages: number;
+    };
   };
-};
+
+/* -------------------------------------------------------------------------- */
+/*                                  COMPONENT                                 */
+/* -------------------------------------------------------------------------- */
 
 export default function CaisseTab() {
 
-  /**
-   * =========================================
-   * PAGINATION
-   * =========================================
-   */
-  const [page, setPage] =
-    useState(1);
+  /* ------------------------------------------------------------------------ */
+  /*                                   STATE                                  */
+  /* ------------------------------------------------------------------------ */
 
-  const limit = 10;
-
-  /**
-   * =========================================
-   * QUERY
-   * =========================================
-   */
-  const {
-    data: response,
-    isLoading,
-  } = useCaisses(
+  const [
     page,
-    limit
-  ) as {
-    data?: PaginatedCaissesResponse;
-    isLoading: boolean;
-  };
+    setPage,
+  ] = useState(1);
 
-  const caisses =
-    response?.data || [];
+  const limit =
+    10;
 
-  const meta =
-    response?.meta;
-
-  /**
-   * =========================================
-   * MUTATIONS
-   * =========================================
-   */
-  const {
-    mutate: deleteCaisse,
-  } = useDeleteCaisse();
-
-  const {
-    mutate: openCaisse,
-  } = useOpenCaisse();
-
-  const {
-    mutate: closeCaisse,
-  } = useCloseCaisse();
-
-  /**
-   * =========================================
-   * STATES
-   * =========================================
-   */
   const [
     selectedId,
     setSelectedId,
-  ] = useState<string | null>(
-    null
-  );
+  ] = useState<
+    string | null
+  >(null);
 
   const [
     openMouvement,
@@ -137,245 +126,591 @@ export default function CaisseTab() {
   const [
     appMessage,
     setAppMessage,
-  ] = useState<MessageState | null>(
-    null
-  );
+  ] =
+    useState<MessageState | null>(
+      null
+    );
 
-  /**
-   * =========================================
-   * TABLE COLUMNS
-   * =========================================
-   */
-  const columns: Column<Caisse>[] =
+  /* ------------------------------------------------------------------------ */
+  /*                                   QUERY                                  */
+  /* ------------------------------------------------------------------------ */
+
+  const {
+    data: response,
+    isLoading,
+  } = useCaisses(
+    page,
+    limit
+  ) as {
+    data?: PaginatedCaissesResponse;
+
+    isLoading: boolean;
+  };
+
+  const caisses =
+    useMemo(
+      () =>
+        response?.data ||
+        [],
+      [response]
+    );
+
+  const meta =
+    response?.meta;
+
+  /* ------------------------------------------------------------------------ */
+  /*                                MUTATIONS                                 */
+  /* ------------------------------------------------------------------------ */
+
+  const {
+    mutate:
+      deleteCaisse,
+  } =
+    useDeleteCaisse();
+
+  const {
+    mutate:
+      openCaisse,
+  } =
+    useOpenCaisse();
+
+  const {
+    mutate:
+      closeCaisse,
+  } =
+    useCloseCaisse();
+
+  /* ------------------------------------------------------------------------ */
+  /*                                  HELPERS                                 */
+  /* ------------------------------------------------------------------------ */
+
+  const handleError =
+    (
+      error: unknown,
+      fallback: string,
+      title: string
+    ) => {
+
+      const apiError =
+        error as ErrorWithResponse;
+
+      setAppMessage({
+        variant:
+          "error",
+
+        title,
+
+        message:
+          apiError
+            ?.response
+            ?.data
+            ?.message ||
+          fallback,
+      });
+    };
+
+  /* ------------------------------------------------------------------------ */
+  /*                                  COLUMNS                                 */
+  /* ------------------------------------------------------------------------ */
+
+  const columns:
+    Column<Caisse>[] =
     [
-      {
-        header: "Code",
-
-        accessor: "code_caisse",
-      },
 
       {
-        header: "Devise",
+        header:
+          "Caisse",
 
-        accessor: "devise",
-      },
+        accessor:
+          "code_caisse",
 
-      {
-        header: "Type",
+        render:
+          (
+            value
+          ) => (
 
-        accessor: "type",
-      },
+            <div
+              className="
+                flex
+                items-center
+                gap-3
+              "
+            >
 
-      {
-        header: "Solde",
+              <div
+                className="
+                  flex
+                  h-11
+                  w-11
+                  items-center
+                  justify-center
+                  rounded-2xl
+                  bg-indigo-50
+                  text-indigo-600
+                "
+              >
 
-        accessor: "solde",
+                <Wallet2
+                  size={18}
+                />
 
-        render: (
-          value,
-          row
-        ) => (
-          <span className="font-semibold text-green-600">
-            {value !== undefined
-              ? `${Number(
-                  value
-                ).toLocaleString()} ${
-                  row.devise
-                }`
-              : "-"}
-          </span>
-        ),
-      },
+              </div>
 
-      {
-        header: "Statut",
+              <div
+                className="
+                  flex
+                  flex-col
+                "
+              >
 
-        accessor: "state",
+                <span
+                  className="
+                    font-semibold
+                    text-slate-800
+                  "
+                >
+                  {String(
+                    value
+                  )}
+                </span>
 
-        render: (value) =>
-          value ? (
-            <CaisseStatusBadge
-              state={
-                value as Caisse["state"]
-              }
-            />
-          ) : (
-            <span>-</span>
+                <span
+                  className="
+                    text-xs
+                    text-slate-500
+                  "
+                >
+                  Identifiant
+                  caisse
+                </span>
+
+              </div>
+
+            </div>
+
           ),
       },
 
       {
-        header: "Actions",
+        header:
+          "Devise",
 
-        accessor: "id",
+        accessor:
+          "devise",
 
-        render: (_v, row) => (
-          <div className="flex gap-2 flex-wrap">
+        render:
+          (
+            value
+          ) => (
 
-            {row.state ===
-              "FERMEE" && (
+            <div
+              className="
+                inline-flex
+                items-center
+                gap-2
+                rounded-full
+                border
+                border-emerald-200
+                bg-emerald-50
+                px-3
+                py-1
+                text-xs
+                font-semibold
+                text-emerald-700
+              "
+            >
 
-              <Button
-                onClick={() =>
-                  openCaisse(
-                    row.id,
-                    {
-                      onSuccess:
-                        () => {
+              <CircleDollarSign
+                size={13}
+              />
 
-                          setAppMessage(
-                            {
-                              variant:
-                                "success",
+              {String(
+                value
+              )}
 
-                              title:
-                                "Succès",
+            </div>
 
-                              message:
-                                "Caisse ouverte avec succès",
-                            }
-                          );
-                        },
+          ),
+      },
 
-                      onError: (
-                        error: unknown
-                      ) => {
+      {
+        header:
+          "Type",
 
-                        const apiError =
-                          error as ErrorWithResponse;
+        accessor:
+          "type",
 
-                        setAppMessage(
-                          {
-                            variant:
-                              "error",
+        render:
+          (
+            value
+          ) => (
 
-                            title:
-                              "Ouverture refusée",
+            <div
+              className="
+                inline-flex
+                items-center
+                gap-2
+                rounded-full
+                border
+                border-slate-200
+                bg-slate-100
+                px-3
+                py-1
+                text-xs
+                font-medium
+                text-slate-700
+              "
+            >
 
-                            message:
-                              apiError
-                                ?.response
-                                ?.data
-                                ?.message ||
+              <Building2
+                size={13}
+              />
 
-                              "Impossible d’ouvrir cette caisse",
-                          }
-                        );
-                      },
-                    }
-                  )
-                }
-                className="px-2 py-1 text-xs"
+              {String(
+                value ||
+                  "-"
+              )}
+
+            </div>
+
+          ),
+      },
+
+      {
+        header:
+          "Solde",
+
+        accessor:
+          "solde",
+
+        render:
+          (
+            value,
+            row
+          ) => (
+
+            <div
+              className="
+                flex
+                flex-col
+              "
+            >
+
+              <span
+                className="
+                  font-semibold
+                  text-emerald-600
+                "
               >
-                Ouvrir
-              </Button>
-            )}
 
-            {row.state ===
-              "OUVERTE" && (
+                {value !==
+                undefined
+                  ? `${Number(
+                      value
+                    ).toLocaleString()} ${row.devise}`
+                  : "-"}
+
+              </span>
+
+              <span
+                className="
+                  text-xs
+                  text-slate-400
+                "
+              >
+                Solde actuel
+              </span>
+
+            </div>
+
+          ),
+      },
+
+      {
+        header:
+          "Statut",
+
+        accessor:
+          "state",
+
+        render:
+          (
+            value
+          ) =>
+
+            value
+              ? (
+
+                <CaisseStatusBadge
+                  state={
+                    value as Caisse["state"]
+                  }
+                />
+
+              )
+              : (
+                <span>
+                  -
+                </span>
+              ),
+      },
+
+      {
+        header:
+          "Actions",
+
+        accessor:
+          "id",
+
+        render:
+          (
+            _v,
+            row
+          ) => (
+
+            <div
+              className="
+                flex
+                flex-wrap
+                items-center
+                gap-2
+              "
+            >
+
+              {/* OPEN */}
+
+              {row.state ===
+                "FERMEE" && (
+
+                <Button
+                  onClick={() =>
+
+                    openCaisse(
+                      row.id,
+                      {
+                        onSuccess:
+                          () => {
+
+                            setAppMessage(
+                              {
+                                variant:
+                                  "success",
+
+                                title:
+                                  "Succès",
+
+                                message:
+                                  "Caisse ouverte avec succès",
+                              }
+                            );
+                          },
+
+                        onError:
+                          (
+                            error
+                          ) =>
+
+                            handleError(
+                              error,
+                              "Impossible d’ouvrir cette caisse",
+                              "Ouverture refusée"
+                            ),
+                      }
+                    )
+                  }
+                  className="
+                    h-9
+                    rounded-xl
+                    px-3
+                    text-xs
+                  "
+                >
+
+                  <LockOpen
+                    size={14}
+                  />
+
+                  Ouvrir
+
+                </Button>
+
+              )}
+
+              {/* CLOSE */}
+
+              {row.state ===
+                "OUVERTE" && (
+
+                <Button
+                  variant="secondary"
+                  onClick={() =>
+
+                    closeCaisse(
+                      row.id,
+                      {
+                        onSuccess:
+                          () => {
+
+                            setAppMessage(
+                              {
+                                variant:
+                                  "success",
+
+                                title:
+                                  "Succès",
+
+                                message:
+                                  "Caisse fermée avec succès",
+                              }
+                            );
+                          },
+
+                        onError:
+                          (
+                            error
+                          ) =>
+
+                            handleError(
+                              error,
+                              "Impossible de fermer cette caisse",
+                              "Fermeture refusée"
+                            ),
+                      }
+                    )
+                  }
+                  className="
+                    h-9
+                    rounded-xl
+                    px-3
+                    text-xs
+                  "
+                >
+
+                  <Lock
+                    size={14}
+                  />
+
+                  Fermer
+
+                </Button>
+
+              )}
+
+              {/* EDIT */}
 
               <Button
                 variant="secondary"
-
                 onClick={() =>
-                  closeCaisse(
-                    row.id,
-                    {
-                      onSuccess:
-                        () => {
-
-                          setAppMessage(
-                            {
-                              variant:
-                                "success",
-
-                              title:
-                                "Succès",
-
-                              message:
-                                "Caisse fermée avec succès",
-                            }
-                          );
-                        },
-
-                      onError: (
-                        error: unknown
-                      ) => {
-
-                        const apiError =
-                          error as ErrorWithResponse;
-
-                        setAppMessage(
-                          {
-                            variant:
-                              "error",
-
-                            title:
-                              "Fermeture refusée",
-
-                            message:
-                              apiError
-                                ?.response
-                                ?.data
-                                ?.message ||
-
-                              "Impossible de fermer cette caisse",
-                          }
-                        );
-                      },
-                    }
+                  alert(
+                    "Edition bientôt disponible"
                   )
                 }
-                className="px-2 py-1 text-xs"
+                className="
+                  h-9
+                  rounded-xl
+                  px-3
+                  text-xs
+                "
               >
-                Fermer
+
+                <Pencil
+                  size={14}
+                />
+
+                Modifier
+
               </Button>
-            )}
 
-            <Button
-              variant="secondary"
+              {/* DELETE */}
 
-              onClick={() =>
-                alert(
-                  "Edit bientôt"
-                )
-              }
+              <Button
+                variant="danger"
+                onClick={() =>
+                  setSelectedId(
+                    row.id
+                  )
+                }
+                className="
+                  h-9
+                  rounded-xl
+                  px-3
+                  text-xs
+                "
+              >
 
-              className="px-2 py-1 text-xs"
-            >
-              Modifier
-            </Button>
+                <Trash2
+                  size={14}
+                />
 
-            <Button
-              variant="danger"
+                Supprimer
 
-              onClick={() =>
-                setSelectedId(
-                  row.id
-                )
-              }
+              </Button>
 
-              className="px-2 py-1 text-xs"
-            >
-              Supprimer
-            </Button>
+            </div>
 
-          </div>
-        ),
+          ),
       },
     ];
 
+  /* ------------------------------------------------------------------------ */
+  /*                                   RENDER                                 */
+  /* ------------------------------------------------------------------------ */
+
   return (
-    <div className="space-y-4">
+
+    <div
+      className="
+        space-y-5
+      "
+    >
 
       {/* HEADER */}
-      <div className="flex justify-between items-center">
 
-        <h1 className="text-xl font-semibold">
-          Gestion des caisses
-        </h1>
+      <div
+        className="
+          flex
+          flex-col
+          gap-4
+          lg:flex-row
+          lg:items-center
+          lg:justify-between
+        "
+      >
 
-        <div className="flex gap-2">
+        <div>
+
+          <h2
+            className="
+              text-2xl
+              font-semibold
+              tracking-[-0.03em]
+              text-slate-900
+            "
+          >
+            Gestion des caisses
+          </h2>
+
+          <p
+            className="
+              mt-1
+              text-sm
+              text-slate-500
+            "
+          >
+            Administration et suivi
+            des caisses
+            opérationnelles.
+          </p>
+
+        </div>
+
+        <div
+          className="
+            flex
+            items-center
+            gap-3
+          "
+        >
 
           <Button
             onClick={() =>
@@ -384,209 +719,219 @@ export default function CaisseTab() {
               )
             }
           >
-            + Caisse
+
+            <Plus
+              size={16}
+            />
+
+            Nouvelle caisse
+
           </Button>
 
         </div>
+
       </div>
 
-      {/* ALERT */}
+      {/* MESSAGE */}
+
       {appMessage && (
 
         <AppMessageState
           variant={
             appMessage.variant
           }
-
           title={
             appMessage.title
           }
-
           message={
             appMessage.message
           }
-
           buttonText="Fermer"
-
           onAction={() =>
             setAppMessage(
               null
             )
           }
         />
+
       )}
 
       {/* TABLE */}
-      <Table<Caisse>
-        data={caisses}
-        columns={columns}
-        loading={isLoading}
-      />
+
+      <div
+        className="
+          overflow-hidden
+          rounded-[28px]
+          border
+          border-slate-200
+          bg-white
+        "
+      >
+
+        <Table<Caisse>
+          data={
+            caisses
+          }
+          columns={
+            columns
+          }
+          loading={
+            isLoading
+          }
+        />
+
+      </div>
+
+      {/* EMPTY */}
+
+      {!isLoading &&
+        caisses.length ===
+          0 && (
+
+          <div
+            className="
+              rounded-3xl
+              border
+              border-dashed
+              border-slate-200
+              bg-white
+              py-16
+              text-center
+            "
+          >
+
+            <Wallet2
+              size={38}
+              className="
+                mx-auto
+                mb-4
+                text-slate-300
+              "
+            />
+
+            <p
+              className="
+                text-sm
+                text-slate-500
+              "
+            >
+              Aucune caisse
+              disponible.
+            </p>
+
+          </div>
+
+        )}
 
       {/* PAGINATION */}
-      {meta && (
 
-        <div
-          className="
-            flex items-center
-            justify-center
-            gap-3
-            pt-2
-          "
-        >
+      {meta && meta.totalPages > 1 && (
 
-          <Button
-            variant="secondary"
+        <div className="pt-2">
 
-            disabled={
-              page === 1
-            }
-
-            onClick={() =>
-              setPage((p) =>
-                Math.max(
-                  1,
-                  p - 1
-                )
-              )
-            }
-          >
-            ←
-          </Button>
-
-          <span className="text-sm text-gray-600">
-
-            Page{" "}
-
-            <strong>
-              {meta.page}
-            </strong>{" "}
-
-            / {meta.totalPages}
-
-          </span>
-
-          <Button
-            variant="secondary"
-
-            disabled={
-              page >=
-              meta.totalPages
-            }
-
-            onClick={() =>
-              setPage((p) =>
-                p + 1
-              )
-            }
-          >
-            →
-          </Button>
+          <Pagination
+            page={page}
+            totalPages={meta.totalPages}
+            onChange={setPage}
+          />
 
         </div>
+
       )}
 
-      {/* MODALS */}
+      {/* MOVEMENT MODAL */}
+
       {openMouvement && (
 
         <MouvementFormModal
           open={
             openMouvement
           }
-
           onClose={() =>
             setOpenMouvement(
               false
             )
           }
         />
+
       )}
+
+      {/* CREATE MODAL */}
 
       {openCreate && (
 
         <CaisseFormModal
-          open={openCreate}
-
+          open={
+            openCreate
+          }
           onClose={() =>
             setOpenCreate(
               false
             )
           }
         />
+
       )}
 
-      {/* DELETE CONFIRM */}
-      <ConfirmModal
-        open={!!selectedId}
+      {/* DELETE MODAL */}
 
+      <ConfirmModal
+        open={
+          !!selectedId
+        }
         onClose={() =>
           setSelectedId(
             null
           )
         }
-
         onConfirm={() => {
 
-          if (selectedId) {
+          if (
+            !selectedId
+          ) return;
 
-            deleteCaisse(
-              selectedId,
-              {
-                onSuccess:
-                  () => {
-
-                    setAppMessage(
-                      {
-                        variant:
-                          "success",
-
-                        title:
-                          "Succès",
-
-                        message:
-                          "Caisse supprimée avec succès",
-                      }
-                    );
-                  },
-
-                onError: (
-                  error: unknown
-                ) => {
-
-                  const apiError =
-                    error as ErrorWithResponse;
+          deleteCaisse(
+            selectedId,
+            {
+              onSuccess:
+                () => {
 
                   setAppMessage(
                     {
                       variant:
-                        "error",
+                        "success",
 
                       title:
-                        "Suppression refusée",
+                        "Succès",
 
                       message:
-                        apiError
-                          ?.response
-                          ?.data
-                          ?.message ||
-
-                        "Impossible de supprimer cette caisse",
+                        "Caisse supprimée avec succès",
                     }
                   );
                 },
-              }
-            );
 
-            setSelectedId(
-              null
-            );
-          }
+              onError:
+                (
+                  error
+                ) =>
+
+                  handleError(
+                    error,
+                    "Impossible de supprimer cette caisse",
+                    "Suppression refusée"
+                  ),
+            }
+          );
+
+          setSelectedId(
+            null
+          );
         }}
-
         title="Supprimer caisse"
-
         description="Cette action est irréversible."
       />
+
     </div>
+
   );
 }

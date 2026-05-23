@@ -1,9 +1,29 @@
 // src/modules/ledger/pages/LedgerPage.tsx
 
-import { useState } from "react";
-import { Table, Button } from "../../../components/ui";
-import type { Column } from "../../../components/ui/Table.types";
-import type { Ledger } from "../services/ledger.service";
+import {
+  useMemo,
+  useState,
+} from "react";
+
+import {
+  Download,
+  FileText,
+  Filter,
+  Landmark,
+} from "lucide-react";
+
+import {
+  Table,
+  Button,
+} from "../../../components/ui";
+
+import type {
+  Column,
+} from "../../../components/ui/Table.types";
+
+import type {
+  Ledger,
+} from "../services/ledger.service";
 
 import {
   exportLedgerExcel,
@@ -14,7 +34,14 @@ import {
   useMyLedger,
 } from "../hooks/useLeger";
 
-import { useCaisses } from "../../caisse/hooks/useCaisses";
+import {
+  useCaisses,
+} from "../../caisse/hooks/useCaisses";
+import Pagination from "../../../components/ui/Pagination";
+
+/* -------------------------------------------------------------------------- */
+/*                                   TYPES                                    */
+/* -------------------------------------------------------------------------- */
 
 type Caisse = {
   id: string;
@@ -23,6 +50,7 @@ type Caisse = {
 
 type LedgerResponse = {
   data: Ledger[];
+
   meta?: {
     total: number;
     page: number;
@@ -31,7 +59,16 @@ type LedgerResponse = {
   };
 };
 
+/* -------------------------------------------------------------------------- */
+/*                                    PAGE                                    */
+/* -------------------------------------------------------------------------- */
+
 export default function LedgerPage() {
+
+  /* ---------------------------------------------------------------------- */
+  /* STATE                                                                  */
+  /* ---------------------------------------------------------------------- */
+
   const [page, setPage] =
     useState(1);
 
@@ -43,9 +80,6 @@ export default function LedgerPage() {
     setIsExporting,
   ] = useState(false);
 
-  /**
-   * 🔥 FILTERS
-   */
   const [filters, setFilters] =
     useState({
       type_operation: "",
@@ -54,22 +88,36 @@ export default function LedgerPage() {
       date_to: "",
     });
 
+  /* ---------------------------------------------------------------------- */
+  /* MODE                                                                   */
+  /* ---------------------------------------------------------------------- */
+
   const isAdminMode =
     !!caisseId;
 
-  /**
-   * ✅ FIX PAGINATION CAISSES
-   */
+  /* ---------------------------------------------------------------------- */
+  /* CAISSES                                                                */
+  /* ---------------------------------------------------------------------- */
+
   const {
     data: caisseResponse,
-  } = useCaisses();
+  } = useCaisses(
+    1,
+    100
+  );
 
   const caisses: Caisse[] =
-    caisseResponse?.data || [];
+    useMemo(
+      () =>
+        caisseResponse?.data ||
+        [],
+      [caisseResponse]
+    );
 
-  /**
-   * 🔥 LEDGER QUERIES
-   */
+  /* ---------------------------------------------------------------------- */
+  /* LEDGER                                                                 */
+  /* ---------------------------------------------------------------------- */
+
   const adminQuery =
     useLedgerByCaisse(
       caisseId,
@@ -86,9 +134,11 @@ export default function LedgerPage() {
     );
 
   const response =
-    (isAdminMode
-      ? adminQuery.data
-      : userQuery.data) as
+    (
+      isAdminMode
+        ? adminQuery.data
+        : userQuery.data
+    ) as
       | LedgerResponse
       | undefined;
 
@@ -103,20 +153,38 @@ export default function LedgerPage() {
       ? adminQuery.isLoading
       : userQuery.isLoading;
 
+  /* ---------------------------------------------------------------------- */
+  /* HELPERS                                                                */
+  /* ---------------------------------------------------------------------- */
+
   const getSensStyle = (
     sens: string
   ) =>
+
     sens === "ENTREE"
-      ? "text-green-600"
+      ? "text-emerald-600"
       : "text-red-600";
 
-  /**
-   * 🔥 EXPORT
-   */
+  const getSensBadge = (
+    sens: string
+  ) =>
+
+    sens === "ENTREE"
+      ? "bg-emerald-100 text-emerald-700"
+      : "bg-red-100 text-red-700";
+
+  /* ---------------------------------------------------------------------- */
+  /* EXPORT                                                                 */
+  /* ---------------------------------------------------------------------- */
+
   const handleExport =
     async () => {
+
       try {
-        setIsExporting(true);
+
+        setIsExporting(
+          true
+        );
 
         await exportLedgerExcel(
           {
@@ -141,60 +209,85 @@ export default function LedgerPage() {
               undefined,
           }
         );
-      } catch (err) {
-        console.error(err);
+
+      } catch (
+        err
+      ) {
+
+        console.error(
+          err
+        );
 
       } finally {
-        setIsExporting(false);
+
+        setIsExporting(
+          false
+        );
       }
     };
 
-  const columns: Column<Ledger>[] =
-    [
-      {
-        header:
-          "Opération",
+  /* ---------------------------------------------------------------------- */
+  /* COLUMNS                                                                */
+  /* ---------------------------------------------------------------------- */
 
-        accessor:
-          "libelle_operation",
+  const columns:
+    Column<Ledger>[] = [
 
-        render: (
-          _,
-          row
-        ) => (
-          <div className="flex flex-col">
-            <span className="font-medium text-gray-800">
-              {
-                row.libelle_operation
-              }
-            </span>
+    {
+      header:
+        "Opération",
 
-            <span className="text-xs text-gray-500">
-              {
-                row.reference_metier ||
-                "-"
-              }
-            </span>
-          </div>
-        ),
-      },
+      accessor:
+        "libelle_operation",
 
-      {
-        header:
-          "Montant",
+      render: (
+        _,
+        row
+      ) => (
 
-        accessor:
-          "montant",
+        <div className="flex flex-col">
 
-        render: (
-          value,
-          row
-        ) => (
+          <span className="font-medium text-slate-800">
+
+            {
+              row.libelle_operation
+            }
+
+          </span>
+
+          <span className="text-xs text-slate-500">
+
+            {
+              row.reference_metier ||
+              "-"
+            }
+
+          </span>
+
+        </div>
+      ),
+    },
+
+    {
+      header:
+        "Montant",
+
+      accessor:
+        "montant",
+
+      render: (
+        value,
+        row
+      ) => (
+
+        <div className="flex flex-col">
+
           <span
             className={`font-semibold ${getSensStyle(
               row.sens
             )}`}
           >
+
             {row.sens ===
             "ENTREE"
               ? "+"
@@ -203,326 +296,625 @@ export default function LedgerPage() {
             {Number(
               value
             ).toLocaleString()}{" "}
+
             {row.devise}
+
           </span>
-        ),
-      },
 
-      {
-        header: "Client",
+          <span
+            className={`
+              mt-1
+              inline-flex
+              w-fit
+              rounded-full
+              px-2
+              py-0.5
+              text-[10px]
+              font-semibold
+              ${getSensBadge(
+                row.sens
+              )}
+            `}
+          >
 
-        accessor:
-          "expediteur_complet",
+            {row.sens}
 
-        render: (
-          _,
-          row
-        ) => {
-          const isClientOperation =
-            row.type_operation ===
-              "TRANSFERT_CLIENT" ||
-            row.type_operation ===
-              "RETRAIT";
+          </span>
 
-          if (
-            !isClientOperation
-          ) {
-            return (
-              <span className="text-sm text-gray-500">
-                Opération
-                interne
-              </span>
-            );
-          }
+        </div>
+      ),
+    },
+
+    {
+      header:
+        "Client",
+
+      accessor:
+        "expediteur_complet",
+
+      render: (
+        _,
+        row
+      ) => {
+
+        const isClientOperation =
+
+          row.type_operation ===
+            "TRANSFERT_CLIENT" ||
+
+          row.type_operation ===
+            "RETRAIT";
+
+        if (
+          !isClientOperation
+        ) {
 
           return (
-            <div className="flex flex-col text-sm">
-              <span>
-                <strong>
-                  Exp:
-                </strong>{" "}
-                {row.expediteur_complet ||
-                  "-"}
-              </span>
 
-              <span>
-                <strong>
-                  Dest:
-                </strong>{" "}
-                {row.destinataire_complet ||
-                  "-"}
-              </span>
-            </div>
+            <span className="text-sm text-slate-400">
+
+              Opération interne
+
+            </span>
           );
-        },
-      },
+        }
 
-      {
-        header:
-          "Agence / Caisse",
+        return (
 
-        accessor:
-          "agence_display",
+          <div className="flex flex-col text-sm gap-1">
 
-        render: (
-          _,
-          row
-        ) => (
-          <div className="flex flex-col text-sm">
-            <span className="font-medium">
-              {
-                row.agence_display
-              }
+            <span>
+
+              <strong>
+                Exp:
+              </strong>{" "}
+
+              {row.expediteur_complet ||
+                "-"}
+
             </span>
 
-            <span className="text-gray-500">
-              Caisse{" "}
-              {
-                row.code_caisse
-              }
+            <span>
+
+              <strong>
+                Dest:
+              </strong>{" "}
+
+              {row.destinataire_complet ||
+                "-"}
+
             </span>
+
           </div>
-        ),
+        );
       },
+    },
 
-      {
-        header:
-          "Agent",
+    {
+      header:
+        "Agence / Caisse",
 
-        accessor:
-          "agent_operation",
+      accessor:
+        "agence_display",
 
-        render: (
-          value
-        ) => (
-          <span className="text-sm">
-            {value || "-"}
+      render: (
+        _,
+        row
+      ) => (
+
+        <div className="flex flex-col">
+
+          <span className="font-medium text-slate-800">
+
+            {
+              row.agence_display
+            }
+
           </span>
-        ),
-      },
 
-      {
-        header:
-          "Date",
+          <span className="text-xs text-slate-500">
 
-        accessor:
-          "created_at",
+            Caisse{" "}
 
-        render: (
-          value
-        ) => (
-          <div className="text-sm">
-            {new Date(
-              String(value)
-            ).toLocaleString()}
-          </div>
-        ),
-      },
-    ];
+            {
+              row.code_caisse
+            }
+
+          </span>
+
+        </div>
+      ),
+    },
+
+    {
+      header:
+        "Agent",
+
+      accessor:
+        "agent_operation",
+
+      render: (
+        value
+      ) => (
+
+        <span className="text-sm text-slate-700">
+
+          {value || "-"}
+
+        </span>
+      ),
+    },
+
+    {
+      header:
+        "Date",
+
+      accessor:
+        "created_at",
+
+      render: (
+        value
+      ) => (
+
+        <div className="text-sm text-slate-600">
+
+          {new Date(
+            String(value)
+          ).toLocaleString(
+            "fr-FR"
+          )}
+
+        </div>
+      ),
+    },
+  ];
+
+  /* ---------------------------------------------------------------------- */
+  /* RENDER                                                                 */
+  /* ---------------------------------------------------------------------- */
 
   return (
-    <div className="space-y-5">
-      {/* HEADER */}
-      <div className="flex items-center justify-between gap-4 flex-wrap">
-        <h1 className="text-xl font-semibold">
-          Journal financier
-          (
-          Historique de
-          vos mouvements
-          d'argent )
-        </h1>
 
-        <button
-          onClick={
-            handleExport
-          }
-          disabled={
-            isExporting
-          }
+    <div className="space-y-6">
+
+      {/* HEADER */}
+
+      <section
+        className="
+          rounded-[28px]
+          border
+          border-slate-200
+          bg-white
+          p-6
+          shadow-sm
+        "
+      >
+
+        <div
           className="
-            px-4 py-2 rounded-xl
-            bg-emerald-600 text-white
-            text-sm font-medium
-            hover:bg-emerald-700
-            transition-all
-            disabled:opacity-60
-            disabled:cursor-not-allowed
+            flex
+            flex-col
+            gap-5
+            lg:flex-row
+            lg:items-center
+            lg:justify-between
           "
         >
-          {isExporting
-            ? "Exportation..."
-            : "Exporter Excel"}
-        </button>
-      </div>
 
-      {/* FILTRES */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-3 bg-white p-4 rounded-xl shadow">
-        {/* CAISSE */}
-        <select
-          value={caisseId}
-          onChange={(e) => {
-            setCaisseId(
-              e.target.value
-            );
+          {/* LEFT */}
 
-            setPage(1);
-          }}
-          className="input"
-        >
-          <option value="">
-            Toutes les
-            caisses
-          </option>
+          <div className="flex items-start gap-4">
 
-          {caisses.map(
-            (c) => (
-              <option
-                key={c.id}
-                value={c.id}
+            <div
+              className="
+                flex
+                h-14
+                w-14
+                items-center
+                justify-center
+                rounded-2xl
+                bg-indigo-50
+                text-indigo-600
+              "
+            >
+
+              <Landmark
+                size={24}
+              />
+
+            </div>
+
+            <div>
+
+              <h1
+                className="
+                  text-2xl
+                  font-semibold
+                  text-slate-900
+                "
               >
-                {
-                  c.code_caisse
-                }
-              </option>
-            )
-          )}
-        </select>
+                Journal financier
+              </h1>
 
-        {/* TYPE */}
-        <select
-          value={
-            filters.type_operation
-          }
-          onChange={(e) =>
-            setFilters(
-              (
-                f
-              ) => ({
-                ...f,
-                type_operation:
-                  e.target
-                    .value,
-              })
-            )
-          }
-          className="input"
+              <p
+                className="
+                  mt-1
+                  text-sm
+                  text-slate-500
+                "
+              >
+                Historique détaillé des
+                mouvements financiers
+                et opérations caisse.
+              </p>
+
+            </div>
+
+          </div>
+
+          {/* ACTION */}
+
+          <Button
+            onClick={
+              handleExport
+            }
+            loading={
+              isExporting
+            }
+            className="
+              h-11
+              px-5
+            "
+          >
+
+            <Download
+              size={16}
+            />
+
+            <span>
+              Exporter Excel
+            </span>
+
+          </Button>
+
+        </div>
+
+      </section>
+
+      {/* FILTERS */}
+
+      <section
+        className="
+          rounded-[28px]
+          border
+          border-slate-200
+          bg-white
+          p-5
+          shadow-sm
+        "
+      >
+
+        <div className="mb-5 flex items-center gap-3">
+
+          <div
+            className="
+              flex
+              h-10
+              w-10
+              items-center
+              justify-center
+              rounded-2xl
+              bg-slate-100
+              text-slate-600
+            "
+          >
+
+            <Filter
+              size={18}
+            />
+
+          </div>
+
+          <div>
+
+            <h2
+              className="
+                text-base
+                font-semibold
+                text-slate-900
+              "
+            >
+              Filtres
+            </h2>
+
+            <p
+              className="
+                text-sm
+                text-slate-500
+              "
+            >
+              Affinez votre recherche
+              sur les écritures du ledger.
+            </p>
+
+          </div>
+
+        </div>
+
+        <div
+          className="
+            grid
+            grid-cols-1
+            gap-4
+            md:grid-cols-2
+            xl:grid-cols-5
+          "
         >
-          <option value="">
-            Tous les
-            types
-          </option>
 
-          <option value="TRANSFERT_CAISSE">
-            Transfert
-            caisse
-          </option>
+          {/* CAISSE */}
 
-          <option value="TRANSFERT_CLIENT">
-            Transfert
-            client
-          </option>
+          <select
+            value={caisseId}
+            onChange={(e) => {
 
-          <option value="ANNULATION_TRANSFERT_CLIENT">
-            Annulation
-            transfert
-            client
-          </option>
+              setCaisseId(
+                e.target.value
+              );
 
-          <option value="RETRAIT">
-            Retrait
-          </option>
+              setPage(1);
 
-          <option value="APPROVISIONNEMENT">
-            Approvisionnement
-          </option>
+            }}
+            className="input"
+          >
 
-          <option value="ECART_CAISSE">
-            Écart de
-            caisse
-          </option>
+            <option value="">
+              Toutes les caisses
+            </option>
 
-          <option value="REJETE">
-            Rejet
-          </option>
-        </select>
+            {caisses.map(
+              (c) => (
 
-        {/* SENS */}
-        <select
-          value={
-            filters.sens
-          }
-          onChange={(e) =>
-            setFilters(
-              (
-                f
-              ) => ({
-                ...f,
-                sens:
-                  e.target
-                    .value,
-              })
-            )
-          }
-          className="input"
-        >
-          <option value="">
-            Sens
-          </option>
+                <option
+                  key={c.id}
+                  value={c.id}
+                >
+                  {
+                    c.code_caisse
+                  }
+                </option>
+              )
+            )}
 
-          <option value="ENTREE">
-            Entrée
-          </option>
+          </select>
 
-          <option value="SORTIE">
-            Sortie
-          </option>
-        </select>
+          {/* TYPE */}
 
-        {/* DATE FROM */}
-        <input
-          type="date"
-          value={
-            filters.date_from
-          }
-          onChange={(e) =>
-            setFilters(
-              (
-                f
-              ) => ({
-                ...f,
-                date_from:
-                  e.target
-                    .value,
-              })
-            )
-          }
-          className="input"
-        />
+          <select
+            value={
+              filters.type_operation
+            }
+            onChange={(e) => {
 
-        {/* DATE TO */}
-        <input
-          type="date"
-          value={
-            filters.date_to
-          }
-          onChange={(e) =>
-            setFilters(
-              (
-                f
-              ) => ({
-                ...f,
-                date_to:
-                  e.target
-                    .value,
-              })
-            )
-          }
-          className="input"
-        />
-      </div>
+              setPage(1);
+
+              setFilters(
+                (
+                  f
+                ) => ({
+                  ...f,
+
+                  type_operation:
+                    e.target
+                      .value,
+                })
+              );
+
+            }}
+            className="input"
+          >
+
+            <option value="">
+              Tous les types
+            </option>
+
+            <option value="TRANSFERT_CAISSE">
+              Transfert caisse
+            </option>
+
+            <option value="TRANSFERT_CLIENT">
+              Transfert client
+            </option>
+
+            <option value="ANNULATION_TRANSFERT_CLIENT">
+              Annulation transfert client
+            </option>
+
+            <option value="RETRAIT">
+              Retrait
+            </option>
+
+            <option value="APPROVISIONNEMENT">
+              Approvisionnement
+            </option>
+
+            <option value="ECART_CAISSE">
+              Écart de caisse
+            </option>
+
+            <option value="REJETE">
+              Rejet
+            </option>
+
+          </select>
+
+          {/* SENS */}
+
+          <select
+            value={
+              filters.sens
+            }
+            onChange={(e) => {
+
+              setPage(1);
+
+              setFilters(
+                (
+                  f
+                ) => ({
+                  ...f,
+
+                  sens:
+                    e.target
+                      .value,
+                })
+              );
+
+            }}
+            className="input"
+          >
+
+            <option value="">
+              Sens
+            </option>
+
+            <option value="ENTREE">
+              Entrée
+            </option>
+
+            <option value="SORTIE">
+              Sortie
+            </option>
+
+          </select>
+
+          {/* DATE FROM */}
+
+          <input
+            type="date"
+            value={
+              filters.date_from
+            }
+            onChange={(e) => {
+
+              setPage(1);
+
+              setFilters(
+                (
+                  f
+                ) => ({
+                  ...f,
+
+                  date_from:
+                    e.target
+                      .value,
+                })
+              );
+
+            }}
+            className="input"
+          />
+
+          {/* DATE TO */}
+
+          <input
+            type="date"
+            value={
+              filters.date_to
+            }
+            onChange={(e) => {
+
+              setPage(1);
+
+              setFilters(
+                (
+                  f
+                ) => ({
+                  ...f,
+
+                  date_to:
+                    e.target
+                      .value,
+                })
+              );
+
+            }}
+            className="input"
+          />
+
+        </div>
+
+      </section>
 
       {/* TABLE */}
-      <div className="bg-white rounded-2xl shadow-sm border overflow-hidden">
+
+      <section
+        className="
+          overflow-hidden
+          rounded-[28px]
+          border
+          border-slate-200
+          bg-white
+          shadow-sm
+        "
+      >
+
+        <div
+          className="
+            flex
+            items-center
+            gap-3
+            border-b
+            border-slate-100
+            px-6
+            py-5
+          "
+        >
+
+          <div
+            className="
+              flex
+              h-10
+              w-10
+              items-center
+              justify-center
+              rounded-2xl
+              bg-indigo-50
+              text-indigo-600
+            "
+          >
+
+            <FileText
+              size={18}
+            />
+
+          </div>
+
+          <div>
+
+            <h2
+              className="
+                text-base
+                font-semibold
+                text-slate-900
+              "
+            >
+              Historique des opérations
+            </h2>
+
+            <p
+              className="
+                text-sm
+                text-slate-500
+              "
+            >
+              Vue consolidée des mouvements
+              financiers enregistrés.
+            </p>
+
+          </div>
+
+        </div>
+
         <Table<Ledger>
           data={data}
           columns={
@@ -532,71 +924,45 @@ export default function LedgerPage() {
             isLoading
           }
         />
-      </div>
+
+      </section>
 
       {/* EMPTY */}
+
       {!isLoading &&
         data.length ===
           0 && (
-          <div className="text-center text-gray-500 py-6">
-            Aucun
-            mouvement
-            trouvé
-          </div>
-        )}
 
-      {/* PAGINATION */}
-      {meta && (
-        <div className="flex justify-center items-center gap-3">
-          <Button
-            variant="secondary"
-            disabled={
-              page === 1
-            }
-            onClick={() =>
-              setPage(
-                (
-                  p
-                ) =>
-                  p - 1
-              )
-            }
-          >
-            ←
-          </Button>
+        <div
+          className="
+            rounded-2xl
+            border
+            border-dashed
+            border-slate-300
+            bg-white
+            py-14
+            text-center
+            text-sm
+            text-slate-500
+          "
+        >
 
-          <span className="text-sm text-gray-600">
-            Page{" "}
-            <strong>
-              {
-                meta.page
-              }
-            </strong>{" "}
-            /{" "}
-            {
-              meta.totalPages
-            }
-          </span>
+          Aucun mouvement trouvé
 
-          <Button
-            variant="secondary"
-            disabled={
-              page >=
-              meta.totalPages
-            }
-            onClick={() =>
-              setPage(
-                (
-                  p
-                ) =>
-                  p + 1
-              )
-            }
-          >
-            →
-          </Button>
         </div>
       )}
+
+      {/* PAGINATION */}
+
+      {meta && (
+
+        <Pagination
+          page={meta.page}
+          totalPages={meta.totalPages}
+          onChange={setPage}
+        />
+      )}
+
     </div>
   );
 }
