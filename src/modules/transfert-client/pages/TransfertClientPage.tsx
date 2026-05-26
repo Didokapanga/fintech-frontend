@@ -5,12 +5,19 @@ import {
   CalendarRange,
   Filter,
   Plus,
+  Printer,
   RefreshCcw,
   Send,
 } from "lucide-react";
 
-import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import {
+  useMemo,
+  useState,
+} from "react";
+
+import {
+  useQuery,
+} from "@tanstack/react-query";
 
 import {
   Button,
@@ -42,8 +49,15 @@ import {
   api,
 } from "../../../services/api";
 
-import TransfertClientModal from "../components/TransfertFormModal";
-import Pagination from "../../../components/ui/Pagination";
+import TransfertClientModal
+from "../components/TransfertFormModal";
+
+import Pagination
+from "../../../components/ui/Pagination";
+
+import {
+  useReceipt,
+} from "../../receipt/hooks/useReceipt";
 
 /* -------------------------------------------------------------------------- */
 /*                                    PAGE                                    */
@@ -79,6 +93,11 @@ export default function TransfertClientPage() {
     selectedAgence,
     setSelectedAgence,
   ] = useState("");
+
+  const {
+    mutateAsync:
+      fetchReceipt,
+  } = useReceipt();
 
   /* ------------------------------------------------------------------------ */
   /*                                    AUTH                                  */
@@ -178,6 +197,7 @@ export default function TransfertClientPage() {
         );
 
         if (statut) {
+
           params.append(
             "statut",
             statut
@@ -185,6 +205,7 @@ export default function TransfertClientPage() {
         }
 
         if (dateOperation) {
+
           params.append(
             "date_operation",
             dateOperation
@@ -192,6 +213,7 @@ export default function TransfertClientPage() {
         }
 
         if (selectedAgence) {
+
           params.append(
             "agence_exp",
             selectedAgence
@@ -226,11 +248,34 @@ export default function TransfertClientPage() {
     isLoading,
   } = currentQuery;
 
-  const transferts:
-    TransfertClient[] =
-      Array.isArray(data)
-        ? data
-        : data?.data ?? [];
+  /* ------------------------------------------------------------------------ */
+  /*                               TRANSFERTS                                 */
+  /* ------------------------------------------------------------------------ */
+
+  const transferts =
+    useMemo<
+      TransfertClient[]
+    >(() => {
+
+      if (
+        Array.isArray(data)
+      ) {
+
+        return data;
+      }
+
+      if (
+        Array.isArray(
+          data?.data
+        )
+      ) {
+
+        return data.data;
+      }
+
+      return [];
+
+    }, [data]);
 
   const meta =
     !Array.isArray(data)
@@ -284,6 +329,216 @@ export default function TransfertClientPage() {
         `;
     }
   };
+
+  /* ------------------------------------------------------------------------ */
+  /*                               HANDLE PRINT                               */
+  /* ------------------------------------------------------------------------ */
+
+  const handlePrint =
+    async (
+      row: TransfertClient
+    ) => {
+
+      try {
+
+        const response =
+          await fetchReceipt(
+            row.id
+          );
+
+        const receiptData =
+          response.data;
+
+        const printWindow =
+          window.open(
+            "",
+            "_blank",
+            "width=450,height=900"
+          );
+
+        if (!printWindow) {
+          return;
+        }
+
+        printWindow.document.write(`
+          <html>
+            <head>
+              <title>
+                Receipt
+              </title>
+
+              <script src="https://cdn.tailwindcss.com"></script>
+
+              <style>
+                body {
+                  font-family:
+                    Arial,
+                    sans-serif;
+                  padding: 20px;
+                }
+
+                .row {
+                  display: flex;
+                  justify-content: space-between;
+                  margin-bottom: 8px;
+                }
+
+                .title {
+                  text-align: center;
+                  margin-bottom: 20px;
+                }
+
+                .section {
+                  margin-top: 20px;
+                  border-top: 1px dashed #ccc;
+                  padding-top: 10px;
+                }
+              </style>
+            </head>
+
+            <body>
+
+              <div class="title">
+                <h2>
+                  GLOBAL FINTECH
+                </h2>
+
+                <p>
+                  Financial System
+                </p>
+              </div>
+
+              <div class="row">
+                <strong>Référence</strong>
+                <span>
+                  ${receiptData.reference}
+                </span>
+              </div>
+
+              <div class="row">
+                <strong>Date</strong>
+                <span>
+                  ${new Date(
+                    receiptData.date_operation
+                  ).toLocaleString(
+                    "fr-FR"
+                  )}
+                </span>
+              </div>
+
+              <div class="row">
+                <strong>Agence</strong>
+                <span>
+                  ${receiptData.agence}
+                </span>
+              </div>
+
+              <div class="row">
+                <strong>Caisse</strong>
+                <span>
+                  ${receiptData.caisse}
+                </span>
+              </div>
+
+              <div class="row">
+                <strong>Agent</strong>
+                <span>
+                  ${receiptData.agent}
+                </span>
+              </div>
+
+              <div class="section">
+                <h3>
+                  Expéditeur
+                </h3>
+
+                <div class="row">
+                  <strong>Nom</strong>
+                  <span>
+                    ${receiptData.expediteur.nom_complet}
+                  </span>
+                </div>
+
+                <div class="row">
+                  <strong>Téléphone</strong>
+                  <span>
+                    ${receiptData.expediteur.telephone}
+                  </span>
+                </div>
+              </div>
+
+              <div class="section">
+                <h3>
+                  Destinataire
+                </h3>
+
+                <div class="row">
+                  <strong>Nom</strong>
+                  <span>
+                    ${receiptData.destinataire.nom_complet}
+                  </span>
+                </div>
+
+                <div class="row">
+                  <strong>Téléphone</strong>
+                  <span>
+                    ${receiptData.destinataire.telephone}
+                  </span>
+                </div>
+              </div>
+
+              <div class="section">
+                <div class="row">
+                  <strong>Montant</strong>
+                  <span>
+                    ${Number(
+                      receiptData.montant
+                    ).toLocaleString()}
+                    ${receiptData.devise}
+                  </span>
+                </div>
+
+                <div class="row">
+                  <strong>Frais</strong>
+                  <span>
+                    ${Number(
+                      receiptData.frais
+                    ).toLocaleString()}
+                    ${receiptData.devise}
+                  </span>
+                </div>
+
+                <div class="row">
+                  <strong>Total</strong>
+                  <span>
+                    ${Number(
+                      receiptData.total
+                    ).toLocaleString()}
+                    ${receiptData.devise}
+                  </span>
+                </div>
+              </div>
+
+            </body>
+          </html>
+        `);
+
+        printWindow.document.close();
+
+        setTimeout(() => {
+
+          printWindow.print();
+
+        }, 500);
+
+      } catch (error) {
+
+        console.error(
+          "Erreur impression:",
+          error
+        );
+      }
+    };
 
   /* ------------------------------------------------------------------------ */
   /*                                  COLUMNS                                 */
@@ -476,6 +731,7 @@ export default function TransfertClientPage() {
                   );
 
             return (
+
               <div
                 className="
                   flex
@@ -504,11 +760,7 @@ export default function TransfertClientPage() {
                   "
                 >
                   Frais:{" "}
-                  {row.frais} •
-                  Commission:{" "}
-                  {
-                    row.commission
-                  }
+                  {row.frais}
                 </span>
 
               </div>
@@ -566,6 +818,7 @@ export default function TransfertClientPage() {
               row.created_at;
 
             return (
+
               <div
                 className="
                   flex
@@ -591,6 +844,53 @@ export default function TransfertClientPage() {
               </div>
             );
           },
+        },
+
+        {
+          header:
+            "Action",
+
+          accessor:
+            "id",
+
+          render: (
+            _v,
+            row
+          ) => (
+
+            <button
+              onClick={() =>
+                handlePrint(
+                  row
+                )
+              }
+              className="
+                inline-flex
+                items-center
+                gap-2
+                rounded-xl
+                border
+                border-slate-200
+                bg-white
+                px-3
+                py-2
+                text-sm
+                font-medium
+                text-slate-700
+                transition-all
+                hover:bg-indigo-50
+                hover:text-indigo-600
+              "
+            >
+
+              <Printer
+                size={16}
+              />
+
+              Imprimer
+
+            </button>
+          ),
         },
       ];
 
@@ -619,6 +919,7 @@ export default function TransfertClientPage() {
   /* ------------------------------------------------------------------------ */
 
   return (
+
     <div
       className="
         min-h-screen
@@ -630,14 +931,10 @@ export default function TransfertClientPage() {
           mx-auto
           max-w-[1700px]
           space-y-6
-          px-0
-          py-0
         "
       >
 
-        {/* -------------------------------------------------------------- */}
-        {/* HEADER                                                         */}
-        {/* -------------------------------------------------------------- */}
+        {/* HEADER */}
 
         <section
           className="
@@ -697,18 +994,6 @@ export default function TransfertClientPage() {
               Transferts clients
             </h1>
 
-            <p
-              className="
-                mt-2
-                text-sm
-                text-slate-500
-              "
-            >
-              Supervision des
-              opérations et des
-              transferts financiers.
-            </p>
-
           </div>
 
           <Button
@@ -734,9 +1019,7 @@ export default function TransfertClientPage() {
 
         </section>
 
-        {/* -------------------------------------------------------------- */}
-        {/* FILTERS                                                        */}
-        {/* -------------------------------------------------------------- */}
+        {/* FILTERS */}
 
         <section
           className="
@@ -785,8 +1068,6 @@ export default function TransfertClientPage() {
             "
           >
 
-            {/* STATUT */}
-
             <select
               value={statut}
               onChange={(e) => {
@@ -802,15 +1083,7 @@ export default function TransfertClientPage() {
                 rounded-2xl
                 border
                 border-slate-200
-                bg-white
                 px-4
-                text-sm
-                text-slate-700
-                outline-none
-                transition-all
-                focus:border-indigo-400
-                focus:ring-4
-                focus:ring-indigo-100
               "
             >
 
@@ -836,8 +1109,6 @@ export default function TransfertClientPage() {
 
             </select>
 
-            {/* DATE */}
-
             <input
               type="date"
               value={dateOperation}
@@ -854,19 +1125,9 @@ export default function TransfertClientPage() {
                 rounded-2xl
                 border
                 border-slate-200
-                bg-white
                 px-4
-                text-sm
-                text-slate-700
-                outline-none
-                transition-all
-                focus:border-indigo-400
-                focus:ring-4
-                focus:ring-indigo-100
               "
             />
-
-            {/* AGENCE */}
 
             {isGlobalAdmin && (
 
@@ -887,15 +1148,7 @@ export default function TransfertClientPage() {
                   rounded-2xl
                   border
                   border-slate-200
-                  bg-white
                   px-4
-                  text-sm
-                  text-slate-700
-                  outline-none
-                  transition-all
-                  focus:border-indigo-400
-                  focus:ring-4
-                  focus:ring-indigo-100
                 "
               >
 
@@ -926,8 +1179,6 @@ export default function TransfertClientPage() {
               </select>
             )}
 
-            {/* RESET */}
-
             <Button
               variant="secondary"
               onClick={
@@ -951,9 +1202,7 @@ export default function TransfertClientPage() {
 
         </section>
 
-        {/* -------------------------------------------------------------- */}
-        {/* TABLE                                                          */}
-        {/* -------------------------------------------------------------- */}
+        {/* TABLE */}
 
         <Table<TransfertClient>
           data={transferts}
@@ -963,9 +1212,7 @@ export default function TransfertClientPage() {
           emptyDescription="Aucun résultat ne correspond actuellement aux filtres sélectionnés."
         />
 
-        {/* -------------------------------------------------------------- */}
-        {/* PAGINATION                                                     */}
-        {/* -------------------------------------------------------------- */}
+        {/* PAGINATION */}
 
         {meta && (
 
@@ -988,9 +1235,7 @@ export default function TransfertClientPage() {
 
       </div>
 
-      {/* -------------------------------------------------------------- */}
-      {/* MODAL                                                          */}
-      {/* -------------------------------------------------------------- */}
+      {/* MODAL */}
 
       {open && (
 
