@@ -622,7 +622,6 @@ export default function TransfertClientPage() {
     <div
       className="
         min-h-screen
-        bg-[#f5f7fb]
       "
     >
 
@@ -631,8 +630,8 @@ export default function TransfertClientPage() {
           mx-auto
           max-w-[1700px]
           space-y-6
-          px-4
-          py-4
+          px-0
+          py-0
         "
       >
 

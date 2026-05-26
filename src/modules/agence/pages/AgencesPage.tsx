@@ -421,7 +421,6 @@ export default function AgencesPage() {
     <div
       className="
         min-h-screen
-        bg-[#f5f7fb]
       "
     >
 
@@ -430,8 +429,8 @@ export default function AgencesPage() {
           mx-auto
           max-w-[1700px]
           space-y-6
-          px-6
-          py-6
+          px-0
+          py-0
         "
       >
 

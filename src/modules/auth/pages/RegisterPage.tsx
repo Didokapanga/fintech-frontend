@@ -394,7 +394,6 @@ const users = useMemo<User[]>(() => {
     <div
       className="
         min-h-screen
-        bg-[#f5f7fb]
       "
     >
 
@@ -403,8 +402,8 @@ const users = useMemo<User[]>(() => {
           mx-auto
           max-w-[1700px]
           space-y-6
-          px-4
-          py-4
+          px-0
+          py-0
         "
       >
 
