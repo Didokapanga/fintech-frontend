@@ -3,6 +3,7 @@
 import {
   CalendarRange,
   Filter,
+  Printer,
   RefreshCcw,
 } from "lucide-react";
 
@@ -599,17 +600,24 @@ export default function RetraitHistoryTab() {
                     className="
                       inline-flex
                       items-center
+                      gap-2
                       rounded-xl
-                      bg-indigo-50
+                      border
+                      border-slate-200
+                      bg-white
                       px-3
                       py-2
-                      text-xs
-                      font-semibold
-                      text-indigo-600
+                      text-sm
+                      font-medium
+                      text-slate-700
                       transition-all
-                      hover:bg-indigo-100
+                      hover:bg-indigo-50
+                      hover:text-indigo-600
                     "
                   >
+                   <Printer
+                      size={16}
+                    />
                     Imprimer
                   </button>
 
