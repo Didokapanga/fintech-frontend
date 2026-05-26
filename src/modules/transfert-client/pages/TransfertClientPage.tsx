@@ -55,10 +55,6 @@ from "../components/TransfertFormModal";
 import Pagination
 from "../../../components/ui/Pagination";
 
-import {
-  useReceipt,
-} from "../../receipt/hooks/useReceipt";
-
 /* -------------------------------------------------------------------------- */
 /*                                    PAGE                                    */
 /* -------------------------------------------------------------------------- */
@@ -93,11 +89,6 @@ export default function TransfertClientPage() {
     selectedAgence,
     setSelectedAgence,
   ] = useState("");
-
-  const {
-    mutateAsync:
-      fetchReceipt,
-  } = useReceipt();
 
   /* ------------------------------------------------------------------------ */
   /*                                    AUTH                                  */
@@ -335,209 +326,14 @@ export default function TransfertClientPage() {
   /* ------------------------------------------------------------------------ */
 
   const handlePrint =
-    async (
+    (
       row: TransfertClient
     ) => {
 
-      try {
-
-        const response =
-          await fetchReceipt(
-            row.id
-          );
-
-        const receiptData =
-          response.data;
-
-        const printWindow =
-          window.open(
-            "",
-            "_blank",
-            "width=450,height=900"
-          );
-
-        if (!printWindow) {
-          return;
-        }
-
-        printWindow.document.write(`
-          <html>
-            <head>
-              <title>
-                Receipt
-              </title>
-
-              <script src="https://cdn.tailwindcss.com"></script>
-
-              <style>
-                body {
-                  font-family:
-                    Arial,
-                    sans-serif;
-                  padding: 20px;
-                }
-
-                .row {
-                  display: flex;
-                  justify-content: space-between;
-                  margin-bottom: 8px;
-                }
-
-                .title {
-                  text-align: center;
-                  margin-bottom: 20px;
-                }
-
-                .section {
-                  margin-top: 20px;
-                  border-top: 1px dashed #ccc;
-                  padding-top: 10px;
-                }
-              </style>
-            </head>
-
-            <body>
-
-              <div class="title">
-                <h2>
-                  GLOBAL FINTECH
-                </h2>
-
-                <p>
-                  Financial System
-                </p>
-              </div>
-
-              <div class="row">
-                <strong>Référence</strong>
-                <span>
-                  ${receiptData.reference}
-                </span>
-              </div>
-
-              <div class="row">
-                <strong>Date</strong>
-                <span>
-                  ${new Date(
-                    receiptData.date_operation
-                  ).toLocaleString(
-                    "fr-FR"
-                  )}
-                </span>
-              </div>
-
-              <div class="row">
-                <strong>Agence</strong>
-                <span>
-                  ${receiptData.agence}
-                </span>
-              </div>
-
-              <div class="row">
-                <strong>Caisse</strong>
-                <span>
-                  ${receiptData.caisse}
-                </span>
-              </div>
-
-              <div class="row">
-                <strong>Agent</strong>
-                <span>
-                  ${receiptData.agent}
-                </span>
-              </div>
-
-              <div class="section">
-                <h3>
-                  Expéditeur
-                </h3>
-
-                <div class="row">
-                  <strong>Nom</strong>
-                  <span>
-                    ${receiptData.expediteur.nom_complet}
-                  </span>
-                </div>
-
-                <div class="row">
-                  <strong>Téléphone</strong>
-                  <span>
-                    ${receiptData.expediteur.telephone}
-                  </span>
-                </div>
-              </div>
-
-              <div class="section">
-                <h3>
-                  Destinataire
-                </h3>
-
-                <div class="row">
-                  <strong>Nom</strong>
-                  <span>
-                    ${receiptData.destinataire.nom_complet}
-                  </span>
-                </div>
-
-                <div class="row">
-                  <strong>Téléphone</strong>
-                  <span>
-                    ${receiptData.destinataire.telephone}
-                  </span>
-                </div>
-              </div>
-
-              <div class="section">
-                <div class="row">
-                  <strong>Montant</strong>
-                  <span>
-                    ${Number(
-                      receiptData.montant
-                    ).toLocaleString()}
-                    ${receiptData.devise}
-                  </span>
-                </div>
-
-                <div class="row">
-                  <strong>Frais</strong>
-                  <span>
-                    ${Number(
-                      receiptData.frais
-                    ).toLocaleString()}
-                    ${receiptData.devise}
-                  </span>
-                </div>
-
-                <div class="row">
-                  <strong>Total</strong>
-                  <span>
-                    ${Number(
-                      receiptData.total
-                    ).toLocaleString()}
-                    ${receiptData.devise}
-                  </span>
-                </div>
-              </div>
-
-            </body>
-          </html>
-        `);
-
-        printWindow.document.close();
-
-        setTimeout(() => {
-
-          printWindow.print();
-
-        }, 500);
-
-      } catch (error) {
-
-        console.error(
-          "Erreur impression:",
-          error
-        );
-      }
+      window.open(
+        `/receipt/transfert/${row.id}`,
+        "_blank"
+      );
     };
 
   /* ------------------------------------------------------------------------ */

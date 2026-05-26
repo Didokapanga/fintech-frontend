@@ -2,8 +2,6 @@
 // 📄 src/modules/receipt/components/ReceiptTemplate.tsx
 // ============================================================
 
-import QRCode from "react-qr-code";
-
 import type {
   ReceiptResponse,
 } from "../services/receipt.service";
@@ -17,53 +15,65 @@ export default function ReceiptTemplate({
   receipt,
 }: Props) {
 
+  /**
+   * ============================================================
+   * 🔥 QR DATA
+   * ============================================================
+   */
+  const qrData =
+    encodeURIComponent(
+      JSON.stringify({
+        reference:
+          receipt.reference,
+
+        montant:
+          receipt.montant,
+
+        devise:
+          receipt.devise,
+
+        statut:
+          receipt.statut,
+
+        date:
+          receipt.date_operation,
+
+        agence:
+          receipt.agence,
+      })
+    );
+
+  /**
+   * ============================================================
+   * 🔥 QR URL
+   * ============================================================
+   */
+  const qrCodeUrl =
+    `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${qrData}`;
+
+  /**
+   * ============================================================
+   * 🔥 PRINT
+   * ============================================================
+   */
   const handlePrint =
     () => {
 
       window.print();
     };
 
-  /**
-   * ============================================================
-   * 🔥 QR DATA
-   * ============================================================
-   */
-  const qrData = JSON.stringify({
-    reference:
-      receipt.reference,
-
-    montant:
-      receipt.montant,
-
-    devise:
-      receipt.devise,
-
-    statut:
-      receipt.statut,
-
-    date:
-      receipt.date_operation,
-
-    agence:
-      receipt.agence,
-  });
-
   return (
 
     <div
       className="
-        w-full
-        max-w-[380px]
-        mx-auto
+        w-[80mm]
         bg-white
-        border
-        border-gray-200
-        rounded-2xl
-        p-5
-        text-sm
-        shadow-sm
-        print:shadow-none
-        print:border-none
+        px-3
+        py-4
+        text-black
+        font-mono
+        text-[12px]
+        leading-tight
       "
     >
 
@@ -73,46 +83,55 @@ export default function ReceiptTemplate({
 
       <div className="text-center">
 
-        <div
+        <img
+          src="/logo.png"
+          alt="Logo"
           className="
-            flex
-            justify-center
-            mb-3
+            mx-auto
+            h-12
+            w-12
+            object-contain
+          "
+        />
+
+        <h1
+          className="
+            mt-2
+            text-[20px]
+            font-bold
+            uppercase
+            tracking-wide
           "
         >
-
-          <img
-            src="/logo.png"
-            alt="Logo"
-            className="
-              w-16
-              h-16
-              object-contain
-            "
-          />
-
-        </div>
-
-        <h1 className="text-xl font-bold tracking-wide">
           GLOBAL FINTECH
         </h1>
 
-        <p className="text-xs text-gray-500">
+        <p
+          className="
+            text-[10px]
+            text-slate-500
+          "
+        >
           Financial System
         </p>
 
         <div
-          className="
-            inline-flex
+          className={`
             mt-3
+            inline-flex
             rounded-full
-            bg-green-100
             px-3
             py-1
-            text-xs
-            font-semibold
-            text-green-700
-          "
+            text-[10px]
+            font-bold
+            tracking-wide
+            ${
+              receipt.statut ===
+              "EXECUTE"
+                ? "bg-emerald-100 text-emerald-700"
+                : "bg-slate-100 text-slate-700"
+            }
+          `}
         >
           {receipt.statut}
         </div>
@@ -123,13 +142,11 @@ export default function ReceiptTemplate({
       {/* INFOS */}
       {/* ===================================================== */}
 
-      <div className="mt-6 space-y-2">
+      <div className="mt-5 space-y-2">
 
         <Row
           label="Référence"
-          value={
-            receipt.reference
-          }
+          value={receipt.reference}
         />
 
         <Row
@@ -143,30 +160,22 @@ export default function ReceiptTemplate({
 
         <Row
           label="Agence"
-          value={
-            receipt.agence
-          }
+          value={receipt.agence}
         />
 
         <Row
           label="Ville"
-          value={
-            receipt.ville
-          }
+          value={receipt.ville}
         />
 
         <Row
           label="Caisse"
-          value={
-            receipt.caisse
-          }
+          value={receipt.caisse}
         />
 
         <Row
           label="Agent"
-          value={
-            receipt.agent
-          }
+          value={receipt.agent}
         />
 
       </div>
@@ -303,33 +312,26 @@ export default function ReceiptTemplate({
           flex-col
           items-center
           justify-center
-          gap-3
-          py-3
+          py-4
         "
       >
 
-        <div
+        <img
+          src={qrCodeUrl}
+          alt="QR Code"
           className="
-            rounded-2xl
-            border
-            bg-white
-            p-3
+            h-[130px]
+            w-[130px]
           "
-        >
-
-          <QRCode
-            value={qrData}
-            size={130}
-          />
-
-        </div>
+        />
 
         <p
           className="
+            mt-2
             text-center
-            text-[11px]
-            text-gray-500
+            text-[10px]
             leading-relaxed
+            text-slate-500
           "
         >
           Scanner pour vérifier
@@ -343,71 +345,19 @@ export default function ReceiptTemplate({
       {/* ===================================================== */}
 
       <SectionTitle
-        title="Visa & Signature"
+        title="Signature"
       />
 
       <div
         className="
-          mt-4
-          grid
-          grid-cols-2
-          gap-6
+          mt-3
+          h-16
+          rounded-lg
+          border
+          border-dashed
+          border-slate-300
         "
-      >
-
-        {/* CLIENT */}
-
-        <div className="space-y-3">
-
-          <p
-            className="
-              text-xs
-              font-semibold
-              text-gray-600
-            "
-          >
-            Signature client
-          </p>
-
-          <div
-            className="
-              h-20
-              rounded-xl
-              border
-              border-dashed
-              border-gray-300
-            "
-          />
-
-        </div>
-
-        {/* AGENT */}
-
-        <div className="space-y-3">
-
-          <p
-            className="
-              text-xs
-              font-semibold
-              text-gray-600
-            "
-          >
-            Signature agent
-          </p>
-
-          <div
-            className="
-              h-20
-              rounded-xl
-              border
-              border-dashed
-              border-gray-300
-            "
-          />
-
-        </div>
-
-      </div>
+      />
 
       {/* ===================================================== */}
       {/* FOOTER */}
@@ -415,16 +365,33 @@ export default function ReceiptTemplate({
 
       <div
         className="
-          mt-8
+          mt-5
+          border-t
+          border-dashed
+          pt-3
           text-center
-          text-xs
-          text-gray-500
-          leading-relaxed
         "
       >
-        Merci pour votre confiance
-        <br />
-        GLOBAL FINTECH
+
+        <p
+          className="
+            text-[11px]
+            text-slate-500
+          "
+        >
+          Merci pour votre confiance
+        </p>
+
+        <p
+          className="
+            mt-1
+            text-[10px]
+            text-slate-400
+          "
+        >
+          GLOBAL FINTECH
+        </p>
+
       </div>
 
       {/* ===================================================== */}
@@ -432,20 +399,18 @@ export default function ReceiptTemplate({
       {/* ===================================================== */}
 
       <button
-        onClick={
-          handlePrint
-        }
+        onClick={handlePrint}
         className="
-          mt-6
+          mt-5
           w-full
-          rounded-2xl
-          bg-indigo-600
+          rounded-xl
+          bg-black
           py-3
-          text-sm
+          text-[12px]
           font-semibold
           text-white
           transition-all
-          hover:bg-indigo-700
+          hover:bg-slate-800
           print:hidden
         "
       >
@@ -481,16 +446,25 @@ function Row({
       "
     >
 
-      <span className="text-gray-500">
+      <span
+        className="
+          text-[11px]
+          text-slate-500
+        "
+      >
         {label}
       </span>
 
       <span
-        className={
-          strong
-            ? "font-bold text-green-600"
-            : "font-medium text-right"
-        }
+        className={`
+          text-right
+          text-[11px]
+          ${
+            strong
+              ? "font-bold text-emerald-600"
+              : "font-semibold text-slate-800"
+          }
+        `}
       >
         {value}
       </span>
@@ -513,16 +487,17 @@ function SectionTitle({
 
     <div
       className="
-        mt-6
+        mt-5
         mb-3
         border-b
         border-dashed
+        border-slate-300
         pb-2
-        text-xs
+        text-[11px]
         font-bold
         uppercase
-        tracking-wide
-        text-gray-500
+        tracking-[0.15em]
+        text-slate-600
       "
     >
       {title}

@@ -572,6 +572,65 @@ export default function RetraitHistoryTab() {
             </div>
           ),
         },
+
+        {
+          header: "Actions",
+
+          accessor: "id",
+
+          render: (_v, row) => {
+
+            const canPrint =
+              row.statut === "EXECUTE";
+
+            return (
+
+              <div className="flex items-center gap-2">
+
+                {canPrint ? (
+
+                  <button
+                    onClick={() =>
+                      window.open(
+                        `/receipt/retrait/${row.id}`,
+                        "_blank"
+                      )
+                    }
+                    className="
+                      inline-flex
+                      items-center
+                      rounded-xl
+                      bg-indigo-50
+                      px-3
+                      py-2
+                      text-xs
+                      font-semibold
+                      text-indigo-600
+                      transition-all
+                      hover:bg-indigo-100
+                    "
+                  >
+                    Imprimer
+                  </button>
+
+                ) : (
+
+                  <span
+                    className="
+                      text-xs
+                      text-slate-400
+                      italic
+                    "
+                  >
+                    Non disponible
+                  </span>
+
+                )}
+
+              </div>
+            );
+          },
+        }
       ];
 
   /* ------------------------------------------------------------------------ */
