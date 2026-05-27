@@ -1,4 +1,4 @@
-// src/layouts/sidebar/Sidebar.tsx
+// src/layouts/Sidebar.tsx
 
 import {
   Wallet,
@@ -16,18 +16,22 @@ import {
   useNavigate,
 } from "react-router-dom";
 
-import { navItems } from "./nav.config";
 import NavItem from "./NavItem";
 
-import { useAuthStore } from "../../app/store";
+import {
+  useAuthStore,
+} from "../../app/store";
+import { getNavItems } from "./nav.config";
 
 export default function Sidebar() {
 
   const navigate =
     useNavigate();
 
-  const [collapsed, setCollapsed] =
-    useState(false);
+  const [
+    collapsed,
+    setCollapsed,
+  ] = useState(false);
 
   const user =
     useAuthStore(
@@ -38,6 +42,16 @@ export default function Sidebar() {
     useAuthStore(
       (s) => s.logout
     );
+
+  /* ====================================================== */
+  /* BASE PATH */
+  /* ====================================================== */
+
+  const basePath =
+    user?.role_name ===
+    "CAISSIER"
+      ? "/caissier"
+      : "/admin";
 
   return (
 
@@ -61,9 +75,9 @@ export default function Sidebar() {
       `}
     >
 
-      {/* ===================================================== */}
+      {/* ================================================= */}
       {/* HEADER */}
-      {/* ===================================================== */}
+      {/* ================================================= */}
 
       <div
         className="
@@ -78,7 +92,7 @@ export default function Sidebar() {
       >
 
         <NavLink
-          to="/dashboard"
+          to={basePath}
           className={`
             flex
             items-center
@@ -92,8 +106,6 @@ export default function Sidebar() {
             }
           `}
         >
-
-          {/* LOGO */}
 
           <div
             className="
@@ -183,9 +195,9 @@ export default function Sidebar() {
 
       </div>
 
-      {/* ===================================================== */}
-      {/* COLLAPSED BTN */}
-      {/* ===================================================== */}
+      {/* ================================================= */}
+      {/* COLLAPSE BTN */}
+      {/* ================================================= */}
 
       {collapsed && (
 
@@ -221,9 +233,9 @@ export default function Sidebar() {
 
       )}
 
-      {/* ===================================================== */}
+      {/* ================================================= */}
       {/* USER CARD */}
-      {/* ===================================================== */}
+      {/* ================================================= */}
 
       <div className="px-4 pt-5">
 
@@ -289,9 +301,7 @@ export default function Sidebar() {
                     text-slate-800
                   "
                 >
-                  {
-                    user?.user_name
-                  }
+                  {user?.user_name}
                 </p>
 
                 <p
@@ -301,9 +311,7 @@ export default function Sidebar() {
                     text-slate-500
                   "
                 >
-                  {
-                    user?.role_name
-                  }
+                  {user?.role_name}
                 </p>
 
               </div>
@@ -316,9 +324,9 @@ export default function Sidebar() {
 
       </div>
 
-      {/* ===================================================== */}
+      {/* ================================================= */}
       {/* NAVIGATION */}
-      {/* ===================================================== */}
+      {/* ================================================= */}
 
       <div
         className="
@@ -331,15 +339,13 @@ export default function Sidebar() {
 
         <div className="space-y-1.5">
 
-          {navItems.map(
+          {getNavItems(user?.role_name).map(
             (item) => (
 
               <NavItem
                 key={item.path}
                 item={item}
-                collapsed={
-                  collapsed
-                }
+                collapsed={collapsed}
               />
 
             )
@@ -349,9 +355,9 @@ export default function Sidebar() {
 
       </div>
 
-      {/* ===================================================== */}
+      {/* ================================================= */}
       {/* QUICK ACCESS */}
-      {/* ===================================================== */}
+      {/* ================================================= */}
 
       {!collapsed && (
 
@@ -390,14 +396,12 @@ export default function Sidebar() {
 
               <QuickAction
                 icon={
-                  <Wallet
-                    size={16}
-                  />
+                  <Wallet size={16} />
                 }
                 label="Caisses"
                 onClick={() =>
                   navigate(
-                    "/caisses"
+                    `${basePath}/caisses`
                   )
                 }
               />
@@ -411,7 +415,7 @@ export default function Sidebar() {
                 label="Transferts"
                 onClick={() =>
                   navigate(
-                    "/transfert-client"
+                    `${basePath}/transfert-client`
                   )
                 }
               />
@@ -425,7 +429,7 @@ export default function Sidebar() {
                 label="Validation"
                 onClick={() =>
                   navigate(
-                    "/validation"
+                    `${basePath}/validation`
                   )
                 }
               />
@@ -438,9 +442,9 @@ export default function Sidebar() {
 
       )}
 
-      {/* ===================================================== */}
+      {/* ================================================= */}
       {/* FOOTER */}
-      {/* ===================================================== */}
+      {/* ================================================= */}
 
       <div
         className="

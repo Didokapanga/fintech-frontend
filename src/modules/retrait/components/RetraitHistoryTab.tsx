@@ -38,6 +38,7 @@ import {
   getRetraitsByAgence,
 } from "../services/retrait.service";
 import Pagination from "../../../components/ui/Pagination";
+import { useNavigate } from "react-router-dom";
 
 /* -------------------------------------------------------------------------- */
 /*                                    PAGE                                    */
@@ -243,6 +244,15 @@ export default function RetraitHistoryTab() {
         `;
     }
   };
+
+  const navigate =
+    useNavigate();
+
+  const basePath =
+    user?.role_name ===
+    "CAISSIER"
+      ? "/caissier"
+      : "/admin";
 
   /* ------------------------------------------------------------------------ */
   /*                                  COLUMNS                                 */
@@ -592,9 +602,8 @@ export default function RetraitHistoryTab() {
 
                   <button
                     onClick={() =>
-                      window.open(
-                        `/receipt/retrait/${row.id}`,
-                        "_blank"
+                      navigate(
+                        `${basePath}/receipt/retrait/${row.id}`
                       )
                     }
                     className="

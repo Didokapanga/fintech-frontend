@@ -54,6 +54,7 @@ from "../components/TransfertFormModal";
 
 import Pagination
 from "../../../components/ui/Pagination";
+import { useNavigate } from "react-router-dom";
 
 /* -------------------------------------------------------------------------- */
 /*                                    PAGE                                    */
@@ -64,6 +65,9 @@ export default function TransfertClientPage() {
   /* ------------------------------------------------------------------------ */
   /*                                   STATE                                  */
   /* ------------------------------------------------------------------------ */
+
+  const navigate =
+  useNavigate();
 
   const [
     open,
@@ -326,15 +330,20 @@ export default function TransfertClientPage() {
   /* ------------------------------------------------------------------------ */
 
   const handlePrint =
-    (
-      row: TransfertClient
-    ) => {
+  (
+    row: TransfertClient
+  ) => {
 
-      window.open(
-        `/receipt/transfert/${row.id}`,
-        "_blank"
-      );
-    };
+    const basePath =
+      user?.role_name ===
+      "CAISSIER"
+        ? "/caissier"
+        : "/admin";
+
+    navigate(
+      `${basePath}/receipt/transfert/${row.id}`
+    );
+  };
 
   /* ------------------------------------------------------------------------ */
   /*                                  COLUMNS                                 */

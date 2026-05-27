@@ -1,68 +1,135 @@
 // src/components/layout/Layout.tsx
 
-import { Outlet, useLocation, useNavigate } from "react-router-dom";
+import {
+  Outlet,
+  useLocation,
+} from "react-router-dom";
+
 import Sidebar from "./Sidebar";
 import Header from "./Header";
-import { useAuthStore } from "../../app/store";
-import CaissierDashboard from "../../modules/caisse/pages/CaissierDashboard";
+
+/* ============================================================ */
+/* COMPONENT */
+/* ============================================================ */
 
 export default function Layout() {
-  const user = useAuthStore((s) => s.user);
-  const location = useLocation();
-  const navigate = useNavigate();
 
-  const isCaissier = user?.role_name === "CAISSIER";
-  const isDashboard = location.pathname === "/";
+  const location =
+    useLocation();
+
+  /**
+   * ============================================================
+   * 🔥 RECEIPT PAGE
+   * ============================================================
+   */
+  const isReceiptPage =
+    location.pathname.includes(
+      "/receipt/"
+    );
 
   return (
+
     <div
-      className="
-        flex h-screen relative
-        bg-[url('/src/assets/bg-pattern.svg')]
-        bg-cover bg-center
-      "
+      className={`
+        flex
+        h-screen
+        relative
+        ${
+          isReceiptPage
+            ? "bg-white"
+            : `
+              bg-[url('/src/assets/bg-pattern.svg')]
+              bg-cover
+              bg-center
+            `
+        }
+      `}
     >
+
+      {/* ===================================================== */}
       {/* OVERLAY */}
-      <div className="absolute inset-0 bg-white/40" />
+      {/* ===================================================== */}
 
-      <div className="relative flex w-full">
+      {!isReceiptPage && (
 
-        {!isCaissier && <Sidebar />}
+        <div
+          className="
+            absolute
+            inset-0
+            bg-white/40
+          "
+        />
 
-        <div className="flex-1 flex flex-col">
+      )}
 
-          <Header />
+      <div
+        className="
+          relative
+          flex
+          w-full
+        "
+      >
 
-          <main className="p-6 overflow-auto space-y-4">
+        {/* ===================================================== */}
+        {/* SIDEBAR */}
+        {/* ===================================================== */}
 
-            {/* 🔥 BOUTON RETOUR (SEULEMENT SI PAS DASHBOARD) */}
-            {isCaissier && !isDashboard && (
-              <button
-                onClick={() => navigate("/")}
-                className="
-                  inline-flex items-center gap-2
-                  px-3 py-1.5 rounded-lg
-                  bg-indigo-50 text-indigo-600
-                  hover:bg-indigo-100
-                  text-sm font-medium
-                  transition
-                "
-              >
-                ← Retour au dashboard
-              </button>
-            )}
+        {!isReceiptPage && (
+          <Sidebar />
+        )}
 
-            {/* CONTENU */}
-            {isCaissier && isDashboard ? (
-              <CaissierDashboard />
-            ) : (
-              <Outlet />
-            )}
+        {/* ===================================================== */}
+        {/* CONTENT */}
+        {/* ===================================================== */}
+
+        <div
+          className="
+            flex-1
+            flex
+            flex-col
+          "
+        >
+
+          {/* ================================================= */}
+          {/* HEADER */}
+          {/* ================================================= */}
+
+          {!isReceiptPage && (
+            <Header />
+          )}
+
+          {/* ================================================= */}
+          {/* MAIN */}
+          {/* ================================================= */}
+
+          <main
+            className={
+              isReceiptPage
+                ? `
+                    h-full
+                    overflow-auto
+                    bg-white
+                  `
+                : `
+                    p-6
+                    overflow-auto
+                    space-y-4
+                  `
+            }
+          >
+
+            {/* ============================================= */}
+            {/* ROUTES */}
+            {/* ============================================= */}
+
+            <Outlet />
 
           </main>
 
         </div>
+
       </div>
+
     </div>
   );
 }

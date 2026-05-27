@@ -1,34 +1,121 @@
 // src/components/ProtectedRoute.tsx
 
-import type { ReactNode } from "react";
-import { useAuthStore } from "../app/store";
-import { Navigate, useLocation } from "react-router-dom";
-import { CAISSIER_ALLOWED_ROUTES } from "../configs/roles";
+import type {
+  ReactNode,
+} from "react";
+
+import {
+  Navigate,
+  useLocation,
+} from "react-router-dom";
+
+import {
+  useAuthStore,
+} from "../app/store";
+
+/* ========================================================= */
+/* TYPES */
+/* ========================================================= */
 
 type Props = {
   children: ReactNode;
 };
 
-export default function ProtectedRoute({ children }: Props) {
-  const token = useAuthStore((s) => s.token);
-  const user = useAuthStore((s) => s.user);
-  const location = useLocation();
+/* ========================================================= */
+/* COMPONENT */
+/* ========================================================= */
 
-  // 🔐 PAS CONNECTÉ
+export default function ProtectedRoute({
+  children,
+}: Props) {
+
+  const token =
+    useAuthStore(
+      (s) => s.token
+    );
+
+  const user =
+    useAuthStore(
+      (s) => s.user
+    );
+
+  const location =
+    useLocation();
+
+  /* ======================================================= */
+  /* NOT AUTHENTICATED */
+  /* ======================================================= */
+
   if (!token) {
-    return <Navigate to="/login" replace />;
+
+    return (
+      <Navigate
+        to="/login"
+        replace
+      />
+    );
   }
 
-  // 🔥 PROTECTION PAR RÔLE
-  if (user?.role_name === "CAISSIER") {
-    const currentPath = location.pathname;
+  /* ======================================================= */
+  /* ROLE BASED ACCESS */
+  /* ======================================================= */
 
-    const isAllowed = CAISSIER_ALLOWED_ROUTES.includes(currentPath);
+  const isCaissier =
+    user?.role_name ===
+    "CAISSIER";
 
-    if (!isAllowed) {
-      return <Navigate to="/" replace />;
+  const currentPath =
+    location.pathname;
+
+  /**
+   * =======================================================
+   * CAISSIER ACCESS
+   * =======================================================
+   */
+  if (isCaissier) {
+
+    const allowed =
+      currentPath.startsWith(
+        "/caissier"
+      );
+
+    if (!allowed) {
+
+      return (
+        <Navigate
+          to="/caissier"
+          replace
+        />
+      );
     }
   }
+
+  /**
+   * =======================================================
+   * ADMIN / N+1 / N+2 ACCESS
+   * =======================================================
+   */
+  if (!isCaissier) {
+
+    const allowed =
+      currentPath.startsWith(
+        "/admin"
+      );
+
+    if (!allowed) {
+
+      return (
+        <Navigate
+          to="/admin"
+          replace
+        />
+      );
+    }
+  }
+
+  /* ======================================================= */
+  /* RENDER */
+  /* ======================================================= */
 
   return children;
 }

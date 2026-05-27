@@ -148,8 +148,19 @@ export default function LoginForm() {
           },
         });
 
-        window.location.href =
-          "/";
+        const role =
+          res.user.role_name;
+
+        if (role === "CAISSIER") {
+
+          window.location.href =
+            "/caissier";
+
+        } else {
+
+          window.location.href =
+            "/admin";
+        }
       },
     });
 

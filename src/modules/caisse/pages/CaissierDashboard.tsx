@@ -1,21 +1,17 @@
-// src/modules/caissier/CaissierDashboard.tsx
-
-import { useMemo, useState } from "react";
-
-import { useNavigate }
-from "react-router-dom";
+import {
+  useMemo,
+  useState,
+} from "react";
 
 import {
   Send,
   Banknote,
   Inbox,
-  Wallet,
-  Repeat,
   Lock,
-  FileText,
-  ChevronRight,
-  Building2,
+  Filter,
+  Wallet,
   ArrowUpRight,
+  CalendarDays,
 } from "lucide-react";
 
 import type {
@@ -26,6 +22,10 @@ import {
   useCaisses,
 } from "../hooks/useCaisses";
 
+import {
+  useDashboardCaissier,
+} from "../hooks/useDashboardCaissier";
+
 import ClotureCaisseModal
 from "../../cloture-caisse/components/ClotureCaisseModal";
 
@@ -34,9 +34,6 @@ from "../../cloture-caisse/components/ClotureCaisseModal";
 /* ======================================================== */
 
 export default function CaissierDashboard() {
-
-  const navigate =
-    useNavigate();
 
   /* ====================================================== */
   /* STATE */
@@ -54,6 +51,27 @@ export default function CaissierDashboard() {
     setOpenCloture,
   ] = useState(false);
 
+  /**
+   * ======================================================
+   * FILTERS
+   * ======================================================
+   */
+
+  const [
+    devise,
+    setDevise,
+  ] = useState("");
+
+  const [
+    dateFrom,
+    setDateFrom,
+  ] = useState("");
+
+  const [
+    dateTo,
+    setDateTo,
+  ] = useState("");
+
   /* ====================================================== */
   /* QUERY */
   /* ====================================================== */
@@ -64,6 +82,25 @@ export default function CaissierDashboard() {
     1,
     100
   );
+
+  /**
+   * ======================================================
+   * DASHBOARD QUERY
+   * ======================================================
+   */
+
+  const {
+    data: dashboard,
+  } = useDashboardCaissier({
+    devise:
+      devise || undefined,
+
+    date_from:
+      dateFrom || undefined,
+
+    date_to:
+      dateTo || undefined,
+  });
 
   const caisses =
     useMemo<Caisse[]>(
@@ -101,115 +138,6 @@ export default function CaissierDashboard() {
     ]);
 
   /* ====================================================== */
-  /* ACTIONS */
-  /* ====================================================== */
-
-  const actions = [
-
-    {
-      label:
-        "Envoi d’argent",
-
-      path:
-        "/transfert-client",
-
-      icon:
-        Send,
-
-      color:
-        "text-indigo-600",
-
-      bg:
-        "bg-indigo-50",
-    },
-
-    {
-      label:
-        "Paiement retrait",
-
-      path:
-        "/retrait",
-
-      icon:
-        Banknote,
-
-      color:
-        "text-emerald-600",
-
-      bg:
-        "bg-emerald-50",
-    },
-
-    {
-      label:
-        "Transfert caisse",
-
-      path:
-        "/transfert-caisse",
-
-      icon:
-        Repeat,
-
-      color:
-        "text-blue-600",
-
-      bg:
-        "bg-blue-50",
-    },
-
-    {
-      label:
-        "Validations",
-
-      path:
-        "/validation",
-
-      icon:
-        Inbox,
-
-      color:
-        "text-orange-600",
-
-      bg:
-        "bg-orange-50",
-    },
-
-    {
-      label:
-        "Mes caisses",
-
-      path:
-        "/caisses",
-
-      icon:
-        Wallet,
-
-      color:
-        "text-purple-600",
-
-      bg:
-        "bg-purple-50",
-    },
-
-    {
-      label:
-        "Journal caisse",
-
-      path:
-        "/ledger",
-
-      icon:
-        FileText,
-
-      color:
-        "text-slate-600",
-
-      bg:
-        "bg-slate-100",
-    },
-  ];
-
-  /* ====================================================== */
   /* RENDER */
   /* ====================================================== */
 
@@ -218,8 +146,10 @@ export default function CaissierDashboard() {
     <div
       className="
         min-h-screen
-        px-0
-        py-0
+        bg-gradient-to-br
+        via-white
+        to-red-50/40
+        p-1
       "
     >
 
@@ -233,24 +163,23 @@ export default function CaissierDashboard() {
         "
       >
 
-        {/* ================================================= */}
         {/* HERO */}
-        {/* ================================================= */}
 
         <section
           className="
             relative
             overflow-hidden
-            rounded-[32px]
+            rounded-[36px]
             border
-            border-slate-200/80
-            bg-white
-            p-6
-            shadow-sm
+            border-white/50
+            bg-white/80
+            p-7
+            shadow-[0_10px_40px_rgba(0,0,0,0.06)]
+            backdrop-blur-xl
           "
         >
 
-          {/* GLOW */}
+          {/* BACKGROUND EFFECT */}
 
           <div
             className="
@@ -260,7 +189,20 @@ export default function CaissierDashboard() {
               h-[320px]
               w-[320px]
               rounded-full
-              bg-indigo-50
+              bg-red-200/30
+              blur-3xl
+            "
+          />
+
+          <div
+            className="
+              absolute
+              bottom-[-120px]
+              left-[-120px]
+              h-[280px]
+              w-[280px]
+              rounded-full
+              bg-orange-100/40
               blur-3xl
             "
           />
@@ -277,9 +219,7 @@ export default function CaissierDashboard() {
             "
           >
 
-            {/* ============================================= */}
             {/* LEFT */}
-            {/* ============================================= */}
 
             <div
               className="
@@ -289,80 +229,136 @@ export default function CaissierDashboard() {
               "
             >
 
-              {/* BRAND */}
-
               <div
                 className="
                   flex
                   items-center
-                  gap-4
+                  gap-5
                 "
               >
 
+                {/* LOGO */}
+
                 <div
                   className="
+                    relative
                     flex
-                    h-16
-                    w-16
+                    h-20
+                    w-20
                     items-center
                     justify-center
-                    rounded-3xl
+                    rounded-[28px]
                     bg-gradient-to-br
-                    from-indigo-600
-                    to-blue-500
-                    shadow-lg
-                    shadow-indigo-200
+                    from-red-600
+                    via-red-500
+                    to-orange-400
+                    shadow-[0_15px_35px_rgba(239,68,68,0.35)]
                   "
                 >
 
+                  <div
+                    className="
+                      absolute
+                      inset-0
+                      rounded-[28px]
+                      bg-white/10
+                    "
+                  />
+
                   <img
-                    src="/logo.png"
+                    src="/2.png"
                     alt="Fintech Logo"
                     className="
-                      h-11
-                      w-11
+                      relative
+                      h-12
+                      w-12
                       object-contain
                     "
                   />
 
                 </div>
 
+                {/* TITLE */}
+
                 <div>
 
-                  <p
+                  <div
                     className="
-                      text-xs
-                      font-semibold
-                      uppercase
-                      tracking-[0.18em]
-                      text-indigo-600
+                      flex
+                      items-center
+                      gap-2
                     "
                   >
-                    Global Fintech
-                  </p>
+
+                    <div
+                      className="
+                        h-2
+                        w-2
+                        rounded-full
+                        bg-emerald-500
+                      "
+                    />
+
+                    <p
+                      className="
+                        text-xs
+                        font-semibold
+                        uppercase
+                        tracking-[0.25em]
+                        text-red-600
+                      "
+                    >
+                      Global Fintech ERP
+                    </p>
+
+                  </div>
 
                   <h1
                     className="
-                      mt-1
-                      text-3xl
-                      font-bold
-                      tracking-[-0.04em]
+                      mt-3
+                      text-4xl
+                      font-black
+                      tracking-[-0.06em]
                       text-slate-900
                     "
                   >
-                    Tableau de bord caissier
+                    Dashboard Caissier
                   </h1>
+
+                  <p
+                    className="
+                      mt-2
+                      max-w-xl
+                      text-sm
+                      leading-6
+                      text-slate-500
+                    "
+                  >
+                    Vue intelligente des opérations,
+                    retraits et validations en attente
+                    en temps réel.
+                  </p>
 
                 </div>
 
               </div>
 
-              {/* SELECT */}
+              {/* SELECT CAISSE */}
 
               {caisses.length >
                 1 && (
 
-                <div>
+                <div
+                  className="
+                    w-fit
+                    rounded-3xl
+                    border
+                    border-slate-200
+                    bg-white/70
+                    p-4
+                    shadow-sm
+                  "
+                >
 
                   <label
                     className="
@@ -392,7 +388,7 @@ export default function CaissierDashboard() {
                     }
 
                     className="
-                      min-w-[260px]
+                      min-w-[280px]
                       rounded-2xl
                       border
                       border-slate-200
@@ -400,13 +396,10 @@ export default function CaissierDashboard() {
                       px-4
                       py-3
                       text-sm
-                      text-slate-700
+                      font-medium
                       outline-none
-                      transition-all
-                      focus:border-indigo-400
-                      focus:bg-white
-                      focus:ring-4
-                      focus:ring-indigo-100
+                      transition
+                      focus:border-red-400
                     "
                   >
 
@@ -444,73 +437,104 @@ export default function CaissierDashboard() {
 
             </div>
 
-            {/* ============================================= */}
             {/* RIGHT */}
-            {/* ============================================= */}
 
             {selectedCaisse && (
 
               <div
                 className="
+                  relative
                   w-full
-                  max-w-[450px]
-                  rounded-[28px]
+                  max-w-[420px]
+                  overflow-hidden
+                  rounded-[32px]
                   border
-                  border-slate-200
-                  bg-slate-50
-                  p-6
+                  border-white/40
+                  bg-gradient-to-br
+                  from-slate-900
+                  via-slate-800
+                  to-slate-900
+                  p-7
+                  text-white
+                  shadow-[0_20px_60px_rgba(15,23,42,0.35)]
                 "
               >
 
-                {/* TOP */}
+                <div
+                  className="
+                    absolute
+                    right-[-60px]
+                    top-[-60px]
+                    h-40
+                    w-40
+                    rounded-full
+                    bg-red-500/20
+                    blur-3xl
+                  "
+                />
 
                 <div
                   className="
+                    relative
                     flex
                     items-start
                     justify-between
-                    gap-4
                   "
                 >
 
                   <div>
 
-                    <p
+                    <div
                       className="
-                        text-sm
-                        text-slate-500
+                        flex
+                        items-center
+                        gap-2
                       "
                     >
-                      Solde disponible
-                    </p>
+
+                      <Wallet
+                        size={18}
+                        className="
+                          text-red-400
+                        "
+                      />
+
+                      <p
+                        className="
+                          text-sm
+                          text-slate-300
+                        "
+                      >
+                        Solde disponible
+                      </p>
+
+                    </div>
 
                     <h2
                       className="
-                        mt-2
-                        text-4xl
-                        font-bold
-                        tracking-[-0.04em]
-                        text-slate-900
+                        mt-5
+                        text-5xl
+                        font-black
+                        tracking-[-0.06em]
                       "
                     >
                       {Number(
                         selectedCaisse.solde
                       ).toLocaleString()}
-
-                      <span
-                        className="
-                          ml-2
-                          text-lg
-                          font-medium
-                          text-slate-500
-                        "
-                      >
-                        {
-                          selectedCaisse.devise
-                        }
-                      </span>
-
                     </h2>
+
+                    <p
+                      className="
+                        mt-2
+                        text-lg
+                        font-medium
+                        text-slate-400
+                      "
+                    >
+                      {
+                        selectedCaisse.devise
+                      }
+                    </p>
 
                   </div>
 
@@ -524,8 +548,8 @@ export default function CaissierDashboard() {
                       ${
                         selectedCaisse.state ===
                         "OUVERTE"
-                          ? "bg-emerald-100 text-emerald-700"
-                          : "bg-red-100 text-red-700"
+                          ? "bg-emerald-500/20 text-emerald-300"
+                          : "bg-red-500/20 text-red-300"
                       }
                     `}
                   >
@@ -537,72 +561,6 @@ export default function CaissierDashboard() {
 
                 </div>
 
-                {/* INFOS */}
-
-                <div
-                  className="
-                    mt-6
-                    flex
-                    items-center
-                    gap-3
-                    rounded-2xl
-                    border
-                    border-slate-200
-                    bg-white
-                    p-4
-                  "
-                >
-
-                  <div
-                    className="
-                      flex
-                      h-12
-                      w-12
-                      items-center
-                      justify-center
-                      rounded-2xl
-                      bg-indigo-50
-                      text-indigo-600
-                    "
-                  >
-
-                    <Building2
-                      size={22}
-                    />
-
-                  </div>
-
-                  <div>
-
-                    <p
-                      className="
-                        text-xs
-                        uppercase
-                        tracking-[0.12em]
-                        text-slate-400
-                      "
-                    >
-                      Caisse active
-                    </p>
-
-                    <h3
-                      className="
-                        text-sm
-                        font-semibold
-                        text-slate-800
-                      "
-                    >
-                      {
-                        selectedCaisse.code_caisse
-                      }
-                    </h3>
-
-                  </div>
-
-                </div>
-
-                {/* ACTION */}
-
                 <button
                   onClick={() =>
                     setOpenCloture(
@@ -611,7 +569,7 @@ export default function CaissierDashboard() {
                   }
 
                   className="
-                    mt-6
+                    mt-8
                     flex
                     w-full
                     items-center
@@ -620,12 +578,14 @@ export default function CaissierDashboard() {
                     rounded-2xl
                     bg-red-600
                     px-4
-                    py-3.5
+                    py-4
                     text-sm
                     font-semibold
                     text-white
                     transition-all
+                    duration-300
                     hover:bg-red-700
+                    hover:shadow-xl
                   "
                 >
 
@@ -645,189 +605,378 @@ export default function CaissierDashboard() {
 
         </section>
 
-        {/* ================================================= */}
-        {/* ACTIONS */}
-        {/* ================================================= */}
+        {/* MAIN GRID */}
 
-        <section>
+        <section
+          className="
+            grid
+            grid-cols-1
+            gap-6
+            xl:grid-cols-3
+          "
+        >
+
+          {/* STATS */}
 
           <div
             className="
-              mb-5
-              flex
-              items-center
-              justify-between
-              gap-4
-              flex-wrap
+              rounded-[32px]
+              border
+              border-white/50
+              bg-white/80
+              p-6
+              shadow-[0_10px_40px_rgba(0,0,0,0.05)]
+              backdrop-blur-xl
+              xl:col-span-2
             "
           >
 
-            <div>
+            <div
+              className="
+                flex
+                items-center
+                justify-between
+              "
+            >
 
-              <h2
-                className="
-                  text-xl
-                  font-semibold
-                  text-slate-900
-                "
-              >
-                Opérations rapides
-              </h2>
+              <div>
 
-              <p
+                <h2
+                  className="
+                    text-2xl
+                    font-bold
+                    tracking-[-0.04em]
+                    text-slate-900
+                  "
+                >
+                  Activités
+                </h2>
+
+                <p
+                  className="
+                    mt-1
+                    text-sm
+                    text-slate-500
+                  "
+                >
+                  Vue instantanée des opérations
+                </p>
+
+              </div>
+
+              <div
                 className="
-                  mt-1
+                  flex
+                  items-center
+                  gap-2
+                  rounded-2xl
+                  bg-red-50
+                  px-4
+                  py-2
                   text-sm
-                  text-slate-500
+                  font-medium
+                  text-red-600
                 "
               >
-                Accès direct aux principales opérations
-              </p>
+
+                <ArrowUpRight
+                  size={16}
+                />
+
+                Temps réel
+
+              </div>
+
+            </div>
+
+            <div
+              className="
+                mt-8
+                grid
+                grid-cols-1
+                gap-5
+                md:grid-cols-3
+              "
+            >
+
+              <StatCard
+                title="Transferts"
+                value={String(
+                  dashboard
+                    ?.transfert_client
+                    ?.total_effectue || 0
+                )}
+                icon={
+                  <Send
+                    size={22}
+                  />
+                }
+                bg="bg-red-100"
+                color="text-red-600"
+              />
+
+              <StatCard
+                title="Retraits"
+                value={String(
+                  dashboard
+                    ?.retrait
+                    ?.total_effectue || 0
+                )}
+                icon={
+                  <Banknote
+                    size={22}
+                  />
+                }
+                bg="bg-emerald-100"
+                color="text-emerald-600"
+              />
+
+              <StatCard
+                title="En attente"
+                value={String(
+                  dashboard
+                    ?.en_attente
+                    ?.total_en_attente || 0
+                )}
+                icon={
+                  <Inbox
+                    size={22}
+                  />
+                }
+                bg="bg-orange-100"
+                color="text-orange-600"
+              />
 
             </div>
 
           </div>
 
+          {/* FILTERS */}
+
           <div
             className="
-              grid
-              grid-cols-1
-              gap-5
-              sm:grid-cols-2
-              xl:grid-cols-3
+              rounded-[32px]
+              border
+              border-white/50
+              bg-white/80
+              p-6
+              shadow-[0_10px_40px_rgba(0,0,0,0.05)]
+              backdrop-blur-xl
             "
           >
 
-            {actions.map(
-              (
-                action
-              ) => {
+            <div
+              className="
+                flex
+                items-center
+                gap-3
+              "
+            >
 
-                const Icon =
-                  action.icon;
+              <div
+                className="
+                  flex
+                  h-11
+                  w-11
+                  items-center
+                  justify-center
+                  rounded-2xl
+                  bg-red-100
+                  text-red-600
+                "
+              >
 
-                return (
+                <Filter
+                  size={20}
+                />
 
-                  <button
-                    key={
-                      action.label
-                    }
+              </div>
 
-                    onClick={() =>
-                      navigate(
-                        action.path
-                      )
-                    }
+              <div>
 
-                    className="
-                      group
-                      rounded-[28px]
-                      border
-                      border-slate-200
-                      bg-white
-                      p-6
-                      text-left
-                      shadow-sm
-                      transition-all
-                      hover:-translate-y-1
-                      hover:shadow-xl
-                    "
-                  >
+                <h2
+                  className="
+                    text-lg
+                    font-bold
+                    text-slate-900
+                  "
+                >
+                  Filtres
+                </h2>
 
-                    <div
-                      className="
-                        flex
-                        items-start
-                        justify-between
-                        gap-4
-                      "
-                    >
+                <p
+                  className="
+                    text-sm
+                    text-slate-500
+                  "
+                >
+                  Analyse par période
+                </p>
 
-                      <div
-                        className={`
-                          flex
-                          h-14
-                          w-14
-                          items-center
-                          justify-center
-                          rounded-2xl
-                          ${action.bg}
-                        `}
-                      >
+              </div>
 
-                        <Icon
-                          className={`
-                            h-6
-                            w-6
-                            ${action.color}
-                          `}
-                        />
+            </div>
 
-                      </div>
+            <div
+              className="
+                mt-7
+                space-y-5
+              "
+            >
 
-                      <ArrowUpRight
-                        className="
-                          h-5
-                          w-5
-                          text-slate-300
-                          transition-all
-                          group-hover:text-slate-500
-                        "
-                      />
+              <div>
 
-                    </div>
+                <label
+                  className="
+                    mb-2
+                    block
+                    text-sm
+                    font-medium
+                    text-slate-600
+                  "
+                >
+                  Devise
+                </label>
 
-                    <div className="mt-6">
+                <select
+                  value={devise}
+                  onChange={(e) =>
+                    setDevise(
+                      e.target.value
+                    )
+                  }
+                  className="
+                    w-full
+                    rounded-2xl
+                    border
+                    border-slate-200
+                    bg-slate-50
+                    px-4
+                    py-3
+                    text-sm
+                    outline-none
+                    transition
+                    focus:border-red-400
+                  "
+                >
 
-                      <h3
-                        className="
-                          text-base
-                          font-semibold
-                          text-slate-900
-                        "
-                      >
-                        {
-                          action.label
-                        }
-                      </h3>
+                  <option value="">
+                    Toutes les devises
+                  </option>
 
-                      <div
-                        className="
-                          mt-4
-                          inline-flex
-                          items-center
-                          gap-1
-                          text-sm
-                          font-medium
-                          text-indigo-600
-                        "
-                      >
+                  <option value="USD">
+                    USD
+                  </option>
 
-                        Accéder
+                  <option value="CDF">
+                    CDF
+                  </option>
 
-                        <ChevronRight
-                          size={15}
-                        />
+                </select>
 
-                      </div>
+              </div>
 
-                    </div>
+              <div>
 
-                  </button>
+                <label
+                  className="
+                    mb-2
+                    flex
+                    items-center
+                    gap-2
+                    text-sm
+                    font-medium
+                    text-slate-600
+                  "
+                >
 
-                );
-              }
-            )}
+                  <CalendarDays
+                    size={15}
+                  />
+
+                  Date début
+
+                </label>
+
+                <input
+                  type="date"
+                  value={dateFrom}
+                  onChange={(e) =>
+                    setDateFrom(
+                      e.target.value
+                    )
+                  }
+                  className="
+                    w-full
+                    rounded-2xl
+                    border
+                    border-slate-200
+                    bg-slate-50
+                    px-4
+                    py-3
+                    text-sm
+                    outline-none
+                    transition
+                    focus:border-red-400
+                  "
+                />
+
+              </div>
+
+              <div>
+
+                <label
+                  className="
+                    mb-2
+                    flex
+                    items-center
+                    gap-2
+                    text-sm
+                    font-medium
+                    text-slate-600
+                  "
+                >
+
+                  <CalendarDays
+                    size={15}
+                  />
+
+                  Date fin
+
+                </label>
+
+                <input
+                  type="date"
+                  value={dateTo}
+                  onChange={(e) =>
+                    setDateTo(
+                      e.target.value
+                    )
+                  }
+                  className="
+                    w-full
+                    rounded-2xl
+                    border
+                    border-slate-200
+                    bg-slate-50
+                    px-4
+                    py-3
+                    text-sm
+                    outline-none
+                    transition
+                    focus:border-red-400
+                  "
+                />
+
+              </div>
+
+            </div>
 
           </div>
 
         </section>
 
       </div>
-
-      {/* =================================================== */}
-      {/* MODAL */}
-      {/* =================================================== */}
 
       {openCloture && (
 
@@ -843,6 +992,153 @@ export default function CaissierDashboard() {
         />
 
       )}
+
+    </div>
+  );
+}
+
+/* ======================================================== */
+/* STAT CARD */
+/* ======================================================== */
+
+function StatCard({
+  title,
+  value,
+  icon,
+  bg,
+  color,
+}: {
+  title: string;
+  value: string;
+  icon: React.ReactNode;
+  bg: string;
+  color: string;
+}) {
+
+  return (
+
+    <div
+      className="
+        group
+        relative
+        overflow-hidden
+        rounded-[28px]
+        border
+        border-slate-200/70
+        bg-white
+        p-5
+        shadow-sm
+        transition-all
+        duration-300
+        hover:-translate-y-1
+        hover:shadow-xl
+      "
+    >
+
+      <div
+        className={`
+          absolute
+          right-[-40px]
+          top-[-40px]
+          h-32
+          w-32
+          rounded-full
+          opacity-40
+          blur-3xl
+          transition-all
+          duration-300
+          group-hover:scale-125
+          ${bg}
+        `}
+      />
+
+      <div
+        className="
+          relative
+          flex
+          items-start
+          justify-between
+        "
+      >
+
+        <div>
+
+          <p
+            className="
+              text-sm
+              font-medium
+              text-slate-500
+            "
+          >
+            {title}
+          </p>
+
+          <h3
+            className="
+              mt-4
+              text-4xl
+              font-black
+              tracking-[-0.05em]
+              text-slate-900
+            "
+          >
+            {value}
+          </h3>
+
+          <div
+            className="
+              mt-4
+              flex
+              items-center
+              gap-2
+            "
+          >
+
+            <div
+              className={`
+                h-2
+                w-2
+                rounded-full
+                ${bg}
+              `}
+            />
+
+            <span
+              className="
+                text-xs
+                font-medium
+                text-slate-400
+              "
+            >
+              Synchronisé
+            </span>
+
+          </div>
+
+        </div>
+
+        <div
+          className={`
+            relative
+            flex
+            h-14
+            w-14
+            items-center
+            justify-center
+            rounded-2xl
+            shadow-lg
+            ${bg}
+            ${color}
+          `}
+        >
+
+          <div className="relative">
+            {icon}
+          </div>
+
+        </div>
+
+      </div>
 
     </div>
   );
