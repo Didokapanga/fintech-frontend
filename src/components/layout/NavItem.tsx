@@ -11,7 +11,6 @@ type NavItemType = {
 
 type Props = {
   item: NavItemType;
-
   collapsed?: boolean;
 };
 
@@ -22,10 +21,22 @@ export default function NavItem({
 
   const Icon = item.icon;
 
+  /**
+   * ============================================================
+   * 🔥 ONLY DASHBOARD SHOULD USE end
+   * ============================================================
+   */
+  const isDashboardRoute =
+    item.path === "/admin" ||
+    item.path === "/caissier";
+
   return (
 
     <NavLink
       to={item.path}
+
+      end={isDashboardRoute}
+
       className={({
         isActive,
       }) =>
@@ -49,10 +60,10 @@ export default function NavItem({
           ${
             isActive
               ? `
-                bg-indigo-600
+                bg-blue-700
                 text-white
                 shadow-lg
-                shadow-indigo-100
+                shadow-red-100
               `
               : `
                 text-slate-600
@@ -69,7 +80,10 @@ export default function NavItem({
       }) => (
 
         <>
+
+          {/* ================================================= */}
           {/* ICON */}
+          {/* ================================================= */}
 
           <div
             className={`
@@ -78,7 +92,10 @@ export default function NavItem({
               ${
                 isActive
                   ? "text-white"
-                  : "text-slate-400 group-hover:text-slate-700"
+                  : `
+                    text-slate-400
+                    group-hover:text-slate-700
+                  `
               }
             `}
           >
@@ -87,7 +104,9 @@ export default function NavItem({
 
           </div>
 
+          {/* ================================================= */}
           {/* LABEL */}
+          {/* ================================================= */}
 
           {!collapsed && (
 
@@ -97,7 +116,9 @@ export default function NavItem({
 
           )}
 
-          {/* ACTIVE BAR */}
+          {/* ================================================= */}
+          {/* ACTIVE DOT */}
+          {/* ================================================= */}
 
           {isActive && !collapsed && (
 

@@ -9,7 +9,7 @@ import {
   LogOut,
 } from "lucide-react";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import {
   NavLink,
@@ -31,7 +31,15 @@ export default function Sidebar() {
   const [
     collapsed,
     setCollapsed,
-  ] = useState(false);
+  ] = useState(() => {
+
+    const saved =
+      localStorage.getItem(
+        "sidebar-collapsed"
+      );
+
+    return saved === "true";
+  });
 
   const user =
     useAuthStore(
@@ -42,6 +50,19 @@ export default function Sidebar() {
     useAuthStore(
       (s) => s.logout
     );
+
+  /* ====================================================== */
+  /* PERSIST SIDEBAR STATE */
+  /* ====================================================== */
+
+  useEffect(() => {
+
+    localStorage.setItem(
+      "sidebar-collapsed",
+      String(collapsed)
+    );
+
+  }, [collapsed]);
 
   /* ====================================================== */
   /* BASE PATH */

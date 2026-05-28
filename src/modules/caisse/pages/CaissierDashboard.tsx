@@ -28,6 +28,7 @@ import {
 
 import ClotureCaisseModal
 from "../../cloture-caisse/components/ClotureCaisseModal";
+import { useAuthStore } from "../../../app/store";
 
 /* ======================================================== */
 /* COMPONENT */
@@ -140,6 +141,27 @@ export default function CaissierDashboard() {
   /* ====================================================== */
   /* RENDER */
   /* ====================================================== */
+
+  /* ====================================================== */
+  /* USER */
+  /* ====================================================== */
+
+  const user =
+    useAuthStore(
+      (s) => s.user
+    );
+
+  /* ====================================================== */
+  /* GREETING */
+  /* ====================================================== */
+
+  const currentHour =
+    new Date().getHours();
+
+  const greeting =
+    currentHour < 18
+      ? "Bonjour"
+      : "Bonsoir";
 
   return (
 
@@ -340,6 +362,64 @@ export default function CaissierDashboard() {
                   </p>
 
                 </div>
+
+              </div>
+
+              {/* ===================================================== */}
+              {/* GREETING */}
+              {/* ===================================================== */}
+
+              <div
+                className="
+                  w-fit
+                  rounded-3xl
+                  border
+                  border-red-100
+                  bg-gradient-to-r
+                  from-red-50
+                  to-orange-50
+                  px-5
+                  py-4
+                  shadow-sm
+                "
+              >
+
+                <p
+                  className="
+                    text-xs
+                    font-semibold
+                    uppercase
+                    tracking-[0.18em]
+                    text-red-500
+                  "
+                >
+                  Session active
+                </p>
+
+                <h2
+                  className="
+                    mt-2
+                    text-2xl
+                    font-bold
+                    tracking-[-0.03em]
+                    text-slate-900
+                  "
+                >
+                  {greeting},{" "}
+                  <span className="text-red-600">
+                    {user?.user_name}
+                  </span>
+                </h2>
+
+                <p
+                  className="
+                    mt-1
+                    text-sm
+                    text-slate-500
+                  "
+                >
+                  Heureux de vous revoir sur votre espace caissier.
+                </p>
 
               </div>
 
