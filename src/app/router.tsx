@@ -2,6 +2,7 @@
 
 import {
   createBrowserRouter,
+  Navigate,
 } from "react-router-dom";
 
 /* ========================================================= */
@@ -85,6 +86,16 @@ from "../modules/receipt/pages/TransfertReceiptPage";
 
 export const router =
   createBrowserRouter([
+
+    {
+      path: "/",
+      element: (
+        <Navigate
+          to="/login"
+          replace
+        />
+      ),
+    },
 
     /**
      * =======================================================

@@ -5,8 +5,13 @@ import {
   useLocation,
 } from "react-router-dom";
 
+import {
+  useIdleLogout,
+} from "../../hooks/useIdleLogout";
+
 import Sidebar from "./Sidebar";
 import Header from "./Header";
+import IdleWarningModal from "../ui/IdleWarningModal";
 
 /* ============================================================ */
 /* COMPONENT */
@@ -26,6 +31,11 @@ export default function Layout() {
     location.pathname.includes(
       "/receipt/"
     );
+
+  const {
+    showWarning,
+    stayConnected,
+  } = useIdleLogout();
 
   return (
 
@@ -129,6 +139,13 @@ export default function Layout() {
         </div>
 
       </div>
+
+      <IdleWarningModal
+        open={showWarning}
+        onStayConnected={
+          stayConnected
+        }
+      />
 
     </div>
   );
