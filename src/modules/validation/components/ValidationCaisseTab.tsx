@@ -112,6 +112,7 @@ export default function ValidationCaisseTab() {
       "ADMIN",
       "N+1",
       "N+2",
+      "CAISSIER",
     ].includes(
       user
         ?.role_name
