@@ -258,12 +258,15 @@ export default function Table<
             <tr>
 
               {columns.map(
-                (col) => (
+                (
+                  col,
+                  index
+                ) => (
 
                   <th
-                    key={String(
+                    key={`${String(
                       col.accessor
-                    )}
+                    )}-${index}`}
                     className="
                       border-b
                       border-slate-200
@@ -313,7 +316,10 @@ export default function Table<
                 >
 
                   {columns.map(
-                    (col) => {
+                    (
+                      col,
+                      index
+                    ) => {
 
                       const value =
                         row[
@@ -322,9 +328,9 @@ export default function Table<
 
                       return (
                         <td
-                          key={String(
+                          key={`${row.id}-${String(
                             col.accessor
-                          )}
+                          )}-${index}`}
                           className="
                             border-b
                             border-slate-100

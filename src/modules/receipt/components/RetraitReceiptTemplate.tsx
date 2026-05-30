@@ -2,6 +2,7 @@
 // 📄 src/modules/receipt/components/RetraitReceiptTemplate.tsx
 // ============================================================
 
+import { useNavigate } from "react-router-dom";
 import type {
   RetraitReceiptResponse,
 } from "../services/retraitReceipt.service";
@@ -14,6 +15,8 @@ type Props = {
 export default function RetraitReceiptTemplate({
   receipt,
 }: Props) {
+
+  const navigate = useNavigate();
 
   const qrData =
     encodeURIComponent(
@@ -274,26 +277,56 @@ export default function RetraitReceiptTemplate({
         Merci pour votre confiance
       </div>
 
-      {/* PRINT */}
+      {/* ACTIONS */}
 
-      <button
-        onClick={() =>
-          window.print()
-        }
+      <div
         className="
           mt-6
-          w-full
-          rounded-2xl
-          bg-indigo-600
-          py-3
-          text-white
-          font-semibold
-          hover:bg-indigo-700
+          flex
+          gap-3
           print:hidden
         "
       >
-        Imprimer
-      </button>
+
+        <button
+          onClick={() =>
+            navigate(-1)
+          }
+          className="
+            flex-1
+            rounded-2xl
+            border
+            border-slate-300
+            bg-white
+            py-3
+            font-semibold
+            text-slate-700
+            transition-all
+            hover:bg-slate-100
+          "
+        >
+          ← Retour
+        </button>
+
+        <button
+          onClick={() =>
+            window.print()
+          }
+          className="
+            flex-1
+            rounded-2xl
+            bg-red-600
+            py-3
+            text-white
+            font-semibold
+            transition-all
+            hover:bg-red-700
+          "
+        >
+          Imprimer
+        </button>
+
+      </div>
 
     </div>
   );
@@ -370,4 +403,4 @@ function SectionTitle({
       {title}
     </div>
   );
-}
+}  
