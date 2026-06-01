@@ -44,8 +44,6 @@ import AppMessageState from "../../../components/ui/AppMessageState";
 
 import CaisseStatusBadge from "./CaisseStatusBadge";
 
-import MouvementFormModal from "../../mouvement/components/MouvementFormModal";
-
 import CaisseFormModal from "./CaisseFormModal";
 
 /* -------------------------------------------------------------------------- */
@@ -112,11 +110,6 @@ export default function CaisseTab() {
   ] = useState<
     string | null
   >(null);
-
-  const [
-    openMouvement,
-    setOpenMouvement,
-  ] = useState(false);
 
   const [
     openCreate,
@@ -841,33 +834,14 @@ export default function CaisseTab() {
 
       {/* MOVEMENT MODAL */}
 
-      {openMouvement && (
-
-        <MouvementFormModal
-          open={
-            openMouvement
-          }
-          onClose={() =>
-            setOpenMouvement(
-              false
-            )
-          }
-        />
-
-      )}
-
       {/* CREATE MODAL */}
 
       {openCreate && (
 
         <CaisseFormModal
-          open={
-            openCreate
-          }
+          open={openCreate}
           onClose={() =>
-            setOpenCreate(
-              false
-            )
+            setOpenCreate(false)
           }
         />
 
