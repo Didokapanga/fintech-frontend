@@ -36,6 +36,7 @@ import type {
 } from "../services/transfertCaisse.service";
 
 import TransfertCaisseModal from "../components/transfertCaisseModal";
+import SelectCaisseModal from "../components/SelectCaisseModal";
 import Pagination from "../../../components/ui/Pagination";
 
 /* -------------------------------------------------------------------------- */
@@ -53,6 +54,21 @@ export default function TransfertCaissePage() {
     setOpen,
   ] =
     useState(false);
+
+  const [
+    openSelectCaisse,
+    setOpenSelectCaisse,
+  ] =
+    useState(false);
+
+  const [
+    selectedCaisse,
+    setSelectedCaisse,
+  ] =
+    useState<{
+      id: string;
+      devise: string;
+    } | null>(null);
 
   const [
     page,
@@ -757,7 +773,7 @@ export default function TransfertCaissePage() {
 
               <Button
                 onClick={() =>
-                  setOpen(true)
+                  setOpenSelectCaisse(true)
                 }
                 className="
                   h-14
@@ -1026,12 +1042,49 @@ export default function TransfertCaissePage() {
       {/* MODAL                                                          */}
       {/* -------------------------------------------------------------- */}
 
+      <SelectCaisseModal
+        open={
+          openSelectCaisse
+        }
+
+        onClose={() =>
+          setOpenSelectCaisse(
+            false
+          )
+        }
+
+        onSelect={(
+          caisseId,
+          devise
+        ) => {
+
+          setSelectedCaisse({
+            id: caisseId,
+            devise,
+          });
+
+          setOpenSelectCaisse(
+            false
+          );
+
+          setOpen(true);
+        }}
+      />
+
       {open && (
 
         <TransfertCaisseModal
           open={open}
           onClose={() =>
             setOpen(false)
+          }
+
+          selectedCaisseId={
+            selectedCaisse?.id
+          }
+
+          selectedDevise={
+            selectedCaisse?.devise
           }
         />
 

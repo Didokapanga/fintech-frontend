@@ -41,6 +41,9 @@ import type {
 type Props = {
   open: boolean;
   onClose: () => void;
+
+  selectedCaisseId: string;
+  selectedDevise: string;
 };
 
 type CaisseItem = {
@@ -48,17 +51,8 @@ type CaisseItem = {
   type?: string;
   devise: string;
   code_caisse: string;
+  state?: string;
 };
-
-/* -------------------------------------------------------------------------- */
-/*                                CONSTANTES                                  */
-/* -------------------------------------------------------------------------- */
-
-const CURRENCIES = [
-  "CDF",
-  "USD",
-  "EUR",
-];
 
 /* -------------------------------------------------------------------------- */
 /*                                  COMPONENT                                 */
@@ -67,6 +61,8 @@ const CURRENCIES = [
 export default function MouvementFormModal({
   open,
   onClose,
+  selectedCaisseId,
+  selectedDevise,
 }: Props) {
 
   /* ---------------------------------------------------------------------- */
@@ -84,8 +80,12 @@ export default function MouvementFormModal({
     },
   } = useForm<CreateMouvementDto>({
     defaultValues: {
-      devise: "",
-      caisse_id: "",
+      devise:
+        selectedDevise,
+
+      caisse_id:
+        selectedCaisseId,
+
       type_mouvement:
         "APPROVISIONNEMENT",
     },
@@ -118,7 +118,11 @@ export default function MouvementFormModal({
 
     onSuccess: () => {
 
-      reset();
+      reset({
+        caisse_id: selectedCaisseId,
+        devise: selectedDevise,
+        type_mouvement: "APPROVISIONNEMENT",
+      });
 
       setTimeout(() => {
 
@@ -152,39 +156,19 @@ export default function MouvementFormModal({
     );
 
   /* ---------------------------------------------------------------------- */
-  /* FILTER                                                                 */
-  /* ---------------------------------------------------------------------- */
-
-  const agenceCaisses =
-    useMemo(() => {
-
-      return caisses.filter(
-        (
-          c: CaisseItem
-        ) =>
-          c.type ===
-          "AGENCE"
-      );
-
-    }, [caisses]);
-
-  /* ---------------------------------------------------------------------- */
   /* WATCH                                                                  */
   /* ---------------------------------------------------------------------- */
 
-  const selectedCaisseId =
-    useWatch({
-      control,
-      name: "caisse_id",
-    });
+  const watchedCaisseId =
+  useWatch({
+    control,
+    name: "caisse_id",
+  });
 
   const selectedCaisse =
-    agenceCaisses.find(
-      (
-        c: CaisseItem
-      ) =>
-        c.id ===
-        selectedCaisseId
+    caisses.find(
+      (c: CaisseItem) =>
+        c.id === watchedCaisseId
     );
 
   /* ---------------------------------------------------------------------- */
@@ -193,18 +177,23 @@ export default function MouvementFormModal({
 
   useEffect(() => {
 
-    if (
-      selectedCaisse
-    ) {
+    if (selectedCaisseId) {
+
+      setValue(
+        "caisse_id",
+        selectedCaisseId
+      );
 
       setValue(
         "devise",
-        selectedCaisse.devise
+        selectedDevise
       );
     }
 
   }, [
-    selectedCaisse,
+    open,
+    selectedCaisseId,
+    selectedDevise,
     setValue,
   ]);
 
@@ -253,6 +242,13 @@ export default function MouvementFormModal({
           />
         )}
 
+        <input
+          type="hidden"
+          {...register(
+            "caisse_id"
+          )}
+        />
+
         {/* FORM */}
 
         <form
@@ -264,84 +260,23 @@ export default function MouvementFormModal({
 
           {/* CAISSE */}
 
-          <div>
-
-            <label
-              className="
-                mb-1.5
-                block
-                text-sm
-                font-medium
-                text-slate-700
-              "
-            >
-              Caisse
-            </label>
-
-            <select
-              {...register(
-                "caisse_id",
-                {
-                  required:
-                    "La caisse est obligatoire",
-                }
-              )}
-              className="
+          <Input
+            label="Caisse"
+            value={
+              selectedCaisse
+                ? `${selectedCaisse.code_caisse} (${selectedDevise})`
+                : ""
+            }
+            readOnly
+            className="
                 w-full
                 rounded-xl
-                border
-                border-slate-200
-                bg-white
-                px-3
-                py-3
+                px-1
+                py-1
                 text-sm
-                outline-none
-                transition
-                focus:border-indigo-500
-                focus:ring-4
-                focus:ring-indigo-100
+                font-medium
               "
-            >
-
-              <option value="">
-                Sélectionner une caisse
-              </option>
-
-              {agenceCaisses.map(
-                (
-                  c: CaisseItem
-                ) => (
-
-                  <option
-                    key={c.id}
-                    value={c.id}
-                  >
-                    {
-                      c.code_caisse
-                    }{" "}
-                    (
-                    {c.devise}
-                    )
-                  </option>
-                )
-              )}
-
-            </select>
-
-            {errors.caisse_id && (
-
-              <p className="mt-1 text-xs text-red-500">
-
-                {
-                  errors
-                    .caisse_id
-                    .message
-                }
-
-              </p>
-            )}
-
-          </div>
+          />
 
           {/* TYPE */}
 
@@ -433,69 +368,16 @@ export default function MouvementFormModal({
 
           <div>
 
-            <label
-              className="
-                mb-1.5
-                block
-                text-sm
-                font-medium
-                text-slate-700
-              "
-            >
-              Devise
-            </label>
+            <input
+              type="hidden"
+              {...register("devise")}
+            />
 
-            <select
-              {...register(
-                "devise",
-                {
-                  required:
-                    "La devise est obligatoire",
-                }
-              )}
-              disabled={
-                !!selectedCaisse
-              }
-              className="
-                w-full
-                rounded-xl
-                border
-                border-slate-200
-                bg-slate-50
-                px-3
-                py-3
-                text-sm
-                outline-none
-                transition
-                focus:border-indigo-500
-                focus:ring-4
-                focus:ring-indigo-100
-              "
-            >
-
-              <option value="">
-                Choisir une devise
-              </option>
-
-              {CURRENCIES.map(
-                (
-                  currency
-                ) => (
-
-                  <option
-                    key={
-                      currency
-                    }
-                    value={
-                      currency
-                    }
-                  >
-                    {currency}
-                  </option>
-                )
-              )}
-
-            </select>
+            <Input
+              label="Devise"
+              value={selectedDevise}
+              readOnly
+            />
 
             {errors.devise && (
 

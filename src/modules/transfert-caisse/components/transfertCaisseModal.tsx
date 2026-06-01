@@ -45,10 +45,18 @@ import type {
 /*                                   TYPES                                    */
 /* -------------------------------------------------------------------------- */
 
+// type Props = {
+//   open: boolean;
+
+//   onClose: () => void;
+// };
+
 type Props = {
   open: boolean;
-
   onClose: () => void;
+
+  selectedCaisseId?: string;
+  selectedDevise?: string;
 };
 
 type Caisse = {
@@ -76,6 +84,8 @@ type Caisse = {
 export default function TransfertCaisseModal({
   open,
   onClose,
+  selectedCaisseId,
+  selectedDevise,
 }: Props) {
 
   /* ------------------------------------------------------------------------ */
@@ -88,17 +98,26 @@ export default function TransfertCaisseModal({
     reset,
     control,
   } =
-    useForm<CreateTransfertCaisseDto>(
-      {
-        defaultValues:
-          {
-            date_operation:
-              new Date()
-                .toISOString()
-                .split("T")[0],
-          },
-      }
-    );
+    useForm<CreateTransfertCaisseDto>({
+      defaultValues: {
+        caisse_source_id: selectedCaisseId,
+        devise: selectedDevise,
+        date_operation: new Date()
+          .toISOString()
+          .split("T")[0],
+      },
+    });
+    // useForm<CreateTransfertCaisseDto>(
+    //   {
+    //     defaultValues:
+    //       {
+    //         date_operation:
+    //           new Date()
+    //             .toISOString()
+    //             .split("T")[0],
+    //       },
+    //   }
+    // );
 
   /* ------------------------------------------------------------------------ */
   /*                                  CAISSES                                 */
@@ -107,8 +126,6 @@ export default function TransfertCaisseModal({
   const {
     data:
       response,
-
-    isLoading,
   } =
     useCaisses(
       1,
@@ -163,12 +180,16 @@ export default function TransfertCaisseModal({
           () => {
 
             reset({
+              caisse_source_id:
+                selectedCaisseId,
+
+              devise:
+                selectedDevise,
+
               date_operation:
                 new Date()
                   .toISOString()
-                  .split(
-                    "T"
-                  )[0],
+                  .split("T")[0],
             });
 
             onClose();
@@ -217,6 +238,12 @@ export default function TransfertCaisseModal({
       c.devise
     } • ${agence}`;
   };
+
+  const selectedCaisseInfo =
+  caisses.find(
+    (c) =>
+      c.id === selectedCaisseId
+  );
 
   /* ------------------------------------------------------------------------ */
   /*                                   RENDER                                 */
@@ -467,63 +494,44 @@ export default function TransfertCaisseModal({
                   Caisse source
                 </label>
 
-                <select
+                {/* valeur envoyée à l'API */}
+
+                <input
+                  type="hidden"
                   {...register(
                     "caisse_source_id",
                     {
                       required: true,
                     }
                   )}
+                />
+
+                {/* affichage readonly */}
+
+                <input
+                  type="text"
+                  readOnly
+                  value={
+                    selectedCaisseInfo
+                      ? formatCaisse(
+                          selectedCaisseInfo
+                        )
+                      : "Aucune caisse sélectionnée"
+                  }
                   className="
                     h-14
                     w-full
                     rounded-2xl
                     border
                     border-slate-200
-                    bg-white
+                    bg-slate-100
                     px-4
                     text-sm
+                    font-medium
                     text-slate-700
-                    outline-none
-                    transition-all
-                    focus:border-indigo-400
-                    focus:ring-4
-                    focus:ring-indigo-100
+                    cursor-not-allowed
                   "
-                >
-
-                  <option value="">
-                    {isLoading
-                      ? "Chargement..."
-                      : "Sélectionner une caisse source"}
-                  </option>
-
-                  {caisses
-                    .filter(
-                      (c) =>
-                        c.type ===
-                        "AGENCE"
-                    )
-                    .map(
-                      (c) => (
-
-                        <option
-                          key={
-                            c.id
-                          }
-                          value={
-                            c.id
-                          }
-                        >
-                          {formatCaisse(
-                            c
-                          )}
-                        </option>
-
-                      )
-                    )}
-
-                </select>
+                />
 
               </div>
 

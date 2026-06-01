@@ -10,7 +10,6 @@ import {
 
 import {
   useEffect,
-  useMemo,
   useState,
 } from "react";
 
@@ -34,32 +33,29 @@ import {
 } from "../hooks/useRetrait";
 
 import {
-  useCaisses,
-} from "../../caisse/hooks/useCaisses";
-
-import {
   useAuthStore,
 } from "../../../app/store";
+import SelectRetraitCaisseModal from "./SelectRetraitCaisseModal";
 
 /* -------------------------------------------------------------------------- */
 /*                                   TYPES                                    */
 /* -------------------------------------------------------------------------- */
 
-type Caisse = {
-  id: string;
+// type Caisse = {
+//   id: string;
 
-  code_caisse: string;
+//   code_caisse: string;
 
-  solde: number;
+//   solde: number;
 
-  devise: string;
+//   devise: string;
 
-  type?: string;
-};
+//   type?: string;
+// };
 
-type SelectedTransfert = {
-  code_reference: string;
-};
+// type SelectedTransfert = {
+//   code_reference: string;
+// };
 
 type FormData = {
   code_reference: string;
@@ -73,9 +69,9 @@ type FormData = {
   date_operation: string;
 };
 
-type Props = {
-  selected?: SelectedTransfert | null;
-};
+// type Props = {
+//   selected?: SelectedTransfert | null;
+// };
 
 type MessageState = {
   variant:
@@ -89,26 +85,11 @@ type MessageState = {
   message: string;
 };
 
-type PaginatedCaissesResponse =
-  {
-    data: Caisse[];
-
-    total: number;
-
-    page: number;
-
-    limit: number;
-
-    totalPages: number;
-  };
-
 /* -------------------------------------------------------------------------- */
 /*                                   PAGE                                     */
 /* -------------------------------------------------------------------------- */
 
-export default function RetraitForm({
-  selected,
-}: Props) {
+export default function RetraitForm() {
 
   /* ------------------------------------------------------------------------ */
   /*                                    FORM                                  */
@@ -121,6 +102,26 @@ export default function RetraitForm({
     setValue,
   } =
     useForm<FormData>();
+
+  const [
+    openSelectCaisse,
+    setOpenSelectCaisse,
+  ] = useState(false);
+
+  const [
+    selectedCaisseId,
+    setSelectedCaisseId,
+  ] = useState("");
+
+  const [
+    selectedCaisseLabel,
+    setSelectedCaisseLabel,
+  ] = useState("");
+
+  const [
+    selectedDevise,
+    setSelectedDevise,
+  ] = useState("");
 
   /* ------------------------------------------------------------------------ */
   /*                                   STORE                                  */
@@ -140,30 +141,6 @@ export default function RetraitForm({
     isPending,
   } =
     useRetrait();
-
-  /* ------------------------------------------------------------------------ */
-  /*                                   CAISSES                                */
-  /* ------------------------------------------------------------------------ */
-
-  const {
-    data: response,
-  } =
-    useCaisses(
-      1,
-      100
-    ) as {
-      data?: PaginatedCaissesResponse;
-    };
-
-  const caisses:
-    Caisse[] =
-      useMemo(
-        () =>
-          response?.data ||
-          [],
-        [response]
-      );
-
   /* ------------------------------------------------------------------------ */
   /*                                  MESSAGE                                 */
   /* ------------------------------------------------------------------------ */
@@ -182,19 +159,18 @@ export default function RetraitForm({
 
   useEffect(() => {
 
-    if (selected) {
+    if (selectedCaisseId) {
 
       setValue(
-        "code_reference",
-        selected.code_reference
+        "caisse_id",
+        selectedCaisseId
       );
     }
 
   }, [
-    selected,
+    selectedCaisseId,
     setValue,
   ]);
-
   /* ------------------------------------------------------------------------ */
   /*                              DEFAULT DATE                                */
   /* ------------------------------------------------------------------------ */
@@ -650,12 +626,7 @@ export default function RetraitForm({
           {/* CAISSE                                                     */}
           {/* ---------------------------------------------------------- */}
 
-          <div
-            className="
-              mt-6
-            "
-          >
-
+          <div className="mt-6">
             <label
               className="
                 mb-2
@@ -668,64 +639,130 @@ export default function RetraitForm({
               Caisse de retrait
             </label>
 
-            <select
+            <input
+              type="hidden"
               {...register(
                 "caisse_id",
                 {
-                  required:
-                    true,
+                  required: true,
                 }
               )}
+            />
+
+            <div
               className="
-                h-14
-                w-full
-                rounded-2xl
-                border
-                border-slate-200
-                bg-white
-                px-4
-                text-sm
-                text-slate-700
-                outline-none
-                transition-all
-                focus:border-red-400
-                focus:ring-4
-                focus:ring-red-100
+                flex
+                flex-col
+                gap-3
+                md:flex-row
+                md:items-stretch
               "
             >
 
-              <option value="">
-                Sélectionner une caisse
-              </option>
+              <Button
+                type="button"
+                variant="primary"
+                onClick={() =>
+                  setOpenSelectCaisse(
+                    true
+                  )
+                }
+                className="
+                  h-14
+                  rounded-2xl
+                  bg-green-600
+                  px-6
+                  hover:bg-green-700
+                  shrink-0
+                "
+              >
+                Choisir une caisse
+              </Button>
 
-              {caisses.map(
-                (
-                  caisse
-                ) => (
+              <div
+                className="
+                  flex-1
+                  rounded-2xl
+                  border
+                  border-slate-200
+                  bg-slate-50
+                  px-5
+                  py-3
+                "
+              >
 
-                  <option
-                    key={
-                      caisse.id
-                    }
-                    value={
-                      caisse.id
-                    }
+                {selectedCaisseId ? (
+
+                  <div
+                    className="
+                      flex
+                      items-center
+                      justify-between
+                      gap-4
+                    "
                   >
-                    {
-                      caisse.code_caisse
-                    }{" "}
-                    •{" "}
-                    {
-                      caisse.solde
-                    }{" "}
-                    {
-                      caisse.devise
-                    }
-                  </option>
-                )
-              )}
 
-            </select>
+                    <div>
+
+                      <p
+                        className="
+                          text-xs
+                          uppercase
+                          tracking-wide
+                          text-slate-400
+                        "
+                      >
+                        Caisse sélectionnée
+                      </p>
+
+                      <p
+                        className="
+                          mt-1
+                          text-sm
+                          font-semibold
+                          text-slate-900
+                        "
+                      >
+                        {selectedCaisseLabel}
+                      </p>
+
+                    </div>
+
+                    <div
+                      className="
+                        rounded-xl
+                        bg-green-100
+                        px-3
+                        py-1.5
+                        text-sm
+                        font-semibold
+                        text-green-700
+                      "
+                    >
+                      {selectedDevise}
+                    </div>
+
+                  </div>
+
+                ) : (
+
+                  <div
+                    className="
+                      flex
+                      h-full
+                      items-center
+                      text-sm
+                      text-slate-400
+                    "
+                  >
+                    Aucune caisse sélectionnée
+                  </div>
+
+                )}
+
+              </div>
+
+            </div>
 
           </div>
 
@@ -768,6 +805,28 @@ export default function RetraitForm({
         </section>
 
       </form>
+
+      <SelectRetraitCaisseModal
+        open={openSelectCaisse}
+        onClose={() =>
+          setOpenSelectCaisse(false)
+        }
+        onSelect={(caisse) => {
+
+          setSelectedCaisseId(
+            caisse.id
+          );
+
+          setSelectedDevise(
+            caisse.devise
+          );
+
+          setSelectedCaisseLabel(
+            caisse.code_caisse
+          );
+
+        }}
+      />
 
     </div>
   );

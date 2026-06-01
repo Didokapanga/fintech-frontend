@@ -55,6 +55,7 @@ from "../components/TransfertFormModal";
 import Pagination
 from "../../../components/ui/Pagination";
 import { useNavigate } from "react-router-dom";
+import SelectAgentCaisseModal from "../components/SelectAgentCaisseModal";
 
 /* -------------------------------------------------------------------------- */
 /*                                    PAGE                                    */
@@ -69,10 +70,10 @@ export default function TransfertClientPage() {
   const navigate =
   useNavigate();
 
-  const [
-    open,
-    setOpen,
-  ] = useState(false);
+  // const [
+  //   open,
+  //   setOpen,
+  // ] = useState(false);
 
   const [
     page,
@@ -93,6 +94,17 @@ export default function TransfertClientPage() {
     selectedAgence,
     setSelectedAgence,
   ] = useState("");
+
+  const [openForm, setOpenForm] = useState(false);
+
+  const [openCaisseModal, setOpenCaisseModal] =
+    useState(false);
+
+  const [selectedCaisseId, setSelectedCaisseId] =
+    useState("");
+
+  const [selectedDevise, setSelectedDevise] =
+    useState("");
 
   /* ------------------------------------------------------------------------ */
   /*                                    AUTH                                  */
@@ -802,8 +814,8 @@ export default function TransfertClientPage() {
           </div>
 
           <Button
-            onClick={() =>
-              setOpen(true)
+           onClick={() =>
+              setOpenCaisseModal(true)
             }
             className="
               h-12
@@ -1042,14 +1054,42 @@ export default function TransfertClientPage() {
 
       {/* MODAL */}
 
-      {open && (
+      <SelectAgentCaisseModal
+        open={openCaisseModal}
+        onClose={() =>
+          setOpenCaisseModal(false)
+        }
+        onSelect={(
+          caisseId,
+          devise
+        ) => {
+          setSelectedCaisseId(
+            caisseId
+          );
+
+          setSelectedDevise(
+            devise
+          );
+
+          setOpenForm(true);
+        }}
+      />
+
+      {openForm && (
 
         <TransfertClientModal
-          open={open}
+          open={openForm}
           onClose={() =>
-            setOpen(false)
+            setOpenForm(false)
+          }
+          selectedCaisseId={
+            selectedCaisseId
+          }
+          selectedDevise={
+            selectedDevise
           }
         />
+
       )}
 
     </div>

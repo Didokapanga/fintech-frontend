@@ -12,7 +12,7 @@ import {
   Wallet,
 } from "lucide-react";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 
 import {
@@ -60,7 +60,12 @@ type Agence = {
 
 type Props = {
   open: boolean;
+
   onClose: () => void;
+
+  selectedCaisseId: string;
+
+  selectedDevise: string;
 };
 
 type MessageState = {
@@ -96,6 +101,8 @@ type CreateTransfertResponse =
 export default function TransfertFormModal({
   open,
   onClose,
+  selectedCaisseId,
+  selectedDevise,
 }: Props) {
 
   /* ------------------------------------------------------------------------ */
@@ -106,9 +113,7 @@ export default function TransfertFormModal({
     register,
     handleSubmit,
     reset,
-    formState: {
-      errors,
-    },
+    setValue,
   } =
     useForm<CreateTransfertClientDto>();
 
@@ -141,6 +146,30 @@ export default function TransfertFormModal({
     Caisse[] =
       caisseResponse?.data ||
       [];
+
+  useEffect(() => {
+
+    if (
+      selectedCaisseId &&
+      selectedDevise
+    ) {
+
+      setValue(
+        "caisse_id",
+        selectedCaisseId
+      );
+
+      setValue(
+        "devise",
+        selectedDevise
+      );
+    }
+
+  }, [
+    selectedCaisseId,
+    selectedDevise,
+    setValue,
+  ]);
 
   const {
     data: agences =
@@ -369,6 +398,20 @@ export default function TransfertFormModal({
             </div>
           )}
 
+          <input
+            type="hidden"
+            {...register(
+              "caisse_id"
+            )}
+          />
+
+          <input
+            type="hidden"
+            {...register(
+              "devise"
+            )}
+          />
+
           <form
             onSubmit={handleSubmit(
               onSubmit
@@ -409,55 +452,30 @@ export default function TransfertFormModal({
                     Caisse source
                   </Label>
 
-                  <select
-                    {...register(
-                      "caisse_id",
-                      {
-                        required:
-                          "La caisse est obligatoire",
-                      }
-                    )}
-                    className="
-                      form-select
-                    "
-                  >
-
-                    <option value="">
-                      Sélectionner une caisse
-                    </option>
-
-                    {caisses.map(
-                      (
-                        caisse
-                      ) => (
-
-                        <option
-                          key={
-                            caisse.id
-                          }
-                          value={
-                            caisse.id
-                          }
-                        >
-                          {
-                            caisse.code_caisse
-                          }{" "}
-                          {caisse.devise
-                            ? `(${caisse.devise})`
-                            : ""}
-                        </option>
-                      )
-                    )}
-
-                  </select>
-
-                  <FieldError>
-                    {
-                      errors
-                        .caisse_id
-                        ?.message
+                  <input
+                    type="text"
+                    readOnly
+                    value={
+                      caisses.find(
+                        c =>
+                          c.id ===
+                          selectedCaisseId
+                      )?.code_caisse || ""
                     }
-                  </FieldError>
+                    className="
+                      h-12
+                      w-full
+                      rounded-2xl
+                      border
+                      border-slate-200
+                      bg-slate-100
+                      px-4
+                      text-sm
+                      font-medium
+                      text-slate-700
+                      cursor-not-allowed
+                    "
+                  />
 
                 </Field>
 
@@ -469,28 +487,24 @@ export default function TransfertFormModal({
                     Devise
                   </Label>
 
-                  <select
-                    {...register(
-                      "devise"
-                    )}
+                  <input
+                    type="text"
+                    readOnly
+                    value={selectedDevise}
                     className="
-                      form-select
+                      h-12
+                      w-full
+                      rounded-2xl
+                      border
+                      border-slate-200
+                      bg-slate-100
+                      px-4
+                      text-sm
+                      font-medium
+                      text-slate-700
+                      cursor-not-allowed
                     "
-                  >
-
-                    <option value="">
-                      Sélectionner
-                    </option>
-
-                    <option value="USD">
-                      USD
-                    </option>
-
-                    <option value="CDF">
-                      CDF
-                    </option>
-
-                  </select>
+                  />
 
                 </Field>
 
@@ -1326,25 +1340,25 @@ function Label({
 /*                                FIELD ERROR                                 */
 /* -------------------------------------------------------------------------- */
 
-function FieldError({
-  children,
-}: {
-  children?: React.ReactNode;
-}) {
+// function FieldError({
+//   children,
+// }: {
+//   children?: React.ReactNode;
+// }) {
 
-  if (!children)
-    return null;
+//   if (!children)
+//     return null;
 
-  return (
-    <span
-      className="
-        mt-2
-        text-xs
-        font-medium
-        text-red-500
-      "
-    >
-      {children}
-    </span>
-  );
-}
+//   return (
+//     <span
+//       className="
+//         mt-2
+//         text-xs
+//         font-medium
+//         text-red-500
+//       "
+//     >
+//       {children}
+//     </span>
+//   );
+// }

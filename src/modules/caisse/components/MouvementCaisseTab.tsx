@@ -22,6 +22,10 @@ import type {
   Column,
 } from "../../../components/ui/Table.types";
 
+import {
+  useCaisses,
+} from "../hooks/useCaisses";
+
 import Pagination from "../../../components/ui/Pagination";
 
 import {
@@ -33,6 +37,9 @@ import type {
 } from "../../mouvement/services/mouvement.service";
 
 import MouvementFormModal from "../../mouvement/components/MouvementFormModal";
+
+import SelectCaisseModal
+from "../../transfert-caisse/components/SelectCaisseModal";
 
 /* -------------------------------------------------------------------------- */
 /*                                  COMPONENT                                 */
@@ -72,6 +79,21 @@ export default function MouvementCaisseTab() {
   const [
     dateOperation,
     setDateOperation,
+  ] = useState("");
+
+  const [
+    openSelectCaisse,
+    setOpenSelectCaisse,
+  ] = useState(false);
+
+  const [
+    selectedCaisseId,
+    setSelectedCaisseId,
+  ] = useState("");
+
+  const [
+    selectedDevise,
+    setSelectedDevise,
   ] = useState("");
 
   /* ------------------------------------------------------------------------ */
@@ -114,6 +136,20 @@ export default function MouvementCaisseTab() {
   const meta =
     data?.meta;
 
+  const {
+    data: caissesResponse,
+  } = useCaisses(
+    1,
+    100
+  );
+
+  const caisses =
+    useMemo(
+      () =>
+        caissesResponse?.data || [],
+      [caissesResponse]
+    );
+
   /* ------------------------------------------------------------------------ */
   /*                                  HELPERS                                 */
   /* ------------------------------------------------------------------------ */
@@ -140,6 +176,27 @@ export default function MouvementCaisseTab() {
           return "bg-gray-100 text-gray-600";
       }
     };
+
+  const getCaisseLabel = (
+    caisseId: string
+  ) => {
+
+  const caisse =
+    caisses.find(
+      (
+        c: {
+          id: string;
+          code_caisse: string;
+          devise: string;
+        }
+      ) =>
+        c.id === caisseId
+    );
+    
+    return caisse
+      ? `${caisse.code_caisse} (${caisse.devise})`
+      : "-";
+  };
 
   /* ------------------------------------------------------------------------ */
   /*                                  COLUMNS                                 */
@@ -170,6 +227,48 @@ export default function MouvementCaisseTab() {
             >
               {value || "-"}
             </span>
+
+          ),
+      },
+
+      {
+        header:
+          "Caisse",
+
+        accessor:
+          "caisse_id",
+
+        render:
+          (value) => (
+
+            <div
+              className="
+                flex
+                flex-col
+              "
+            >
+
+              <span
+                className="
+                  font-semibold
+                  text-slate-800
+                "
+              >
+                {getCaisseLabel(
+                  String(value)
+                )}
+              </span>
+
+              <span
+                className="
+                  text-xs
+                  text-slate-400
+                "
+              >
+                Caisse concernée
+              </span>
+
+            </div>
 
           ),
       },
@@ -392,9 +491,7 @@ export default function MouvementCaisseTab() {
 
         <Button
           onClick={() =>
-            setOpenMouvement(
-              true
-            )
+            setOpenSelectCaisse(true)
           }
         >
 
@@ -712,16 +809,40 @@ export default function MouvementCaisseTab() {
 
       {/* MODAL */}
 
+      <SelectCaisseModal
+        open={openSelectCaisse}
+        onClose={() =>
+          setOpenSelectCaisse(false)
+        }
+        onSelect={(
+          caisseId,
+          devise
+        ) => {
+
+          setSelectedCaisseId(
+            caisseId
+          );
+
+          setSelectedDevise(
+            devise
+          );
+
+          setOpenMouvement(true);
+        }}
+      />
+
       {openMouvement && (
 
         <MouvementFormModal
-          open={
-            openMouvement
-          }
+          open={openMouvement}
           onClose={() =>
-            setOpenMouvement(
-              false
-            )
+            setOpenMouvement(false)
+          }
+          selectedCaisseId={
+            selectedCaisseId
+          }
+          selectedDevise={
+            selectedDevise
           }
         />
 
