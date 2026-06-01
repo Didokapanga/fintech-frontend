@@ -158,49 +158,49 @@ export default function RetraitPendingTab() {
         /* REF                                                            */
         /* -------------------------------------------------------------- */
 
-        {
-          header:
-            "Référence",
+        // {
+        //   header:
+        //     "Référence",
 
-          accessor:
-            "code_reference",
+        //   accessor:
+        //     "code_reference",
 
-          render: (
-            value
-          ) => (
+        //   render: (
+        //     value
+        //   ) => (
 
-            <div
-              className="
-                flex
-                flex-col
-              "
-            >
+        //     <div
+        //       className="
+        //         flex
+        //         flex-col
+        //       "
+        //     >
 
-              <span
-                className="
-                  font-mono
-                  text-xs
-                  font-semibold
-                  tracking-wide
-                  text-slate-700
-                "
-              >
-                {value}
-              </span>
+        //       <span
+        //         className="
+        //           font-mono
+        //           text-xs
+        //           font-semibold
+        //           tracking-wide
+        //           text-slate-700
+        //         "
+        //       >
+        //         {value}
+        //       </span>
 
-              <span
-                className="
-                  mt-1
-                  text-[11px]
-                  text-slate-400
-                "
-              >
-                Transaction
-              </span>
+        //       <span
+        //         className="
+        //           mt-1
+        //           text-[11px]
+        //           text-slate-400
+        //         "
+        //       >
+        //         Transaction
+        //       </span>
 
-            </div>
-          ),
-        },
+        //     </div>
+        //   ),
+        // },
 
         /* -------------------------------------------------------------- */
         /* EXPEDITEUR                                                     */
@@ -362,32 +362,32 @@ export default function RetraitPendingTab() {
         /* PIECE                                                          */
         /* -------------------------------------------------------------- */
 
-        {
-          header:
-            "Pièce",
+        // {
+        //   header:
+        //     "Pièce",
 
-          accessor:
-            "exp_numero_piece",
+        //   accessor:
+        //     "exp_numero_piece",
 
-          render: (
-            value
-          ) => (
+        //   render: (
+        //     value
+        //   ) => (
 
-            <span
-              className="
-                rounded-xl
-                bg-slate-100
-                px-3
-                py-2
-                font-mono
-                text-xs
-                text-slate-600
-              "
-            >
-              {value}
-            </span>
-          ),
-        },
+        //     <span
+        //       className="
+        //         rounded-xl
+        //         bg-slate-100
+        //         px-3
+        //         py-2
+        //         font-mono
+        //         text-xs
+        //         text-slate-600
+        //       "
+        //     >
+        //       {value}
+        //     </span>
+        //   ),
+        // },
 
         /* -------------------------------------------------------------- */
         /* DATE                                                           */
