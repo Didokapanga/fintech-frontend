@@ -53,9 +53,9 @@ import SelectRetraitCaisseModal from "./SelectRetraitCaisseModal";
 //   type?: string;
 // };
 
-// type SelectedTransfert = {
-//   code_reference: string;
-// };
+type SelectedTransfert = {
+  code_reference: string;
+};
 
 type FormData = {
   code_reference: string;
@@ -69,9 +69,9 @@ type FormData = {
   date_operation: string;
 };
 
-// type Props = {
-//   selected?: SelectedTransfert | null;
-// };
+type Props = {
+  selected?: SelectedTransfert | null;
+};
 
 type MessageState = {
   variant:
@@ -89,7 +89,9 @@ type MessageState = {
 /*                                   PAGE                                     */
 /* -------------------------------------------------------------------------- */
 
-export default function RetraitForm() {
+export default function RetraitForm({
+  selected,
+  }: Props) {
 
   /* ------------------------------------------------------------------------ */
   /*                                    FORM                                  */
@@ -171,6 +173,23 @@ export default function RetraitForm() {
     selectedCaisseId,
     setValue,
   ]);
+
+  useEffect(() => {
+
+  if (selected) {
+
+    setValue(
+      "code_reference",
+      selected.code_reference
+    );
+
+  }
+
+}, [
+  selected,
+  setValue,
+]);
+
   /* ------------------------------------------------------------------------ */
   /*                              DEFAULT DATE                                */
   /* ------------------------------------------------------------------------ */

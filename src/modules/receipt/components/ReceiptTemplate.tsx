@@ -2,6 +2,7 @@
 // 📄 src/modules/receipt/components/ReceiptTemplate.tsx
 // ============================================================
 
+import { useNavigate } from "react-router-dom";
 import type {
   ReceiptResponse,
 } from "../services/receipt.service";
@@ -14,6 +15,8 @@ type Props = {
 export default function ReceiptTemplate({
   receipt,
 }: Props) {
+
+  const navigate = useNavigate();
 
   /**
    * ============================================================
@@ -398,24 +401,54 @@ export default function ReceiptTemplate({
       {/* ACTION */}
       {/* ===================================================== */}
 
-      <button
-        onClick={handlePrint}
+      <div
         className="
           mt-5
-          w-full
-          rounded-xl
-          bg-black
-          py-3
-          text-[12px]
-          font-semibold
-          text-white
-          transition-all
-          hover:bg-slate-800
+          flex
+          gap-3
           print:hidden
         "
       >
-        Imprimer
-      </button>
+
+        <button
+          onClick={() =>
+            navigate(-1)
+          }
+          className="
+            flex-1
+            rounded-xl
+            border
+            border-slate-300
+            bg-white
+            py-3
+            text-[12px]
+            font-semibold
+            text-slate-700
+            transition-all
+            hover:bg-slate-100
+          "
+        >
+          ← Retour
+        </button>
+
+        <button
+          onClick={handlePrint}
+          className="
+            flex-1
+            rounded-xl
+            bg-red-600
+            py-3
+            text-[12px]
+            font-semibold
+            text-white
+            transition-all
+            hover:bg-red-700
+          "
+        >
+          Imprimer
+        </button>
+
+      </div>
 
     </div>
   );
