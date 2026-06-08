@@ -587,6 +587,53 @@ export default function TransfertClientPage() {
 
         {
           header:
+            "Commission",
+
+          accessor:
+            "commission",
+
+          render: (
+            value,
+            row
+          ) => {
+
+            const commission =
+              typeof value ===
+              "number"
+                ? value
+                : Number(
+                    value
+                  );
+
+            return (
+
+              <div
+                className="
+                  flex
+                  flex-col
+                "
+              >
+
+                <span
+                  className="
+                    text-base
+                    font-semibold
+                    text-blue-600
+                  "
+                >
+                  {commission.toLocaleString()}{" "}
+                  {
+                    row.devise
+                  }
+                </span>
+
+              </div>
+            );
+          },
+        },
+
+        {
+          header:
             "Statut",
 
           accessor:

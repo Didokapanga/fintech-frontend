@@ -24,6 +24,10 @@ import {
 type Props = {
   open: boolean;
   onClose: () => void;
+  caisse?: Caisse;
+  selectedCaisseId: string;
+  selectedDevise: string;
+  selectedCodeCaisse: string;
 };
 
 type Caisse = {
@@ -56,6 +60,9 @@ type FormData = {
 export default function ClotureCaisseModal({
   open,
   onClose,
+  selectedCaisseId,
+  selectedDevise,
+  selectedCodeCaisse,
 }: Props) {
 
   const {
@@ -107,6 +114,22 @@ export default function ClotureCaisseModal({
     caisses.find(
       (c) => c.id === caisseId
     );
+
+  useEffect(() => {
+
+    if (selectedCaisseId) {
+
+      setValue(
+        "caisse_id",
+        selectedCaisseId
+      );
+
+    }
+
+  }, [
+    selectedCaisseId,
+    setValue,
+  ]);
 
   /**
    * =========================================
@@ -187,43 +210,51 @@ export default function ClotureCaisseModal({
               Caisse
             </label>
 
-            <select
-              {...register(
-                "caisse_id",
-                {
-                  required: true,
-                }
-              )}
-              className="w-full border rounded-xl px-3 py-2"
+            <input
+              type="hidden"
+              {...register("caisse_id")}
+            />
+
+            <div
+              className="
+                rounded-2xl
+                border
+                border-slate-200
+                bg-slate-50
+                p-4
+              "
             >
 
-              <option value="">
-                Sélectionner une caisse
-              </option>
+              <p
+                className="
+                  text-xs
+                  uppercase
+                  text-slate-400
+                "
+              >
+                Caisse sélectionnée
+              </p>
 
-              {caisses
-                .filter(
-                  (c) =>
-                    c.state ===
-                    "OUVERTE"
-                )
-                .map((c) => (
+              <p
+                className="
+                  mt-1
+                  font-semibold
+                  text-slate-900
+                "
+              >
+                {selectedCodeCaisse}
+              </p>
 
-                  <option
-                    key={c.id}
-                    value={c.id}
-                  >
+              <p
+                className="
+                  text-sm
+                  text-slate-500
+                "
+              >
+                {selectedDevise}
+              </p>
 
-                    {c.code_caisse} (
-                    {Number(
-                      c.solde
-                    ).toLocaleString()}{" "}
-                    {c.devise}
-                    )
-
-                  </option>
-                ))}
-            </select>
+            </div>
           </div>
 
           {/* SOLDE SYSTEME */}

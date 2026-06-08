@@ -13,7 +13,10 @@ import {
 } from "lucide-react";
 
 import { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
+import {
+  useForm,
+  useWatch,
+} from "react-hook-form";
 
 import {
   Button,
@@ -114,8 +117,16 @@ export default function TransfertFormModal({
     handleSubmit,
     reset,
     setValue,
-  } =
-    useForm<CreateTransfertClientDto>();
+    control,
+     formState: { errors },
+  } = useForm<CreateTransfertClientDto>();
+
+  const montant = Number(
+    useWatch({
+      control,
+      name: "montant",
+    }) || 0
+  );
 
   /* ------------------------------------------------------------------------ */
   /*                                   STORE                                  */
@@ -146,6 +157,22 @@ export default function TransfertFormModal({
     Caisse[] =
       caisseResponse?.data ||
       [];
+
+  
+  const commission =
+    calculateCommission(
+      montant
+    ).toFixed(2);
+
+  useEffect(() => {
+    setValue(
+      "commission",
+      Number(commission)
+    );
+  }, [
+    commission,
+    setValue,
+  ]);
 
   useEffect(() => {
 
@@ -198,6 +225,21 @@ export default function TransfertFormModal({
   const onSubmit = (
     data: CreateTransfertClientDto
   ) => {
+
+     if (
+        selectedDevise === "USD" &&
+        Number(data.montant) >= 10000
+      ) {
+
+        setAppMessage({
+          variant: "warning",
+          title: "Montant non autorisé",
+          message:
+            "Le montant maximum autorisé pour un transfert client est de 9 999 USD."
+        });
+
+        return;
+      }
 
     if (
       !user?.agence_id
@@ -276,6 +318,28 @@ export default function TransfertFormModal({
   /* ------------------------------------------------------------------------ */
   /*                                   RENDER                                 */
   /* ------------------------------------------------------------------------ */
+
+  function calculateCommission(
+    montant: number
+  ) {
+    if (montant >= 5 && montant <= 99) {
+      return montant * 0.0505;
+    }
+
+    if (montant >= 100 && montant <= 499) {
+      return montant * 0.05;
+    }
+
+    if (montant >= 500 && montant <= 999) {
+      return montant * 0.04;
+    }
+
+    if (montant >= 1000 && montant <= 9999) {
+      return montant * 0.03;
+    }
+
+    return 0;
+  }
 
   return (
     <Modal
@@ -1049,9 +1113,34 @@ export default function TransfertFormModal({
                   label="Montant"
                   placeholder="0.00"
                   {...register(
-                    "montant"
+                    "montant",
+                    {
+                      validate: (value) => {
+                        if (
+                          selectedDevise === "USD" &&
+                          Number(value) >= 10000
+                        ) {
+                          return "Le montant maximum autorisé est de 9 999 USD";
+                        }
+
+                        return true;
+                      },
+                    }
                   )}
                 />
+
+                {errors.montant && (
+                  <p
+                    className="
+                      mt-2
+                      text-sm
+                      font-medium
+                      text-red-600
+                    "
+                  >
+                    {errors.montant.message}
+                  </p>
+                )}
 
                 <div>
 
@@ -1129,14 +1218,32 @@ export default function TransfertFormModal({
                   )}
                 />
 
-                <Input
-                  type="number"
-                  label="Commission"
-                  placeholder="0.00"
-                  {...register(
-                    "commission"
-                  )}
-                />
+                <div>
+
+                  <Label>
+                    Commission
+                  </Label>
+
+                  <input
+                    type="text"
+                    readOnly
+                    value={commission}
+                    className="
+                      h-12
+                      w-full
+                      rounded-2xl
+                      border
+                      border-slate-200
+                      bg-slate-100
+                      px-4
+                      text-sm
+                      font-medium
+                      text-slate-700
+                      cursor-not-allowed
+                    "
+                  />
+
+                </div>
 
               </div>
 
@@ -1335,30 +1442,3 @@ function Label({
     </label>
   );
 }
-
-/* -------------------------------------------------------------------------- */
-/*                                FIELD ERROR                                 */
-/* -------------------------------------------------------------------------- */
-
-// function FieldError({
-//   children,
-// }: {
-//   children?: React.ReactNode;
-// }) {
-
-//   if (!children)
-//     return null;
-
-//   return (
-//     <span
-//       className="
-//         mt-2
-//         text-xs
-//         font-medium
-//         text-red-500
-//       "
-//     >
-//       {children}
-//     </span>
-//   );
-// }

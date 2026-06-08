@@ -29,6 +29,7 @@ import {
 import ClotureCaisseModal
 from "../../cloture-caisse/components/ClotureCaisseModal";
 import { useAuthStore } from "../../../app/store";
+import SelectAgentCaisseModal from "../../transfert-client/components/SelectAgentCaisseModal";
 
 /* ======================================================== */
 /* COMPONENT */
@@ -40,17 +41,6 @@ export default function CaissierDashboard() {
   /* STATE */
   /* ====================================================== */
 
-  const [
-    selectedCaisseId,
-    setSelectedCaisseId,
-  ] = useState<
-    string | null
-  >(null);
-
-  const [
-    openCloture,
-    setOpenCloture,
-  ] = useState(false);
 
   /**
    * ======================================================
@@ -83,6 +73,21 @@ export default function CaissierDashboard() {
     1,
     100
   );
+
+  const [openSelectCaisse, setOpenSelectCaisse] =
+  useState(false);
+
+  const [openCloture, setOpenCloture] =
+    useState(false);
+
+  const [selectedCaisseId, setSelectedCaisseId] =
+    useState("");
+
+  const [selectedDevise, setSelectedDevise] =
+    useState("");
+
+  const [selectedCodeCaisse, setSelectedCodeCaisse] =
+    useState("");
 
   /**
    * ======================================================
@@ -643,9 +648,7 @@ export default function CaissierDashboard() {
 
                 <button
                   onClick={() =>
-                    setOpenCloture(
-                      true
-                    )
+                   setOpenSelectCaisse(true)
                   }
 
                   className="
@@ -1058,7 +1061,7 @@ export default function CaissierDashboard() {
 
       </div>
 
-      {openCloture && (
+      {/* {openCloture && (
 
         <ClotureCaisseModal
           open={
@@ -1068,6 +1071,50 @@ export default function CaissierDashboard() {
             setOpenCloture(
               false
             )
+          }
+        />
+
+      )} */}
+
+      <SelectAgentCaisseModal
+        open={openSelectCaisse}
+        onClose={() =>
+          setOpenSelectCaisse(false)
+        }
+        onSelect={(
+          caisseId,
+          devise,
+        ) => {
+
+          setSelectedCaisseId(
+            caisseId
+          );
+
+          setSelectedDevise(
+            devise
+          );
+
+          setSelectedCodeCaisse("");
+
+          setOpenCloture(true);
+        }}
+      />
+
+      {openCloture && (
+
+        <ClotureCaisseModal
+          open={openCloture}
+          onClose={() =>
+            setOpenCloture(false)
+          }
+          selectedCaisseId={
+            selectedCaisseId
+          }
+          selectedDevise={
+            selectedDevise
+          }
+          selectedCodeCaisse={
+            selectedCodeCaisse
           }
         />
 
