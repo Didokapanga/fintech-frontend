@@ -1,11 +1,9 @@
 // src/modules/validation/components/ValidationCaisseTab.tsx
 
 import {
-  ArrowRightLeft,
   Check,
   Clock3,
   ShieldAlert,
-  Wallet2,
   X,
 } from "lucide-react";
 
@@ -36,46 +34,21 @@ import {
 } from "../../../hooks/useApiMutationWithFeedback";
 
 import {
-  useCaisses,
-} from "../../caisse/hooks/useCaisses";
-
-import {
   useTransfertsCaisseToProcess,
 } from "../../transfert-caisse/hooks/useTransfertCaisse";
 
 import type {
   TransfertCaisse,
-} from "../../transfert-caisse/services/transfertCaisse.service";
+} from "../../transfert-caisse/types";
 
 import {
   useValidateOperation,
 } from "../hooks/useValidation";
+import TransfertCaisseDetailsModal from "./TransfertCaisseDetailsModal";
 
 /* -------------------------------------------------------------------------- */
 /*                                   TYPES                                    */
 /* -------------------------------------------------------------------------- */
-
-type Caisse = {
-  id: string;
-
-  code_caisse: string;
-
-  devise: string;
-};
-
-type PaginatedCaissesResponse = {
-  data: Caisse[];
-
-  meta?: {
-    total: number;
-
-    page: number;
-
-    limit: number;
-
-    totalPages: number;
-  };
-};
 
 /* -------------------------------------------------------------------------- */
 /*                                 COMPONENT                                  */
@@ -92,6 +65,13 @@ export default function ValidationCaisseTab() {
     setPage,
   ] = useState(1);
 
+  const [
+    selectedTransfert,
+    setSelectedTransfert,
+  ] =
+    useState<
+      TransfertCaisse | null
+    >(null);
   /* ------------------------------------------------------------------------ */
   /*                                    USER                                  */
   /* ------------------------------------------------------------------------ */
@@ -100,12 +80,6 @@ export default function ValidationCaisseTab() {
     useAuthStore(
       (s) => s.user
     );
-
-  const isCaissier =
-    user
-      ?.role_name
-      ?.toUpperCase() ===
-    "CAISSIER";
 
   const canValidate =
     [
@@ -175,45 +149,10 @@ export default function ValidationCaisseTab() {
   /*                                  CAISSES                                 */
   /* ------------------------------------------------------------------------ */
 
-  const {
-    data:
-      caissesResponse,
-  } =
-    useCaisses(
-      1,
-      100
-    ) as {
-      data?: PaginatedCaissesResponse;
-    };
-
-  const caisses =
-    caissesResponse
-      ?.data || [];
-
   /* ------------------------------------------------------------------------ */
   /*                                  HELPERS                                 */
   /* ------------------------------------------------------------------------ */
 
-  const getCaisseLabel =
-    (
-      id: string
-    ) => {
-
-      const caisse =
-        caisses.find(
-          (
-            c
-          ) =>
-            c.id === id
-        );
-
-      return caisse
-        ? `${caisse.code_caisse} (${caisse.devise})`
-        : id.slice(
-            0,
-            8
-          );
-    };
 
   const getStatusBadge =
     (
@@ -281,24 +220,22 @@ export default function ValidationCaisseTab() {
     ) => {
 
       let niveau:
-        | "N1"
-        | "N2";
+      | "VALIDATION"
+      | "EXECUTION";
 
       if (
         row.statut ===
         "INITIE"
       ) {
 
-        niveau =
-          "N1";
+        niveau = "VALIDATION";
 
       } else if (
         row.statut ===
         "VALIDE"
       ) {
 
-        niveau =
-          "N2";
+        niveau = "EXECUTION";
 
       } else {
 
@@ -343,10 +280,9 @@ export default function ValidationCaisseTab() {
           "REJETE",
 
         niveau:
-          row.statut ===
-          "INITIE"
-            ? "N1"
-            : "N2",
+          row.statut === "INITIE"
+            ? "VALIDATION"
+            : "EXECUTION",
       });
     };
 
@@ -358,159 +294,140 @@ export default function ValidationCaisseTab() {
     Column<TransfertCaisse>[] =
       [
 
+        /* -------------------------------- */
+        /* REFERENCE                        */
+        /* -------------------------------- */
+
         {
           header:
-            "Caisse source",
+            "Référence",
 
           accessor:
-            "caisse_source_id",
+            "code_reference",
 
           render:
             (
-              value
+              value,
+              row
             ) => (
 
               <div
                 className="
                   flex
-                  min-w-[220px]
-                  items-center
-                  gap-3
+                  flex-col
                 "
               >
 
-                <div
+                <span
                   className="
-                    flex
-                    h-10
-                    w-10
-                    items-center
-                    justify-center
-                    rounded-xl
-                    bg-slate-100
-                    text-slate-600
+                    font-semibold
+                    text-slate-800
                   "
                 >
+                  {value}
+                </span>
 
-                  <Wallet2
-                    size={16}
-                  />
-
-                </div>
-
-                <div
+                <span
                   className="
-                    flex
-                    flex-col
+                    text-xs
+                    text-slate-400
                   "
                 >
-
-                  <span
-                    className="
-                      font-semibold
-                      text-slate-800
-                    "
-                  >
-                    {isCaissier
-                      ? "-"
-                      : getCaisseLabel(
-                          String(
-                            value
-                          )
-                        )}
-                  </span>
-
-                  <span
-                    className="
-                      text-xs
-                      text-slate-400
-                    "
-                  >
-                    Source
-                  </span>
-
-                </div>
+                  {
+                    row.created_by_name
+                  }
+                </span>
 
               </div>
 
             ),
         },
 
+        /* -------------------------------- */
+        /* FLUX                             */
+        /* -------------------------------- */
+
         {
           header:
-            "Caisse destination",
+            "Flux",
 
           accessor:
-            "caisse_destination_id",
+            "source_code_caisse",
 
           render:
             (
-              value
+              _v,
+              row
             ) => (
 
               <div
                 className="
                   flex
-                  min-w-[220px]
-                  items-center
-                  gap-3
+                  flex-col
                 "
               >
 
-                <div
+                <span
                   className="
-                    flex
-                    h-10
-                    w-10
-                    items-center
-                    justify-center
-                    rounded-xl
-                    bg-indigo-50
-                    text-indigo-600
+                    font-semibold
+                    text-slate-800
                   "
                 >
+                  {
+                    row.source_code_caisse
+                  }
+                </span>
 
-                  <ArrowRightLeft
-                    size={16}
-                  />
-
-                </div>
-
-                <div
+                <span
                   className="
-                    flex
-                    flex-col
+                    text-xs
+                    text-slate-400
                   "
                 >
+                  {
+                    row.agence_source_name
+                  }
+                </span>
 
-                  <span
-                    className="
-                      font-semibold
-                      text-slate-800
-                    "
-                  >
-                    {getCaisseLabel(
-                      String(
-                        value
-                      )
-                    )}
-                  </span>
+                <span
+                  className="
+                    my-1
+                    text-slate-300
+                  "
+                >
+                  →
+                </span>
 
-                  <span
-                    className="
-                      text-xs
-                      text-slate-400
-                    "
-                  >
-                    Destination
-                  </span>
+                <span
+                  className="
+                    font-semibold
+                    text-slate-800
+                  "
+                >
+                  {
+                    row.destination_code_caisse
+                  }
+                </span>
 
-                </div>
+                <span
+                  className="
+                    text-xs
+                    text-slate-400
+                  "
+                >
+                  {
+                    row.agence_destination_name
+                  }
+                </span>
 
               </div>
 
             ),
         },
+
+        /* -------------------------------- */
+        /* MONTANT                          */
+        /* -------------------------------- */
 
         {
           header:
@@ -523,50 +440,54 @@ export default function ValidationCaisseTab() {
             (
               value,
               row
-            ) => {
+            ) => (
 
-              const montant =
-                typeof value ===
-                "number"
-                  ? value
-                  : parseFloat(
-                      String(
-                        value
-                      ) || "0"
-                    );
+              <div
+                className="
+                  flex
+                  flex-col
+                "
+              >
 
-              return (
-                <div
+                <span
                   className="
-                    flex
-                    flex-col
+                    text-base
+                    font-bold
+                    text-emerald-600
                   "
                 >
+                  {Number(
+                    value
+                  ).toLocaleString()}
+                  {" "}
+                  {row.devise}
+                </span>
 
-                  <span
-                    className="
-                      text-base
-                      font-bold
-                      text-emerald-600
-                    "
-                  >
-                    {montant.toLocaleString()}{" "}
-                    {row.devise}
-                  </span>
+                <span
+                  className="
+                    text-xs
+                    text-slate-400
+                  "
+                >
+                  {
+                    row.date_operation
+                      ? new Date(
+                          row.date_operation
+                        ).toLocaleDateString(
+                          "fr-FR"
+                        )
+                      : "-"
+                  }
+                </span>
 
-                  <span
-                    className="
-                      text-xs
-                      text-slate-400
-                    "
-                  >
-                    Transfert caisse
-                  </span>
+              </div>
 
-                </div>
-              );
-            },
+            ),
         },
+
+        /* -------------------------------- */
+        /* STATUT                           */
+        /* -------------------------------- */
 
         {
           header:
@@ -611,36 +532,9 @@ export default function ValidationCaisseTab() {
             ),
         },
 
-        {
-          header:
-            "Date",
-
-          accessor:
-            "created_at",
-
-          render:
-            (
-              value
-            ) => (
-
-              <div
-                className="
-                  whitespace-nowrap
-                  text-sm
-                  text-slate-600
-                "
-              >
-                {new Date(
-                  String(
-                    value
-                  )
-                ).toLocaleString(
-                  "fr-FR"
-                )}
-              </div>
-
-            ),
-        },
+        /* -------------------------------- */
+        /* ACTIONS                          */
+        /* -------------------------------- */
 
         {
           header:
@@ -653,19 +547,30 @@ export default function ValidationCaisseTab() {
             (
               _v,
               row
-            ) =>
+            ) => (
 
-              canValidate
-                ? (
+              <div
+                className="
+                  flex
+                  items-center
+                  gap-2
+                "
+              >
 
-                  <div
-                    className="
-                      flex
-                      items-center
-                      gap-2
-                    "
-                  >
+                <Button
+                  variant="secondary"
+                  onClick={() =>
+                    setSelectedTransfert(
+                      row
+                    )
+                  }
+                >
+                  Détails
+                </Button>
 
+                {canValidate && (
+
+                  <>
                     <Button
                       onClick={() =>
                         handleValidate(
@@ -700,33 +605,15 @@ export default function ValidationCaisseTab() {
 
                       Rejeter
                     </Button>
+                  </>
 
-                  </div>
+                )}
 
-                )
-                : (
+              </div>
 
-                  <div
-                    className="
-                      flex
-                      items-center
-                      gap-2
-                      text-sm
-                      italic
-                      text-slate-400
-                    "
-                  >
-
-                    <ShieldAlert
-                      size={14}
-                    />
-
-                    Lecture seule
-
-                  </div>
-
-                ),
+            ),
         },
+
       ];
 
   /* ------------------------------------------------------------------------ */
@@ -858,6 +745,26 @@ export default function ValidationCaisseTab() {
         />
 
       )}
+
+      {
+        selectedTransfert && (
+
+          <TransfertCaisseDetailsModal
+            open={
+              !!selectedTransfert
+            }
+            transfert={
+              selectedTransfert
+            }
+            onClose={() =>
+              setSelectedTransfert(
+                null
+              )
+            }
+          />
+
+        )
+      }
 
     </div>
   );

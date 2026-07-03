@@ -1,7 +1,6 @@
 // src/modules/retrait/components/RetraitHistoryTab.tsx
 
 import {
-  CalendarRange,
   Filter,
   Printer,
   RefreshCcw,
@@ -33,12 +32,13 @@ import {
 } from "../hooks/useRetraitHistory";
 
 import {
-  type Retrait,
   getAllRetraits,
   getRetraitsByAgence,
 } from "../services/retrait.service";
 import Pagination from "../../../components/ui/Pagination";
 import { useNavigate } from "react-router-dom";
+import RetraitDetailsModal from "./RetraitDetailsModal";
+import type { Retrait } from "../types";
 
 /* -------------------------------------------------------------------------- */
 /*                                    PAGE                                    */
@@ -69,6 +69,13 @@ export default function RetraitHistoryTab() {
     selectedAgence,
     setSelectedAgence,
   ] = useState("");
+
+  const [
+    selectedRetrait,
+    setSelectedRetrait,
+  ] = useState<Retrait | null>(
+    null
+  );
 
   /* ------------------------------------------------------------------------ */
   /*                                    AUTH                                  */
@@ -258,397 +265,303 @@ export default function RetraitHistoryTab() {
   /*                                  COLUMNS                                 */
   /* ------------------------------------------------------------------------ */
 
-  const columns:
-    Column<Retrait>[] =
-      [
+  const columns: Column<Retrait>[] = [
 
-        /* -------------------------------------------------------------- */
-        /* EXPEDITEUR                                                     */
-        /* -------------------------------------------------------------- */
+    /* -------------------------------------------------------------- */
+    /* REFERENCE                                                      */
+    /* -------------------------------------------------------------- */
 
-        {
-          header:
-            "Expéditeur",
+    {
+      header: "Référence",
 
-          accessor:
-            "id",
+      accessor: "code_reference",
 
-          render: (
-            _v,
-            row
-          ) => {
+      render: (value, row) => (
 
-            const exp =
-              row.expediteur;
+        <div className="flex flex-col gap-1">
 
-            return (
-              <div
-                className="
-                  flex
-                  flex-col
-                "
-              >
+          <span
+            className="
+              font-semibold
+              text-slate-800
+            "
+          >
+            {String(value)}
+          </span>
 
-                {exp ? (
-
-                  <>
-
-                    <span
-                      className="
-                        font-semibold
-                        text-slate-800
-                      "
-                    >
-                      {exp.nom}{" "}
-                      {
-                        exp.postnom
-                      }
-                    </span>
-
-                    <span
-                      className="
-                        mt-1
-                        text-xs
-                        text-slate-400
-                      "
-                    >
-                      {
-                        exp.phone
-                      }
-                    </span>
-
-                  </>
-
-                ) : (
-
-                  <span
-                    className="
-                      text-sm
-                      italic
-                      text-slate-400
-                    "
-                  >
-                    Non disponible
-                  </span>
-                )}
-
-              </div>
-            );
-          },
-        },
-
-        /* -------------------------------------------------------------- */
-        /* DESTINATAIRE                                                   */
-        /* -------------------------------------------------------------- */
-
-        {
-          header:
-            "Destinataire",
-
-          accessor:
-            "numero_piece",
-
-          render: (
-            _v,
-            row
-          ) => {
-
-            const dest =
-              row.destinataire;
-
-            return (
-              <div
-                className="
-                  flex
-                  flex-col
-                "
-              >
-
-                {dest ? (
-
-                  <>
-
-                    <span
-                      className="
-                        font-semibold
-                        text-slate-800
-                      "
-                    >
-                      {dest.nom}{" "}
-                      {
-                        dest.postnom
-                      }
-                    </span>
-
-                    <span
-                      className="
-                        mt-1
-                        text-xs
-                        text-slate-400
-                      "
-                    >
-                      {
-                        dest.phone
-                      }
-                    </span>
-
-                  </>
-
-                ) : (
-
-                  <span
-                    className="
-                      text-sm
-                      italic
-                      text-slate-400
-                    "
-                  >
-                    Non disponible
-                  </span>
-                )}
-
-              </div>
-            );
-          },
-        },
-
-        /* -------------------------------------------------------------- */
-        /* PIECE                                                          */
-        /* -------------------------------------------------------------- */
-
-        {
-          header:
-            "Pièce",
-
-          accessor:
-            "montant",
-
-          render: (
-            _v,
-            row
-          ) => (
+          <div
+            className="
+              flex
+              items-center
+              gap-2
+            "
+          >
 
             <span
               className="
-                rounded-xl
-                bg-slate-100
-                px-3
-                py-2
-                font-mono
                 text-xs
-                text-slate-600
+                text-slate-400
               "
             >
-              {
-                row.numero_piece
-              }
+              {row.code_caisse}
             </span>
-          ),
-        },
 
-        /* -------------------------------------------------------------- */
-        /* MONTANT                                                        */
-        /* -------------------------------------------------------------- */
+            <span
+              className={`
+                inline-flex
+                items-center
+                rounded-full
+                border
+                px-2
+                py-0.5
+                text-[10px]
+                font-semibold
+                ${getStatusStyle(
+                  row.statut
+                )}
+              `}
+            >
+              {row.statut}
+            </span>
 
-        {
-          header:
-            "Montant",
+          </div>
 
-          accessor:
-            "statut",
+        </div>
+      ),
+    },
 
-          render: (
-            _v,
-            row
-          ) => (
+    /* -------------------------------------------------------------- */
+    /* BENEFICIAIRE                                                   */
+    /* -------------------------------------------------------------- */
 
-            <div
+    {
+      header: "Bénéficiaire",
+
+      accessor: "numero_piece",
+
+      render: (_v, row) => {
+
+        const dest =
+          row.destinataire;
+
+        return (
+
+          <div
+            className="
+              flex
+              flex-col
+            "
+          >
+
+            <span
               className="
-                flex
-                flex-col
+                font-semibold
+                text-slate-800
               "
             >
+              {dest
+                ? `${dest.nom} ${dest.postnom} ${dest.prenom}`
+                : "-"}
+            </span>
 
-              <span
-                className="
-                  text-base
-                  font-semibold
-                  text-emerald-600
-                "
-              >
-                {Number(
-                  row.montant ||
-                    0
-                ).toLocaleString()}{" "}
-                {row.devise}
-              </span>
-
-              <span
-                className="
-                  mt-1
-                  text-xs
-                  text-slate-400
-                "
-              >
-                Retrait validé
-              </span>
-
-            </div>
-          ),
-        },
-
-        /* -------------------------------------------------------------- */
-        /* STATUT                                                         */
-        /* -------------------------------------------------------------- */
-
-        {
-          header:
-            "Statut",
-
-          accessor:
-            "created_at",
-
-          render: (
-            _v,
-            row
-          ) => {
-
-            const s =
-              String(
-                row.statut ||
-                  ""
-              );
-
-            return (
-              <span
-                className={`
-                  inline-flex
-                  items-center
-                  rounded-full
-                  border
-                  px-3
-                  py-1
-                  text-xs
-                  font-semibold
-                  ${getStatusStyle(
-                    s
-                  )}
-                `}
-              >
-                {s}
-              </span>
-            );
-          },
-        },
-
-        /* -------------------------------------------------------------- */
-        /* DATE                                                           */
-        /* -------------------------------------------------------------- */
-
-        {
-          header:
-            "Date",
-
-          accessor:
-            "devise",
-
-          render: (
-            _v,
-            row
-          ) => (
-
-            <div
+            <span
               className="
-                flex
+                mt-1
+                text-xs
+                text-slate-400
+              "
+            >
+              {dest?.telephone ||
+                "-"}
+            </span>
+
+          </div>
+        );
+      },
+    },
+
+    /* -------------------------------------------------------------- */
+    /* MONTANT                                                        */
+    /* -------------------------------------------------------------- */
+
+    {
+      header: "Montant",
+
+      accessor: "montant",
+
+      render: (value, row) => (
+
+        <div
+          className="
+            flex
+            flex-col
+          "
+        >
+
+          <span
+            className="
+              text-base
+              font-semibold
+              text-emerald-600
+            "
+          >
+            {Number(
+              value
+            ).toLocaleString()}
+            {" "}
+            {row.devise}
+          </span>
+
+          <span
+            className="
+              mt-1
+              text-xs
+              text-slate-400
+            "
+          >
+            Total encaissé :
+            {" "}
+            {Number(
+              row.montant_total
+            ).toLocaleString()}
+            {" "}
+            {row.devise}
+          </span>
+
+        </div>
+      ),
+    },
+
+    /* -------------------------------------------------------------- */
+    /* AGENCE / AGENT                                                 */
+    /* -------------------------------------------------------------- */
+
+    {
+      header: "Agence",
+
+      accessor: "agence_name",
+
+      render: (value, row) => (
+
+        <div
+          className="
+            flex
+            flex-col
+          "
+        >
+
+          <span
+            className="
+              font-semibold
+              text-slate-800
+            "
+          >
+            {String(value)}
+          </span>
+
+          <span
+            className="
+              mt-1
+              text-xs
+              text-slate-400
+            "
+          >
+            {row.agent_name}
+          </span>
+
+        </div>
+      ),
+    },
+
+    /* -------------------------------------------------------------- */
+    /* ACTION                                                         */
+    /* -------------------------------------------------------------- */
+
+    {
+      header: "Action",
+
+      accessor: "id",
+
+      render: (_v, row) => (
+
+        <div
+          className="
+            flex
+            items-center
+            gap-2
+          "
+        >
+
+          <button
+            onClick={() =>
+              setSelectedRetrait(
+                row
+              )
+            }
+            className="
+              inline-flex
+              items-center
+              gap-2
+              rounded-xl
+              border
+              border-slate-200
+              bg-white
+              px-3
+              py-2
+              text-sm
+              font-medium
+              text-slate-700
+              transition-all
+              hover:bg-indigo-50
+              hover:text-indigo-600
+            "
+          >
+            Détails
+          </button>
+
+          {row.statut ===
+            "EXECUTE" && (
+
+            <button
+              onClick={() =>
+                navigate(
+                  `${basePath}/receipt/retrait/${row.id}`
+                )
+              }
+              className="
+                inline-flex
                 items-center
                 gap-2
+                rounded-xl
+                border
+                border-slate-200
+                bg-white
+                px-3
+                py-2
                 text-sm
-                text-slate-600
+                font-medium
+                text-slate-700
+                transition-all
+                hover:bg-emerald-50
+                hover:text-emerald-600
               "
             >
 
-              <CalendarRange
+              <Printer
                 size={15}
               />
 
-              {new Date(
-                String(
-                  row.date_operation ||
-                    row.created_at
-                )
-              ).toLocaleDateString(
-                "fr-FR"
-              )}
+              Imprimer
 
-            </div>
-          ),
-        },
+            </button>
 
-        {
-          header: "Actions",
+          )}
 
-          accessor: "id",
+        </div>
+      ),
+    },
 
-          render: (_v, row) => {
-
-            const canPrint =
-              row.statut === "EXECUTE";
-
-            return (
-
-              <div className="flex items-center gap-2">
-
-                {canPrint ? (
-
-                  <button
-                    onClick={() =>
-                      navigate(
-                        `${basePath}/receipt/retrait/${row.id}`
-                      )
-                    }
-                    className="
-                      inline-flex
-                      items-center
-                      gap-2
-                      rounded-xl
-                      border
-                      border-slate-200
-                      bg-white
-                      px-3
-                      py-2
-                      text-sm
-                      font-medium
-                      text-slate-700
-                      transition-all
-                      hover:bg-indigo-50
-                      hover:text-indigo-600
-                    "
-                  >
-                   <Printer
-                      size={16}
-                    />
-                    Imprimer
-                  </button>
-
-                ) : (
-
-                  <span
-                    className="
-                      text-xs
-                      text-slate-400
-                      italic
-                    "
-                  >
-                    Non disponible
-                  </span>
-
-                )}
-
-              </div>
-            );
-          },
-        }
-      ];
+  ];
 
   /* ------------------------------------------------------------------------ */
   /*                                   RESET                                  */
@@ -908,6 +821,16 @@ export default function RetraitHistoryTab() {
         loading={isLoading}
         emptyTitle="Aucun retrait trouvé"
         emptyDescription="Aucun retrait ne correspond actuellement aux filtres sélectionnés."
+      />
+
+      <RetraitDetailsModal
+        open={!!selectedRetrait}
+        retrait={selectedRetrait}
+        onClose={() =>
+          setSelectedRetrait(
+            null
+          )
+        }
       />
 
       {/* -------------------------------------------------------------- */}

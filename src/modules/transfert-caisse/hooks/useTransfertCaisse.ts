@@ -9,10 +9,10 @@ import {
 import {
   createTransfertCaisse,
   getTransferts,
-  type TransfertFilters,
 } from "../services/transfertCaisse.service";
 
 import { api } from "../../../services/api";
+import type { TransfertFilters } from "../types";
 
 // ✅ CREATE
 export const useCreateTransfertCaisse = () => {

@@ -32,14 +32,13 @@ import {
   useMouvements,
 } from "../../mouvement/hooks/useMouvement";
 
-import type {
-  MouvementCaisse,
-} from "../../mouvement/services/mouvement.service";
+import type { Caisse, CaisseDevise } from "../types";
 
 import MouvementFormModal from "../../mouvement/components/MouvementFormModal";
 
-import SelectCaisseModal
-from "../../transfert-caisse/components/SelectCaisseModal";
+import type { MouvementCaisse } from "../../mouvement/types";
+import { PermissionGate } from "../../../components/auth/PermissionGate";
+import { PERMISSIONS } from "../../../constants/permissions";
 
 /* -------------------------------------------------------------------------- */
 /*                                  COMPONENT                                 */
@@ -79,21 +78,6 @@ export default function MouvementCaisseTab() {
   const [
     dateOperation,
     setDateOperation,
-  ] = useState("");
-
-  const [
-    openSelectCaisse,
-    setOpenSelectCaisse,
-  ] = useState(false);
-
-  const [
-    selectedCaisseId,
-    setSelectedCaisseId,
-  ] = useState("");
-
-  const [
-    selectedDevise,
-    setSelectedDevise,
   ] = useState("");
 
   /* ------------------------------------------------------------------------ */
@@ -179,23 +163,26 @@ export default function MouvementCaisseTab() {
 
   const getCaisseLabel = (
     caisseId: string
-  ) => {
+  ): string => {
 
-  const caisse =
-    caisses.find(
-      (
-        c: {
-          id: string;
-          code_caisse: string;
-          devise: string;
-        }
-      ) =>
+    const caisse = caisses.find(
+      (c: Caisse) =>
         c.id === caisseId
     );
-    
-    return caisse
-      ? `${caisse.code_caisse} (${caisse.devise})`
-      : "-";
+
+    if (!caisse) {
+      return "-";
+    }
+
+    const devises =
+      caisse.devises
+        .map(
+          (d: CaisseDevise) =>
+            d.devise
+        )
+        .join(", ");
+
+    return `${caisse.code_caisse} (${devises})`;
   };
 
   /* ------------------------------------------------------------------------ */
@@ -489,19 +476,26 @@ export default function MouvementCaisseTab() {
 
         </div>
 
-        <Button
-          onClick={() =>
-            setOpenSelectCaisse(true)
-          }
-        >
+        <PermissionGate
+          permissions={[
+            PERMISSIONS.MOUVEMENT_CREATE,
+            PERMISSIONS.MOUVEMENT_CREATE_AGENCE
+          ]}
+            >
+              <Button
+              onClick={() =>
+                setOpenMouvement(true)
+              }
+            >
 
-          <Plus
-            size={16}
-          />
+              <Plus
+                size={16}
+              />
 
-          Nouveau mouvement
+              Nouveau mouvement
 
-        </Button>
+            </Button>
+        </PermissionGate>
 
       </div>
 
@@ -555,16 +549,20 @@ export default function MouvementCaisseTab() {
               APPROVISIONNEMENT
             </option>
 
-            <option value="RETRAIT_SORTIE">
-              RETRAIT_SORTIE
+            <option value="REVERSEMENT">
+              REVERSEMENT
             </option>
 
-            <option value="TRANSFERT_SORTIE">
-              TRANSFERT_SORTIE
+            <option value="MOBILE_MONEY_ENTREE">
+              MOBILE_MONEY_ENTREE
             </option>
 
-            <option value="TRANSFERT_ENTREE">
-              TRANSFERT_ENTREE
+            <option value="MOBILE_MONEY_SORTIE">
+              MOBILE_MONEY_SORTIE
+            </option>
+
+            <option value="AJUSTEMENT">
+              AJUSTEMENT
             </option>
 
           </select>
@@ -809,40 +807,12 @@ export default function MouvementCaisseTab() {
 
       {/* MODAL */}
 
-      <SelectCaisseModal
-        open={openSelectCaisse}
-        onClose={() =>
-          setOpenSelectCaisse(false)
-        }
-        onSelect={(
-          caisseId,
-          devise
-        ) => {
-
-          setSelectedCaisseId(
-            caisseId
-          );
-
-          setSelectedDevise(
-            devise
-          );
-
-          setOpenMouvement(true);
-        }}
-      />
-
       {openMouvement && (
 
         <MouvementFormModal
           open={openMouvement}
           onClose={() =>
             setOpenMouvement(false)
-          }
-          selectedCaisseId={
-            selectedCaisseId
-          }
-          selectedDevise={
-            selectedDevise
           }
         />
 

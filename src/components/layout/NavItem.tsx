@@ -2,12 +2,9 @@
 
 import { NavLink } from "react-router-dom";
 
-type NavItemType = {
-  label: string;
-  path: string;
-  icon: React.ElementType;
-  roles?: string[];
-};
+import type {
+  NavItemType,
+} from "./nav.config";
 
 type Props = {
   item: NavItemType;
@@ -19,11 +16,20 @@ export default function NavItem({
   collapsed = false,
 }: Props) {
 
+  /**
+   * ============================================================
+   * SAFETY
+   * ============================================================
+   */
+  if (!item.path) {
+    return null;
+  }
+
   const Icon = item.icon;
 
   /**
    * ============================================================
-   * 🔥 ONLY DASHBOARD SHOULD USE end
+   * ONLY DASHBOARD SHOULD USE end
    * ============================================================
    */
   const isDashboardRoute =
@@ -34,9 +40,7 @@ export default function NavItem({
 
     <NavLink
       to={item.path}
-
       end={isDashboardRoute}
-
       className={({
         isActive,
       }) =>

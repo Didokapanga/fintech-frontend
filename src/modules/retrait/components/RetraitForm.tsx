@@ -35,26 +35,24 @@ import {
 import {
   useAuthStore,
 } from "../../../app/store";
-import SelectRetraitCaisseModal from "./SelectRetraitCaisseModal";
+import { useCaisses } from "../../caisse/hooks/useCaisses";
+import { usePermission } from "../../../hooks/usePermission";
+import { PERMISSIONS } from "../../../constants/permissions";
 
 /* -------------------------------------------------------------------------- */
 /*                                   TYPES                                    */
 /* -------------------------------------------------------------------------- */
 
-// type Caisse = {
-//   id: string;
-
-//   code_caisse: string;
-
-//   solde: number;
-
-//   devise: string;
-
-//   type?: string;
-// };
-
 type SelectedTransfert = {
   code_reference: string;
+
+  devise_destination: string;
+
+  montant_destination: string;
+
+  destinataire_name: string;
+
+  destinataire_telephone: string;
 };
 
 type FormData = {
@@ -105,26 +103,6 @@ export default function RetraitForm({
   } =
     useForm<FormData>();
 
-  const [
-    openSelectCaisse,
-    setOpenSelectCaisse,
-  ] = useState(false);
-
-  const [
-    selectedCaisseId,
-    setSelectedCaisseId,
-  ] = useState("");
-
-  const [
-    selectedCaisseLabel,
-    setSelectedCaisseLabel,
-  ] = useState("");
-
-  const [
-    selectedDevise,
-    setSelectedDevise,
-  ] = useState("");
-
   /* ------------------------------------------------------------------------ */
   /*                                   STORE                                  */
   /* ------------------------------------------------------------------------ */
@@ -132,6 +110,24 @@ export default function RetraitForm({
   const user =
     useAuthStore(
       (s) => s.user
+    );
+
+  const {
+    data: caisseResponse,
+  } = useCaisses(
+    1,
+    10
+  );
+
+  const myCaisse =
+    caisseResponse?.data?.[0];
+
+  const { can } =
+    usePermission();
+
+  const canCreateRetrait =
+    can(
+      PERMISSIONS.RETRAIT_CREATE
     );
 
   /* ------------------------------------------------------------------------ */
@@ -161,16 +157,17 @@ export default function RetraitForm({
 
   useEffect(() => {
 
-    if (selectedCaisseId) {
+    if (myCaisse) {
 
       setValue(
         "caisse_id",
-        selectedCaisseId
+        myCaisse.id
       );
+
     }
 
   }, [
-    selectedCaisseId,
+    myCaisse,
     setValue,
   ]);
 
@@ -233,13 +230,37 @@ export default function RetraitForm({
     }
 
     const payload = {
-      ...data,
+      code_reference:
+        data.code_reference,
 
-      created_by:
-        user.id,
+      code_secret:
+        data.code_secret,
 
-      user_agent:
-        navigator.userAgent,
+      caisse_id:
+        data.caisse_id,
+
+      numero_piece:
+        data.numero_piece,
+
+      details: [
+        {
+          devise:
+            selected?.devise_destination ||
+            "",
+
+          montant:
+            Number(
+              selected?.montant_destination ||
+                0
+            ),
+
+          montant_reference:
+            Number(
+              selected?.montant_destination ||
+                0
+            ),
+        },
+      ],
     };
 
     mutate(payload, {
@@ -646,6 +667,7 @@ export default function RetraitForm({
           {/* ---------------------------------------------------------- */}
 
           <div className="mt-6">
+
             <label
               className="
                 mb-2
@@ -655,130 +677,65 @@ export default function RetraitForm({
                 text-slate-700
               "
             >
-              Caisse de retrait
+              Caisse utilisée
             </label>
 
             <input
               type="hidden"
-              {...register(
-                "caisse_id",
-                {
-                  required: true,
-                }
-              )}
+              {...register("caisse_id")}
             />
 
             <div
               className="
                 flex
-                flex-col
-                gap-3
-                md:flex-row
-                md:items-stretch
+                items-center
+                justify-between
+                rounded-2xl
+                border
+                border-slate-200
+                bg-slate-50
+                px-5
+                py-4
               "
             >
 
-              <Button
-                type="button"
-                variant="primary"
-                onClick={() =>
-                  setOpenSelectCaisse(
-                    true
-                  )
-                }
-                className="
-                  h-14
-                  rounded-2xl
-                  bg-green-600
-                  px-6
-                  hover:bg-green-700
-                  shrink-0
-                "
-              >
-                Choisir une caisse
-              </Button>
+              <div>
+
+                <p
+                  className="
+                    text-xs
+                    uppercase
+                    tracking-wide
+                    text-slate-400
+                  "
+                >
+                  Caisse agent
+                </p>
+
+                <p
+                  className="
+                    mt-1
+                    font-semibold
+                    text-slate-900
+                  "
+                >
+                  {myCaisse?.code_caisse}
+                </p>
+
+              </div>
 
               <div
                 className="
-                  flex-1
-                  rounded-2xl
-                  border
-                  border-slate-200
-                  bg-slate-50
-                  px-5
-                  py-3
+                  rounded-xl
+                  bg-indigo-100
+                  px-3
+                  py-1
+                  text-sm
+                  font-semibold
+                  text-indigo-700
                 "
               >
-
-                {selectedCaisseId ? (
-
-                  <div
-                    className="
-                      flex
-                      items-center
-                      justify-between
-                      gap-4
-                    "
-                  >
-
-                    <div>
-
-                      <p
-                        className="
-                          text-xs
-                          uppercase
-                          tracking-wide
-                          text-slate-400
-                        "
-                      >
-                        Caisse sélectionnée
-                      </p>
-
-                      <p
-                        className="
-                          mt-1
-                          text-sm
-                          font-semibold
-                          text-slate-900
-                        "
-                      >
-                        {selectedCaisseLabel}
-                      </p>
-
-                    </div>
-
-                    <div
-                      className="
-                        rounded-xl
-                        bg-green-100
-                        px-3
-                        py-1.5
-                        text-sm
-                        font-semibold
-                        text-green-700
-                      "
-                    >
-                      {selectedDevise}
-                    </div>
-
-                  </div>
-
-                ) : (
-
-                  <div
-                    className="
-                      flex
-                      h-full
-                      items-center
-                      text-sm
-                      text-slate-400
-                    "
-                  >
-                    Aucune caisse sélectionnée
-                  </div>
-
-                )}
-
+                {myCaisse?.agence_name}
               </div>
 
             </div>
@@ -797,55 +754,35 @@ export default function RetraitForm({
             "
           >
 
-            <Button
-              type="submit"
-              loading={
-                isPending
-              }
-              className="
-                h-14
-                rounded-2xl
-                bg-red-600
-                px-7
-                hover:bg-red-700
-              "
-            >
+            {canCreateRetrait && (
 
-              <ArrowDownCircle
-                size={17}
-              />
+              <Button
+                type="submit"
+                loading={isPending}
+                className="
+                  h-14
+                  rounded-2xl
+                  bg-red-600
+                  px-7
+                  hover:bg-red-700
+                "
+              >
 
-              Valider le retrait
+                <ArrowDownCircle
+                  size={17}
+                />
 
-            </Button>
+                Valider le retrait
+
+              </Button>
+
+            )}
 
           </div>
 
         </section>
 
       </form>
-
-      <SelectRetraitCaisseModal
-        open={openSelectCaisse}
-        onClose={() =>
-          setOpenSelectCaisse(false)
-        }
-        onSelect={(caisse) => {
-
-          setSelectedCaisseId(
-            caisse.id
-          );
-
-          setSelectedDevise(
-            caisse.devise
-          );
-
-          setSelectedCaisseLabel(
-            caisse.code_caisse
-          );
-
-        }}
-      />
 
     </div>
   );

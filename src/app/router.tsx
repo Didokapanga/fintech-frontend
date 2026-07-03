@@ -70,6 +70,18 @@ from "../modules/audit/pages/AuditLogPage";
 import ValidationLogPage
 from "../modules/validation-log/pages/ValidationLogPage";
 
+import Setting
+from "../modules/settings/pages/Setting";
+
+import GrandLivreDetailPage
+from "../modules/grand-livre/pages/GrandLivreDetailPage";
+
+import BalancePage
+from "../modules/balance-comptable/pages/BalancePage";
+
+import ChangePage
+from "../modules/change-devise/pages/ChangePage";
+
 /* ========================================================= */
 /* RECEIPTS */
 /* ========================================================= */
@@ -79,6 +91,7 @@ from "../modules/receipt/pages/RetraitReceiptPage";
 
 import TransfertReceiptPage
 from "../modules/receipt/pages/TransfertReceiptPage";
+import GrandLivrePage from "../modules/grand-livre/pages/GrandLivrePage";
 
 /* ========================================================= */
 /* ROUTER */
@@ -149,6 +162,13 @@ export const router =
         },
 
         {
+          path: "change",
+
+          element:
+            <ChangePage />,
+        },
+
+        {
           path: "retrait",
 
           element:
@@ -205,6 +225,23 @@ export const router =
         },
 
         {
+          path: "grand-livre",
+          element: <GrandLivrePage />,
+        },
+
+        {
+          path: "grand-livre/:compteId",
+          element: <GrandLivreDetailPage />,
+        },
+
+        {
+          path: "balance",
+
+          element:
+            <BalancePage />,
+        },
+
+        {
           path: "audit-logs",
 
           element:
@@ -235,6 +272,13 @@ export const router =
 
           element:
             <RetraitReceiptPage />,
+        },
+
+        {
+          path: "parametres",
+
+          element:
+            <Setting />,
         },
       ],
     },
@@ -286,6 +330,13 @@ export const router =
         },
 
         {
+          path: "change",
+
+          element:
+            <ChangePage />,
+        },
+
+        {
           path: "transfert-caisse",
 
           element:
@@ -330,6 +381,13 @@ export const router =
 
           element:
             <RetraitReceiptPage />,
+        },
+
+        {
+          path: "parametres",
+
+          element:
+            <Setting />,
         },
       ],
     },

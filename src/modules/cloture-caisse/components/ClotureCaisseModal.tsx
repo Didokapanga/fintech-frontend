@@ -4,7 +4,6 @@ import { useEffect } from "react";
 
 import {
   useForm,
-  useWatch,
 } from "react-hook-form";
 
 import {
@@ -14,46 +13,34 @@ import {
 } from "../../../components/ui";
 
 import {
-  useCaisses,
-} from "../../caisse/hooks/useCaisses";
-
-import {
   useClotureCaisse,
 } from "../hooks/useClotureCaisse";
 
 type Props = {
   open: boolean;
   onClose: () => void;
-  caisse?: Caisse;
+
   selectedCaisseId: string;
-  selectedDevise: string;
+
   selectedCodeCaisse: string;
-};
 
-type Caisse = {
-  id: string;
-  code_caisse: string;
-  solde: number;
-  devise: string;
-  state: string;
-};
-
-type PaginatedCaissesResponse = {
-  data: Caisse[];
-
-  meta?: {
-    total: number;
-    page: number;
-    limit: number;
-    totalPages: number;
-  };
+  soldes: Record<
+    string,
+    number
+  >;
 };
 
 type FormData = {
   caisse_id: string;
+
+  devise: string;
+
   solde_physique: number;
+
   motif_ecart?: string;
+
   observation?: string;
+
   date_operation: string;
 };
 
@@ -61,16 +48,15 @@ export default function ClotureCaisseModal({
   open,
   onClose,
   selectedCaisseId,
-  selectedDevise,
   selectedCodeCaisse,
-}: Props) {
+  soldes,
+}: Props){
 
   const {
     register,
     handleSubmit,
     reset,
     setValue,
-    control,
   } = useForm<FormData>();
 
   /**
@@ -78,17 +64,6 @@ export default function ClotureCaisseModal({
    * CAISSES
    * =========================================
    */
-  const {
-    data: response,
-  } = useCaisses(
-    1,
-    100
-  ) as {
-    data?: PaginatedCaissesResponse;
-  };
-
-  const caisses =
-    response?.data || [];
 
   /**
    * =========================================
@@ -105,15 +80,6 @@ export default function ClotureCaisseModal({
    * WATCH
    * =========================================
    */
-  const caisseId = useWatch({
-    control,
-    name: "caisse_id",
-  });
-
-  const selectedCaisse =
-    caisses.find(
-      (c) => c.id === caisseId
-    );
 
   useEffect(() => {
 
@@ -251,35 +217,123 @@ export default function ClotureCaisseModal({
                   text-slate-500
                 "
               >
-                {selectedDevise}
+                {Object.keys(soldes).join(" / ")}
               </p>
 
             </div>
           </div>
 
-          {/* SOLDE SYSTEME */}
-          {selectedCaisse && (
+          {/* DEVISE */}
 
-            <div className="bg-gray-50 border rounded-xl p-3">
+          <div>
 
-              <p className="text-sm text-gray-500">
-                Solde système
-              </p>
+            <label
+              className="
+                block
+                text-sm
+                font-medium
+                mb-1
+              "
+            >
+              Devise
+            </label>
 
-              <p className="text-lg font-semibold text-green-600">
-
-                {Number(
-                  selectedCaisse.solde
-                ).toLocaleString()}{" "}
-
+            <select
+              {...register(
+                "devise",
                 {
-                  selectedCaisse.devise
+                  required: true,
                 }
+              )}
+              className="
+                w-full
+                rounded-xl
+                border
+                border-slate-200
+                px-3
+                py-2
+              "
+            >
 
-              </p>
+              {Object.keys(
+                soldes || {}
+              ).map(
+                (devise) => (
+
+                  <option
+                    key={devise}
+                    value={devise}
+                  >
+                    {devise}
+                  </option>
+
+                )
+              )}
+
+            </select>
+
+          </div>
+
+          {/* SOLDE SYSTEME */}
+          <div
+            className="
+              bg-gray-50
+              border
+              rounded-xl
+              p-3
+            "
+          >
+
+            <p
+              className="
+                text-sm
+                text-gray-500
+              "
+            >
+              Soldes disponibles
+            </p>
+
+            <div className="mt-2 space-y-2">
+
+              {Object.entries(
+                soldes || {}
+              ).map(
+                ([
+                  devise,
+                  montant,
+                ]) => (
+
+                  <div
+                    key={devise}
+                    className="
+                      flex
+                      justify-between
+                    "
+                  >
+
+                    <span>
+                      {devise}
+                    </span>
+
+                    <span
+                      className="
+                        font-semibold
+                        text-green-600
+                      "
+                    >
+                      {Number(
+                        montant
+                      ).toLocaleString()}
+                    </span>
+
+                  </div>
+
+                )
+              )}
 
             </div>
-          )}
+
+          </div>
 
           {/* SOLDE PHYSIQUE */}
           <Input
@@ -313,25 +367,7 @@ export default function ClotureCaisseModal({
               "observation"
             )}
           />
-
-          {/* DATE */}
-          <div>
-
-            <label className="block text-sm font-medium mb-1">
-              Date opération
-            </label>
-
-            <input
-              type="date"
-              {...register(
-                "date_operation",
-                {
-                  required: true,
-                }
-              )}
-              className="w-full border rounded-xl px-3 py-2"
-            />
-          </div>
+        
 
           {/* ACTIONS */}
           <div className="flex justify-end gap-3 pt-2">

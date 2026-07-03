@@ -1,13 +1,48 @@
-// modules/transfert-client/types.ts
+// src/modules/transfert-client/types.ts
 
-export interface CreateTransfertDto {
+export interface CreateTransfertClientDto {
+  /**
+   * Caisse agent qui effectue l'opération
+   */
   caisse_id: string;
-  agence_exp: string;
+
+  /**
+   * Agence bénéficiaire
+   */
   agence_dest: string;
-  client_exp: string;
-  client_dest: string;
-  montant: number;
-  devise: string;
-  type_piece: string;
-  numero_piece: string;
+
+  /**
+   * Client expéditeur
+   */
+  expediteur_id: string;
+
+  /**
+   * Client destinataire
+   */
+  destinataire_id: string;
+
+  /**
+   * Devise débitée de la caisse
+   */
+  devise_source: string;
+
+  /**
+   * Devise remise au bénéficiaire
+   */
+  devise_destination: string;
+
+  /**
+   * Montant reçu par le bénéficiaire
+   */
+  montant_destination: number;
+
+  /**
+   * Mode de paiement
+   */
+  mode_paiement:
+    | "ESPECE"
+    | "MOBILE_MONEY"
+    | "COMPTE_CLIENT"
+    | "CARTE"
+    | "CHEQUE";
 }

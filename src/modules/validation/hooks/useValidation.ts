@@ -1,64 +1,99 @@
 // src/modules/validation/hooks/useValidation.ts
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
+
 import {
   getTransfertsToValidate,
+  getTransfertsCaisseToProcess,
   validateOperation,
 } from "../services/validation.service";
-import type { TransfertClient } from "../services/validation.service";
 
-// ✅ RESPONSE
-type PaginatedResponse<T> = {
-  data: T[];
-  meta: {
-    page: number;
-    limit: number;
-    total: number;
-    totalPages: number;
+/* =========================================
+   VALIDATE OPERATION
+========================================= */
+
+export const useValidateOperation =
+  () => {
+
+    const qc =
+      useQueryClient();
+
+    return useMutation({
+
+      mutationFn:
+        validateOperation,
+
+      onSuccess: () => {
+
+        qc.invalidateQueries({
+          queryKey: [
+            "validation-client",
+          ],
+        });
+
+        qc.invalidateQueries({
+          queryKey: [
+            "transfert-caisse-validation",
+          ],
+        });
+
+        qc.invalidateQueries({
+          queryKey: [
+            "transferts-process",
+          ],
+        });
+
+      },
+    });
   };
-};
 
-// ✅ DTO VALIDATION
-type ValidateOperationDto = {
-  operation_type: "TRANSFERT_CLIENT" | "RETRAIT" | "TRANSFERT_CAISSE";
-  reference_id: string;
-  decision: "APPROUVE" | "REJETE";
-  niveau: "N1" | "N2";
-};
+/* =========================================
+   VALIDATION TRANSFERT CLIENT
+========================================= */
 
-// LIST
 export const useValidationList = (
-  page: number,
-  limit: number
+  page = 1,
+  limit = 10
 ) =>
-  useQuery<PaginatedResponse<TransfertClient>>({
-    queryKey: ["validation", page, limit],
-    queryFn: () => getTransfertsToValidate(page, limit),
+  useQuery({
+
+    queryKey: [
+      "validation-client",
+      page,
+      limit,
+    ],
+
+    queryFn: () =>
+      getTransfertsToValidate(
+        page,
+        limit
+      ),
   });
 
-// VALIDATE
-export const useValidateOperation = () => {
-  const qc = useQueryClient();
+/* =========================================
+   VALIDATION TRANSFERT CAISSE
+========================================= */
 
-  return useMutation<
-    {
-      message: string;
-      statut: string;
-      // code_secret?: string | null;
-    },
-    Error,
-    ValidateOperationDto
-  >({
-    mutationFn: async (payload) => {
-      const res = await validateOperation(payload);
+export const useTransfertCaisseValidation =
+  (
+    page = 1,
+    limit = 10
+  ) =>
+    useQuery({
 
-      return res.data; // 🔥 flatten propre
-    },
+      queryKey: [
+        "transfert-caisse-validation",
+        page,
+        limit,
+      ],
 
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["validation"] });
-      qc.invalidateQueries({ queryKey: ["transferts-caisse-process"] });
-      qc.invalidateQueries({ queryKey: ["transferts-caisse"] });
-    },
-  });
-};
+      queryFn: () =>
+        getTransfertsCaisseToProcess(
+          page,
+          limit
+        ),
+    });

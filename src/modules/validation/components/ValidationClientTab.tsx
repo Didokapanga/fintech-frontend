@@ -4,7 +4,6 @@ import {
   Check,
   Clock3,
   Landmark,
-  Phone,
   ShieldAlert,
   User2,
   X,
@@ -27,14 +26,6 @@ import type {
 import AppMessageState from "../../../components/ui/AppMessageState";
 
 import {
-  useAuthStore,
-} from "../../../app/store";
-
-import {
-  useAgences,
-} from "../../agence/hooks/useAgences";
-
-import {
   useApiMutationWithFeedback,
 } from "../../../hooks/useApiMutationWithFeedback";
 
@@ -43,21 +34,19 @@ import {
   useValidationList,
 } from "../hooks/useValidation";
 
-import type {
-  TransfertClient,
-} from "../services/validation.service";
-
 import Pagination from "../../../components/ui/Pagination";
+import type { TransfertClientValidation } from "../types";
+import TransfertClientDetailsModal from "../../transfert-client/components/TransfertClientDetailsModal";
+
+import { usePermission }
+from "../../../hooks/usePermission";
+
+import { PERMISSIONS }
+from "../../../constants/permissions";
 
 /* -------------------------------------------------------------------------- */
 /*                                   TYPES                                    */
 /* -------------------------------------------------------------------------- */
-
-type Agence = {
-  id: string;
-
-  libelle: string;
-};
 
 /* -------------------------------------------------------------------------- */
 /*                                  COMPONENT                                 */
@@ -78,23 +67,20 @@ export default function ValidationClientTab() {
   /*                                    AUTH                                  */
   /* ------------------------------------------------------------------------ */
 
-  const user =
-    useAuthStore(
-      (s) => s.user
-    );
-
-  const role =
-    user
-      ?.role_name
-      ?.toUpperCase() || "";
+  const { can } =
+    usePermission();
 
   const canValidate =
-    [
-      "ADMIN",
-      "N+1",
-      "N+2",
-    ].includes(role);
+    can(
+      PERMISSIONS.TRANSFERT_CLIENT_VALIDATE
+    );
 
+  const [
+    selectedTransfert,
+    setSelectedTransfert,
+  ] = useState<
+    TransfertClientValidation | null
+  >(null);
   /* ------------------------------------------------------------------------ */
   /*                                   DATA                                   */
   /* ------------------------------------------------------------------------ */
@@ -120,39 +106,6 @@ export default function ValidationClientTab() {
   /* ------------------------------------------------------------------------ */
   /*                                  AGENCES                                 */
   /* ------------------------------------------------------------------------ */
-
-  const {
-    data:
-      agencesData,
-  } =
-    useAgences();
-
-  const agences:
-    Agence[] =
-      (
-        agencesData as
-          Agence[]
-      ) ?? [];
-
-  const getAgenceName =
-    (
-      id: string
-    ) => {
-
-      const agence =
-        agences.find(
-          (
-            a
-          ) =>
-            a.id === id
-        );
-
-      return (
-        agence
-          ?.libelle ||
-        "-"
-      );
-    };
 
   /* ------------------------------------------------------------------------ */
   /*                                VALIDATION                                */
@@ -182,8 +135,7 @@ export default function ValidationClientTab() {
       }
     );
 
-  const handleValidate =
-    (
+    const handleValidate = (
       id: string
     ) => {
 
@@ -198,12 +150,14 @@ export default function ValidationClientTab() {
           "APPROUVE",
 
         niveau:
-          "N1",
+          "VALIDATION",
+
+        commentaire:
+          "Validation conforme",
       });
     };
 
-  const handleReject =
-    (
+    const handleReject = (
       id: string
     ) => {
 
@@ -218,7 +172,10 @@ export default function ValidationClientTab() {
           "REJETE",
 
         niveau:
-          "N1",
+          "VALIDATION",
+
+        commentaire:
+          "Validation rejetée",
       });
     };
 
@@ -231,12 +188,9 @@ export default function ValidationClientTab() {
       status: string
     ) => {
 
-      switch (
-        status
-      ) {
+      switch (status) {
 
         case "INITIE":
-
           return `
             bg-amber-50
             text-amber-700
@@ -244,12 +198,12 @@ export default function ValidationClientTab() {
             border-amber-200
           `;
 
-        case "APPROUVE":
+        case "VALIDE":
           return `
-            bg-emerald-50
-            text-emerald-700
+            bg-blue-50
+            text-blue-700
             border
-            border-emerald-200
+            border-blue-200
           `;
 
         case "EXECUTE":
@@ -261,7 +215,7 @@ export default function ValidationClientTab() {
           `;
 
         case "REJETE":
-
+        case "ANNULE":
           return `
             bg-red-50
             text-red-700
@@ -270,7 +224,6 @@ export default function ValidationClientTab() {
           `;
 
         default:
-
           return `
             bg-slate-100
             text-slate-600
@@ -285,419 +238,338 @@ export default function ValidationClientTab() {
   /* ------------------------------------------------------------------------ */
 
   const columns:
-    Column<TransfertClient>[] =
+    Column<TransfertClientValidation>[] =
       [
+
         {
-          header:
-            "Expéditeur",
+          header: "Référence",
 
           accessor:
-            "id",
+            "code_reference",
 
-          render:
-            (
-              _v,
-              row
-            ) => (
+          render: (
+            value,
+            row
+          ) => (
+
+            <div
+              className="
+                flex
+                flex-col
+                min-w-[180px]
+              "
+            >
+
+              <span
+                className="
+                  font-semibold
+                  text-slate-900
+                "
+              >
+                {value}
+              </span>
+
+              <span
+                className="
+                  text-xs
+                  text-slate-500
+                "
+              >
+                {row.code_caisse}
+              </span>
+
+            </div>
+
+          ),
+        },
+
+        {
+          header: "Expéditeur",
+
+          accessor:
+            "expediteur_name",
+
+          render: (
+            _v,
+            row
+          ) => (
+
+            <div
+              className="
+                flex
+                items-start
+                gap-3
+              "
+            >
 
               <div
                 className="
                   flex
-                  min-w-[220px]
-                  items-start
-                  gap-3
-                "
-              >
-
-                <div
-                  className="
-                    mt-0.5
-                    flex
-                    h-10
-                    w-10
-                    items-center
-                    justify-center
-                    rounded-xl
-                    bg-slate-100
-                    text-slate-600
-                  "
-                >
-
-                  <User2
-                    size={16}
-                  />
-
-                </div>
-
-                <div
-                  className="
-                    flex
-                    flex-col
-                  "
-                >
-
-                  <span
-                    className="
-                      font-semibold
-                      text-slate-800
-                    "
-                  >
-                    {row.exp_nom ||
-                      "-"}{" "}
-
-                    {
-                      row.exp_postnom ||
-                      ""
-                    }
-                  </span>
-
-                  <span
-                    className="
-                      mt-1
-                      inline-flex
-                      items-center
-                      gap-1.5
-                      text-xs
-                      text-slate-500
-                    "
-                  >
-
-                    <Phone
-                      size={12}
-                    />
-
-                    {row.exp_phone ||
-                      "-"}
-
-                  </span>
-
-                </div>
-
-              </div>
-
-            ),
-        },
-
-        {
-          header:
-            "Destinataire",
-
-          accessor:
-            "client_exp",
-
-          render:
-            (
-              _v,
-              row
-            ) => (
-
-              <div
-                className="
-                  flex
-                  min-w-[220px]
-                  items-start
-                  gap-3
-                "
-              >
-
-                <div
-                  className="
-                    mt-0.5
-                    flex
-                    h-10
-                    w-10
-                    items-center
-                    justify-center
-                    rounded-xl
-                    bg-indigo-50
-                    text-indigo-600
-                  "
-                >
-
-                  <Landmark
-                    size={16}
-                  />
-
-                </div>
-
-                <div
-                  className="
-                    flex
-                    flex-col
-                  "
-                >
-
-                  <span
-                    className="
-                      font-semibold
-                      text-slate-800
-                    "
-                  >
-                    {row.dest_nom ||
-                      "-"}{" "}
-
-                    {
-                      row.dest_postnom ||
-                      ""
-                    }
-                  </span>
-
-                  <span
-                    className="
-                      mt-1
-                      inline-flex
-                      items-center
-                      gap-1.5
-                      text-xs
-                      text-slate-500
-                    "
-                  >
-
-                    <Phone
-                      size={12}
-                    />
-
-                    {row.dest_phone ||
-                      "-"}
-
-                  </span>
-
-                </div>
-
-              </div>
-
-            ),
-        },
-
-        {
-          header:
-            "Agence",
-
-          accessor:
-            "agence_exp",
-
-          render:
-            (
-              value
-            ) => (
-
-              <div
-                className="
-                  inline-flex
+                  h-10
+                  w-10
+                  items-center
+                  justify-center
                   rounded-xl
-                  border
-                  border-slate-200
-                  bg-slate-50
-                  px-3
-                  py-2
-                  text-sm
-                  font-medium
-                  text-slate-700
+                  bg-slate-100
+                  text-slate-600
                 "
               >
-                {getAgenceName(
-                  String(
-                    value
-                  )
-                )}
+
+                <User2 size={16} />
+
               </div>
 
-            ),
-        },
+              <div>
 
-        {
-          header:
-            "Montant",
-
-          accessor:
-            "montant",
-
-          render:
-            (
-              value,
-              row
-            ) => {
-
-              const montant =
-                typeof value ===
-                "number"
-                  ? value
-                  : parseFloat(
-                      String(
-                        value
-                      ) ||
-                        "0"
-                    );
-
-              return (
-                <span
+                <p
                   className="
-                    text-base
-                    font-bold
-                    text-emerald-600
+                    font-semibold
+                    text-slate-800
                   "
                 >
-                  {montant.toLocaleString()}{" "}
-                  {row.devise}
-                </span>
-              );
-            },
+                  {row.expediteur_name}
+                </p>
+
+                <p
+                  className="
+                    text-xs
+                    text-slate-500
+                  "
+                >
+                  {row.expediteur_telephone}
+                </p>
+
+              </div>
+
+            </div>
+
+          ),
         },
 
         {
-          header:
-            "Statut",
+          header: "Destinataire",
+
+          accessor:
+            "destinataire_name",
+
+          render: (
+            _v,
+            row
+          ) => (
+
+            <div
+              className="
+                flex
+                items-start
+                gap-3
+              "
+            >
+
+              <div
+                className="
+                  flex
+                  h-10
+                  w-10
+                  items-center
+                  justify-center
+                  rounded-xl
+                  bg-indigo-50
+                  text-indigo-600
+                "
+              >
+
+                <Landmark size={16} />
+
+              </div>
+
+              <div>
+
+                <p
+                  className="
+                    font-semibold
+                    text-slate-800
+                  "
+                >
+                  {row.destinataire_name}
+                </p>
+
+                <p
+                  className="
+                    text-xs
+                    text-slate-500
+                  "
+                >
+                  {row.destinataire_telephone}
+                </p>
+
+              </div>
+
+            </div>
+
+          ),
+        },
+
+        {
+          header: "Montant",
+
+          accessor:
+            "montant_source",
+
+          render: (
+            _v,
+            row
+          ) => (
+
+            <div
+              className="
+                flex
+                flex-col
+              "
+            >
+
+              <span
+                className="
+                  text-base
+                  font-bold
+                  text-emerald-600
+                "
+              >
+                {Number(
+                  row.montant_source
+                ).toLocaleString()}
+                {" "}
+                {row.devise_source}
+              </span>
+
+              <span
+                className="
+                  text-xs
+                  text-slate-500
+                "
+              >
+                Frais :
+                {" "}
+                {Number(
+                  row.frais
+                ).toLocaleString()}
+              </span>
+
+            </div>
+
+          ),
+        },
+
+        {
+          header: "Statut",
 
           accessor:
             "statut",
 
-          render:
-            (
-              value
-            ) => (
+          render: (
+            value
+          ) => (
 
-              <span
-                className={`
-                  inline-flex
-                  items-center
-                  gap-2
-                  rounded-full
-                  px-3
-                  py-1.5
-                  text-xs
-                  font-semibold
-                  ${getStatusBadge(
-                    String(
-                      value
-                    )
-                  )}
-                `}
-              >
-
-                <Clock3
-                  size={12}
-                />
-
-                {String(
-                  value
+            <span
+              className={`
+                inline-flex
+                items-center
+                gap-2
+                rounded-full
+                px-3
+                py-1.5
+                text-xs
+                font-semibold
+                ${getStatusBadge(
+                  String(value)
                 )}
+              `}
+            >
 
-              </span>
+              <Clock3
+                size={12}
+              />
 
-            ),
+              {String(value)}
+
+            </span>
+
+          ),
         },
 
         {
-          header:
-            "Date",
+          header: "Actions",
 
           accessor:
-            "created_at",
+            "id",
 
-          render:
-            (
-              value
-            ) => (
+          render: (
+            _v,
+            row
+          ) => (
 
-              <div
-                className="
-                  whitespace-nowrap
-                  text-sm
-                  text-slate-600
-                "
-              >
-                {new Date(
-                  String(
-                    value
+            <div
+              className="
+                flex
+                items-center
+                gap-2
+              "
+            >
+
+              <Button
+                variant="secondary"
+                onClick={() =>
+                  setSelectedTransfert(
+                    row
                   )
-                ).toLocaleString(
-                  "fr-FR"
-                )}
-              </div>
+                }
+              >
+                Détails
+              </Button>
 
-            ),
+              {canValidate && (
+
+                <>
+                  <Button
+                    onClick={() =>
+                      handleValidate(
+                        row.id
+                      )
+                    }
+                    loading={
+                      isPending
+                    }
+                  >
+                    <Check
+                      size={15}
+                    />
+                    Valider
+                  </Button>
+
+                  <Button
+                    variant="danger"
+                    onClick={() =>
+                      handleReject(
+                        row.id
+                      )
+                    }
+                    loading={
+                      isPending
+                    }
+                  >
+                    <X
+                      size={15}
+                    />
+                    Rejeter
+                  </Button>
+                </>
+
+              )}
+
+            </div>
+
+          ),
         },
 
-        {
-          header:
-            "Actions",
-
-          accessor:
-            "client_dest",
-
-          render:
-            (
-              _v,
-              row
-            ) =>
-
-              canValidate
-                ? (
-
-                  <div
-                    className="
-                      flex
-                      items-center
-                      gap-2
-                    "
-                  >
-
-                    <Button
-                      onClick={() =>
-                        handleValidate(
-                          String(
-                            row.id
-                          )
-                        )
-                      }
-                      loading={
-                        isPending
-                      }
-                    >
-                      <Check
-                        size={15}
-                      />
-
-                      Valider
-                    </Button>
-
-                    <Button
-                      variant="danger"
-                      onClick={() =>
-                        handleReject(
-                          String(
-                            row.id
-                          )
-                        )
-                      }
-                      loading={
-                        isPending
-                      }
-                    >
-                      <X
-                        size={15}
-                      />
-
-                      Rejeter
-                    </Button>
-
-                  </div>
-
-                )
-                : (
-
-                  <div
-                    className="
-                      text-sm
-                      italic
-                      text-slate-400
-                    "
-                  >
-                    Lecture seule
-                  </div>
-
-                ),
-        },
       ];
 
   /* ------------------------------------------------------------------------ */
@@ -769,16 +641,10 @@ export default function ValidationClientTab() {
         "
       >
 
-        <Table<TransfertClient>
-          data={
-            transferts
-          }
-          columns={
-            columns
-          }
-          loading={
-            isLoading
-          }
+        <Table<TransfertClientValidation>
+          data={transferts}
+          columns={columns}
+          loading={isLoading}
         />
 
       </div>
@@ -813,15 +679,29 @@ export default function ValidationClientTab() {
 
         )}
 
-      {meta && (
+        {meta && (
+          <Pagination
+            page={meta.page}
+            totalPages={meta.totalPages}
+            totalItems={meta.total}
+            perPage={meta.limit}
+            onChange={setPage}
+          />
+        )}
 
-        <Pagination
-          page={page}
-          onChange={setPage}
-        />
+        {selectedTransfert && (
 
-      )}
+          <TransfertClientDetailsModal
+            transfert={selectedTransfert}
+            open={!!selectedTransfert}
+            onClose={() =>
+              setSelectedTransfert(null)
+            }
+          />
+
+        )}
 
     </div>
+    
   );
 }

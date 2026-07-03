@@ -1,14 +1,17 @@
 // src/modules/transfert-caisse/components/TransfertCaisseModal.tsx
+import { usePermission } from "../../../hooks/usePermission";
+import { useAuthStore } from "../../../app/store";
+import { PERMISSIONS } from "../../../constants/permissions";
 
 import {
   ArrowRightLeft,
-  CalendarRange,
   Landmark,
   Save,
   Wallet,
 } from "lucide-react";
 
 import {
+  useEffect,
   useMemo,
 } from "react";
 
@@ -36,10 +39,8 @@ import {
 import {
   createTransfertCaisse,
 } from "../services/transfertCaisse.service";
+import type { CreateTransfertCaisseDto } from "../types";
 
-import type {
-  CreateTransfertCaisseDto,
-} from "../services/transfertCaisse.service";
 
 /* -------------------------------------------------------------------------- */
 /*                                   TYPES                                    */
@@ -54,27 +55,24 @@ import type {
 type Props = {
   open: boolean;
   onClose: () => void;
-
-  selectedCaisseId?: string;
-  selectedDevise?: string;
 };
 
 type Caisse = {
   id: string;
 
+  agence_id: string;
+
   code_caisse: string;
-
-  devise: string;
-
-  solde: number;
 
   type?: string;
 
   agence_name?: string;
 
-  agence?: {
-    libelle?: string;
-  };
+  devises?: {
+    id: string;
+    devise: string;
+    solde: string;
+  }[];
 };
 
 /* -------------------------------------------------------------------------- */
@@ -84,9 +82,25 @@ type Caisse = {
 export default function TransfertCaisseModal({
   open,
   onClose,
-  selectedCaisseId,
-  selectedDevise,
 }: Props) {
+
+  const user =
+    useAuthStore(
+      (state) => state.user
+    );
+
+  const { can } =
+    usePermission();
+
+  const canCreateGlobal =
+    can(
+      PERMISSIONS.TRANSFERT_CAISSE_CREATE
+    );
+
+  const canCreateAgence =
+    can(
+      PERMISSIONS.TRANSFERT_CAISSE_CREATE_AGENCE
+    );
 
   /* ------------------------------------------------------------------------ */
   /*                                    FORM                                  */
@@ -95,29 +109,11 @@ export default function TransfertCaisseModal({
   const {
     register,
     handleSubmit,
+    setValue,
     reset,
-    control,
+    control
   } =
-    useForm<CreateTransfertCaisseDto>({
-      defaultValues: {
-        caisse_source_id: selectedCaisseId,
-        devise: selectedDevise,
-        date_operation: new Date()
-          .toISOString()
-          .split("T")[0],
-      },
-    });
-    // useForm<CreateTransfertCaisseDto>(
-    //   {
-    //     defaultValues:
-    //       {
-    //         date_operation:
-    //           new Date()
-    //             .toISOString()
-    //             .split("T")[0],
-    //       },
-    //   }
-    // );
+    useForm<CreateTransfertCaisseDto>();
 
   /* ------------------------------------------------------------------------ */
   /*                                  CAISSES                                 */
@@ -140,6 +136,46 @@ export default function TransfertCaisseModal({
       [response]
     );
 
+  const caisseAgence =
+    caisses.find(
+      (c) =>
+        c.agence_id ===
+        user?.agence_id &&
+        c.type ===
+          "AGENCE"
+    );
+
+  useEffect(() => {
+
+    if (
+      canCreateAgence &&
+      caisseAgence
+    ) {
+
+      setValue(
+        "caisse_source_id",
+        caisseAgence.id
+      );
+
+      if (
+        caisseAgence.devises?.length
+      ) {
+
+        setValue(
+          "devise",
+          caisseAgence.devises[0].devise
+        );
+
+      }
+
+    }
+
+  }, [
+    canCreateAgence,
+    caisseAgence,
+    setValue,
+  ]);
+
   /* ------------------------------------------------------------------------ */
   /*                                WATCHERS                                  */
   /* ------------------------------------------------------------------------ */
@@ -151,6 +187,12 @@ export default function TransfertCaisseModal({
       name:
         "caisse_source_id",
     });
+
+  const selectedSourceCaisse =
+  caisses.find(
+    (c) =>
+      c.id === sourceId
+  );
 
   /* ------------------------------------------------------------------------ */
   /*                                MUTATION                                  */
@@ -179,18 +221,7 @@ export default function TransfertCaisseModal({
         onSuccess:
           () => {
 
-            reset({
-              caisse_source_id:
-                selectedCaisseId,
-
-              devise:
-                selectedDevise,
-
-              date_operation:
-                new Date()
-                  .toISOString()
-                  .split("T")[0],
-            });
+            reset();
 
             onClose();
           },
@@ -208,11 +239,6 @@ export default function TransfertCaisseModal({
     const payload =
       {
         ...data,
-
-        date_operation:
-          new Date(
-            data.date_operation
-          ).toISOString(),
       };
 
     mutate(payload);
@@ -223,27 +249,25 @@ export default function TransfertCaisseModal({
   /* ------------------------------------------------------------------------ */
 
   const formatCaisse = (
-    c: Caisse
-  ) => {
+  c: Caisse
+) => {
 
-    const agence =
-      c.agence
-        ?.libelle ||
-      c.agence_name ||
-      "—";
+  const devises =
+      c.devises
+        ?.map(
+          (d) => d.devise
+        )
+        .join(", ") ||
+      "Aucune devise";
 
     return `${c.code_caisse} • ${
       c.type ?? "—"
     } • ${
-      c.devise
-    } • ${agence}`;
+      devises
+    } • ${
+      c.agence_name ?? "—"
+    }`;
   };
-
-  const selectedCaisseInfo =
-  caisses.find(
-    (c) =>
-      c.id === selectedCaisseId
-  );
 
   /* ------------------------------------------------------------------------ */
   /*                                   RENDER                                 */
@@ -480,60 +504,80 @@ export default function TransfertCaisseModal({
 
               {/* SOURCE */}
 
-              <div>
+              {canCreateGlobal && (
 
-                <label
-                  className="
-                    mb-2
-                    block
-                    text-sm
-                    font-semibold
-                    text-slate-700
-                  "
-                >
-                  Caisse source
-                </label>
+                <div>
 
-                {/* valeur envoyée à l'API */}
+                  <label
+                    className="
+                      mb-2
+                      block
+                      text-sm
+                      font-semibold
+                      text-slate-700
+                    "
+                  >
+                    Caisse source
+                  </label>
 
-                <input
-                  type="hidden"
-                  {...register(
-                    "caisse_source_id",
-                    {
-                      required: true,
-                    }
-                  )}
-                />
+                  <select
+                    {...register(
+                      "caisse_source_id",
+                      {
+                        required: true,
+                      }
+                    )}
+                    className="
+                      h-14
+                      w-full
+                      rounded-2xl
+                      border
+                      border-slate-200
+                      bg-white
+                      px-4
+                    "
+                  >
 
-                {/* affichage readonly */}
+                    <option value="">
+                      Sélectionner une caisse
+                    </option>
 
-                <input
-                  type="text"
-                  readOnly
-                  value={
-                    selectedCaisseInfo
-                      ? formatCaisse(
-                          selectedCaisseInfo
-                        )
-                      : "Aucune caisse sélectionnée"
-                  }
-                  className="
-                    h-14
-                    w-full
-                    rounded-2xl
-                    border
-                    border-slate-200
-                    bg-slate-100
-                    px-4
-                    text-sm
-                    font-medium
-                    text-slate-700
-                    cursor-not-allowed
-                  "
-                />
+                    {caisses
+                      .filter(
+                        (c) =>
+                          c.type ===
+                          "AGENCE"
+                      )
+                      .map((c) => (
 
-              </div>
+                        <option
+                          key={c.id}
+                          value={c.id}
+                        >
+                          {c.code_caisse}
+                          {" | "}
+                          {c.agence_name}
+                        </option>
+
+                      ))}
+
+                  </select>
+
+                </div>
+              )}
+
+              {canCreateAgence &&
+                !canCreateGlobal &&
+                caisseAgence && (
+
+                  <Input
+                    label="Caisse source"
+                    value={`${caisseAgence.code_caisse} | ${caisseAgence.agence_name}`}
+                    readOnly
+                  />
+
+              )}
+
 
               {/* DESTINATION */}
 
@@ -682,75 +726,24 @@ export default function TransfertCaisseModal({
                     Sélectionner une devise
                   </option>
 
-                  <option value="CDF">
-                    CDF
-                  </option>
+                  {(
+                    selectedSourceCaisse?.devises ||
+                    caisseAgence?.devises ||
+                    []
+                  ).map(
+                    (d) => (
 
-                  <option value="USD">
-                    USD
-                  </option>
+                      <option
+                        key={d.id}
+                        value={d.devise}
+                      >
+                        {d.devise}
+                      </option>
 
-                  <option value="EUR">
-                    EUR
-                  </option>
+                    )
+                  )}
 
                 </select>
-
-              </div>
-
-              {/* DATE */}
-
-              <div
-                className="
-                  xl:col-span-2
-                "
-              >
-
-                <label
-                  className="
-                    mb-2
-                    flex
-                    items-center
-                    gap-2
-                    text-sm
-                    font-semibold
-                    text-slate-700
-                  "
-                >
-
-                  <CalendarRange
-                    size={15}
-                  />
-
-                  Date opération
-
-                </label>
-
-                <input
-                  type="date"
-                  {...register(
-                    "date_operation",
-                    {
-                      required: true,
-                    }
-                  )}
-                  className="
-                    h-14
-                    w-full
-                    rounded-2xl
-                    border
-                    border-slate-200
-                    bg-white
-                    px-4
-                    text-sm
-                    text-slate-700
-                    outline-none
-                    transition-all
-                    focus:border-indigo-400
-                    focus:ring-4
-                    focus:ring-indigo-100
-                  "
-                />
 
               </div>
 

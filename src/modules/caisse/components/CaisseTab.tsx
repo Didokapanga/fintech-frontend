@@ -2,7 +2,6 @@
 
 import {
   Building2,
-  CircleDollarSign,
   Lock,
   LockOpen,
   Pencil,
@@ -45,6 +44,8 @@ import AppMessageState from "../../../components/ui/AppMessageState";
 import CaisseStatusBadge from "./CaisseStatusBadge";
 
 import CaisseFormModal from "./CaisseFormModal";
+import { PermissionGate } from "../../../components/auth/PermissionGate";
+import { PERMISSIONS } from "../../../constants/permissions";
 
 /* -------------------------------------------------------------------------- */
 /*                                    TYPES                                   */
@@ -285,45 +286,33 @@ export default function CaisseTab() {
       },
 
       {
-        header:
-          "Devise",
+        header: "Devises",
+        accessor: "devises",
 
-        accessor:
-          "devise",
+        render: (_value, row) => (
 
-        render:
-          (
-            value
-          ) => (
+          <div className="flex flex-wrap gap-1">
 
-            <div
-              className="
-                inline-flex
-                items-center
-                gap-2
-                rounded-full
-                border
-                border-emerald-200
-                bg-emerald-50
-                px-3
-                py-1
-                text-xs
-                font-semibold
-                text-emerald-700
-              "
-            >
+            {row.devises.map((d) => (
+              <span
+                key={d.id}
+                className="
+                  rounded-full
+                  bg-emerald-50
+                  px-2
+                  py-1
+                  text-xs
+                  font-medium
+                  text-emerald-700
+                "
+              >
+                {d.devise}
+              </span>
+            ))}
 
-              <CircleDollarSign
-                size={13}
-              />
+          </div>
 
-              {String(
-                value
-              )}
-
-            </div>
-
-          ),
+        ),
       },
 
       {
@@ -370,53 +359,29 @@ export default function CaisseTab() {
       },
 
       {
-        header:
-          "Solde",
+        header: "Soldes",
+        accessor: "devises",
 
-        accessor:
-          "solde",
+        render: (_value, row) => (
 
-        render:
-          (
-            value,
-            row
-          ) => (
+          <div className="flex flex-col gap-1">
 
-            <div
-              className="
-                flex
-                flex-col
-              "
-            >
+            {row.devises.map((d) => (
 
               <span
-                className="
-                  font-semibold
-                  text-emerald-600
-                "
+                key={d.id}
+                className="text-xs"
               >
-
-                {value !==
-                undefined
-                  ? `${Number(
-                      value
-                    ).toLocaleString()} ${row.devise}`
-                  : "-"}
-
+                {d.devise} :
+                {" "}
+                {Number(d.solde).toLocaleString()}
               </span>
 
-              <span
-                className="
-                  text-xs
-                  text-slate-400
-                "
-              >
-                Solde actuel
-              </span>
+            ))}
 
-            </div>
+          </div>
 
-          ),
+        ),
       },
 
       {
@@ -475,58 +440,65 @@ export default function CaisseTab() {
               {row.state ===
                 "FERMEE" && (
 
-                <Button
-                  onClick={() =>
-
-                    openCaisse(
-                      row.id,
-                      {
-                        onSuccess:
-                          () => {
-
-                            setAppMessage(
-                              {
-                                variant:
-                                  "success",
-
-                                title:
-                                  "Succès",
-
-                                message:
-                                  "Caisse ouverte avec succès",
-                              }
-                            );
-                          },
-
-                        onError:
-                          (
-                            error
-                          ) =>
-
-                            handleError(
-                              error,
-                              "Impossible d’ouvrir cette caisse",
-                              "Ouverture refusée"
-                            ),
-                      }
-                    )
-                  }
-                  className="
-                    h-9
-                    rounded-xl
-                    px-3
-                    text-xs
-                  "
+                <PermissionGate
+                  permissions={[
+                    PERMISSIONS.CAISSE_OPEN,
+                    PERMISSIONS.CAISSE_OPEN_AGENCE,
+                    PERMISSIONS.CAISSE_OPEN_USER,
+                  ]}
                 >
+                  <Button
+                    onClick={() =>
 
-                  <LockOpen
-                    size={14}
-                  />
+                      openCaisse(
+                        row.id,
+                        {
+                          onSuccess:
+                            () => {
 
-                  Ouvrir
+                              setAppMessage(
+                                {
+                                  variant:
+                                    "success",
 
-                </Button>
+                                  title:
+                                    "Succès",
 
+                                  message:
+                                    "Caisse ouverte avec succès",
+                                }
+                              );
+                            },
+
+                          onError:
+                            (
+                              error
+                            ) =>
+
+                              handleError(
+                                error,
+                                "Impossible d’ouvrir cette caisse",
+                                "Ouverture refusée"
+                              ),
+                        }
+                      )
+                    }
+                    className="
+                      h-9
+                      rounded-xl
+                      px-3
+                      text-xs
+                    "
+                  >
+
+                    <LockOpen
+                      size={14}
+                    />
+
+                    Ouvrir
+
+                  </Button>
+                </PermissionGate>
               )}
 
               {/* CLOSE */}
@@ -534,41 +506,80 @@ export default function CaisseTab() {
               {row.state ===
                 "OUVERTE" && (
 
+                <PermissionGate
+                  permissions={[
+                    PERMISSIONS.CAISSE_CLOSE,
+                    PERMISSIONS.CAISSE_CLOSE_AGENCE,
+                    PERMISSIONS.CAISSE_CLOSE_USER,
+                  ]}
+                >
+                  <Button
+                    variant="secondary"
+                    onClick={() =>
+
+                      closeCaisse(
+                        row.id,
+                        {
+                          onSuccess:
+                            () => {
+
+                              setAppMessage(
+                                {
+                                  variant:
+                                    "success",
+
+                                  title:
+                                    "Succès",
+
+                                  message:
+                                    "Caisse fermée avec succès",
+                                }
+                              );
+                            },
+
+                          onError:
+                            (
+                              error
+                            ) =>
+
+                              handleError(
+                                error,
+                                "Impossible de fermer cette caisse",
+                                "Fermeture refusée"
+                              ),
+                        }
+                      )
+                    }
+                    className="
+                      h-9
+                      rounded-xl
+                      px-3
+                      text-xs
+                    "
+                  >
+
+                    <Lock
+                      size={14}
+                    />
+
+                    Fermer
+
+                  </Button>
+                </PermissionGate>
+              )}
+
+              {/* EDIT */}
+
+              <PermissionGate
+                permissions={[
+                  PERMISSIONS.CAISSE_UPDATE
+                ]}
+              >
                 <Button
                   variant="secondary"
                   onClick={() =>
-
-                    closeCaisse(
-                      row.id,
-                      {
-                        onSuccess:
-                          () => {
-
-                            setAppMessage(
-                              {
-                                variant:
-                                  "success",
-
-                                title:
-                                  "Succès",
-
-                                message:
-                                  "Caisse fermée avec succès",
-                              }
-                            );
-                          },
-
-                        onError:
-                          (
-                            error
-                          ) =>
-
-                            handleError(
-                              error,
-                              "Impossible de fermer cette caisse",
-                              "Fermeture refusée"
-                            ),
-                      }
+                    alert(
+                      "Edition bientôt disponible"
                     )
                   }
                   className="
@@ -579,66 +590,44 @@ export default function CaisseTab() {
                   "
                 >
 
-                  <Lock
+                  <Pencil
                     size={14}
                   />
 
-                  Fermer
+                  Modifier
 
                 </Button>
-
-              )}
-
-              {/* EDIT */}
-
-              <Button
-                variant="secondary"
-                onClick={() =>
-                  alert(
-                    "Edition bientôt disponible"
-                  )
-                }
-                className="
-                  h-9
-                  rounded-xl
-                  px-3
-                  text-xs
-                "
-              >
-
-                <Pencil
-                  size={14}
-                />
-
-                Modifier
-
-              </Button>
-
+              </PermissionGate>
               {/* DELETE */}
 
-              <Button
-                variant="danger"
-                onClick={() =>
-                  setSelectedId(
-                    row.id
-                  )
-                }
-                className="
-                  h-9
-                  rounded-xl
-                  px-3
-                  text-xs
-                "
+              <PermissionGate
+                permissions={[
+                  PERMISSIONS.CAISSE_DELETE
+                ]}
               >
+                <Button
+                  variant="danger"
+                  onClick={() =>
+                    setSelectedId(
+                      row.id
+                    )
+                  }
+                  className="
+                    h-9
+                    rounded-xl
+                    px-3
+                    text-xs
+                  "
+                >
 
-                <Trash2
-                  size={14}
-                />
+                  <Trash2
+                    size={14}
+                  />
 
-                Supprimer
+                  Supprimer
 
-              </Button>
-
+                </Button>
+              </PermissionGate>
             </div>
 
           ),
@@ -705,21 +694,20 @@ export default function CaisseTab() {
           "
         >
 
-          <Button
-            onClick={() =>
-              setOpenCreate(
-                true
-              )
-            }
+          <PermissionGate
+            permissions={[
+              PERMISSIONS.CAISSE_CREATE
+            ]}
           >
-
-            <Plus
-              size={16}
-            />
-
-            Nouvelle caisse
-
-          </Button>
+            <Button
+              onClick={() =>
+                setOpenCreate(true)
+              }
+            >
+              <Plus size={16} />
+              Nouvelle caisse
+            </Button>
+          </PermissionGate>
 
         </div>
 

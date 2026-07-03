@@ -91,8 +91,8 @@ export default function CaisseFormModal({
     defaultValues: {
       agence_id: "",
       agent_id: "",
-      type: "",
-      devise: "",
+      type: undefined,
+      devises: [],
     },
   });
 
@@ -243,23 +243,19 @@ export default function CaisseFormModal({
      */
 
     const payload = {
-      agence_id:
-        data.agence_id,
+      agence_id: data.agence_id,
 
-      type:
-        data.type,
+      type: data.type,
 
-      devise:
-        data.devise,
+      devises: data.devises,
 
-      ...(data.type ===
-        "AGENT" &&
-      data.agent_id
-        ? {
-            agent_id:
-              data.agent_id,
-          }
-        : {}),
+      ...(data.type === "AGENT" &&
+        data.agent_id
+          ? {
+              agent_id:
+                data.agent_id,
+            }
+          : {}),
     };
 
     mutate(
@@ -594,36 +590,62 @@ export default function CaisseFormModal({
 
             </label>
 
-            <select
-              {...register(
-                "devise",
-                {
-                  required:
-                    "Devise obligatoire",
-                }
-              )}
-              className="input"
-            >
+            <div className="space-y-3">
 
-              <option value="">
-                Choisir une devise
-              </option>
+              <label
+                className="
+                  flex
+                  items-center
+                  gap-3
+                "
+              >
+                <input
+                  type="checkbox"
+                  value="USD"
+                  {...register("devises", {
+                    required:
+                      "Sélectionnez au moins une devise",
+                  })}
+                />
 
-              <option value="CDF">
-                CDF
-              </option>
-
-              <option value="USD">
                 USD
-              </option>
+              </label>
 
-              <option value="EUR">
+              <label
+                className="
+                  flex
+                  items-center
+                  gap-3
+                "
+              >
+                <input
+                  type="checkbox"
+                  value="CDF"
+                  {...register("devises")}
+                />
+
+                CDF
+              </label>
+
+              <label
+                className="
+                  flex
+                  items-center
+                  gap-3
+                "
+              >
+                <input
+                  type="checkbox"
+                  value="EUR"
+                  {...register("devises")}
+                />
+
                 EUR
-              </option>
+              </label>
 
-            </select>
+            </div>
 
-            {errors.devise && (
+            {errors.devises && (
 
               <p
                 className="
@@ -634,8 +656,8 @@ export default function CaisseFormModal({
               >
                 {
                   errors
-                    .devise
-                    .message
+                    .devises
+                    ?.message
                 }
               </p>
 

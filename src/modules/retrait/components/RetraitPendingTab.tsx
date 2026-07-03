@@ -26,38 +26,7 @@ import RetraitForm from "./RetraitForm";
 import {
   useTransfertsToWithdraw,
 } from "../../transfert-client/hooks/useTransfertClient";
-
-/* -------------------------------------------------------------------------- */
-/*                                    TYPES                                   */
-/* -------------------------------------------------------------------------- */
-
-type Transfert = {
-  id: string;
-
-  code_reference: string;
-
-  exp_nom: string;
-
-  exp_postnom: string;
-
-  exp_phone: string;
-
-  dest_nom: string;
-
-  dest_postnom: string;
-
-  dest_phone: string;
-
-  montant:
-    | number
-    | string;
-
-  devise: string;
-
-  exp_numero_piece: string;
-
-  created_at: string;
-};
+import type { TransfertRetrait } from "../services/retrait.service";
 
 /* -------------------------------------------------------------------------- */
 /*                                    PAGE                                    */
@@ -77,7 +46,7 @@ export default function RetraitPendingTab() {
     selected,
     setSelected,
   ] =
-    useState<Transfert | null>(
+    useState<TransfertRetrait | null>(
       null
     );
 
@@ -100,7 +69,7 @@ export default function RetraitPendingTab() {
     );
 
   const transferts =
-    useMemo<Transfert[]>(
+    useMemo<TransfertRetrait[]>(
       () => data?.data ?? [],
       [data]
     );
@@ -124,19 +93,11 @@ export default function RetraitPendingTab() {
             ?.toLowerCase()
             .includes(q) ||
 
-          item.exp_nom
+          item.expediteur_name
             ?.toLowerCase()
             .includes(q) ||
 
-          item.exp_postnom
-            ?.toLowerCase()
-            .includes(q) ||
-
-          item.dest_nom
-            ?.toLowerCase()
-            .includes(q) ||
-
-          item.dest_postnom
+          item.destinataire_name
             ?.toLowerCase()
             .includes(q)
       );
@@ -150,380 +111,163 @@ export default function RetraitPendingTab() {
   /*                                  COLUMNS                                 */
   /* ------------------------------------------------------------------------ */
 
-  const columns:
-    Column<Transfert>[] =
-      [
+  const columns: Column<TransfertRetrait>[] = [
 
-        /* -------------------------------------------------------------- */
-        /* REF                                                            */
-        /* -------------------------------------------------------------- */
+    {
+      header: "Bénéficiaire",
 
-        // {
-        //   header:
-        //     "Référence",
+      accessor: "destinataire_name",
 
-        //   accessor:
-        //     "code_reference",
+      render: (_v, row) => (
 
-        //   render: (
-        //     value
-        //   ) => (
+        <div className="flex flex-col">
 
-        //     <div
-        //       className="
-        //         flex
-        //         flex-col
-        //       "
-        //     >
+          <span
+            className="
+              font-semibold
+              text-slate-800
+            "
+          >
+            {row.destinataire_name}
+          </span>
 
-        //       <span
-        //         className="
-        //           font-mono
-        //           text-xs
-        //           font-semibold
-        //           tracking-wide
-        //           text-slate-700
-        //         "
-        //       >
-        //         {value}
-        //       </span>
+          <span
+            className="
+              mt-1
+              text-xs
+              text-slate-400
+            "
+          >
+            {row.destinataire_telephone}
+          </span>
 
-        //       <span
-        //         className="
-        //           mt-1
-        //           text-[11px]
-        //           text-slate-400
-        //         "
-        //       >
-        //         Transaction
-        //       </span>
+        </div>
+      ),
+    },
 
-        //     </div>
-        //   ),
-        // },
+    {
+      header: "Montant",
 
-        /* -------------------------------------------------------------- */
-        /* EXPEDITEUR                                                     */
-        /* -------------------------------------------------------------- */
+      accessor: "montant_destination",
 
-        {
-          header:
-            "Expéditeur",
+      render: (_v, row) => (
 
-          accessor:
-            "exp_nom",
+        <div className="flex flex-col">
 
-          render: (
-            _v,
-            row
-          ) => (
+          <span
+            className="
+              text-base
+              font-semibold
+              text-emerald-600
+            "
+          >
+            {Number(
+              row.montant_destination
+            ).toLocaleString()}
+            {" "}
+            {row.devise_destination}
+          </span>
 
-            <div
-              className="
-                flex
-                flex-col
-              "
-            >
+          <span
+            className="
+              mt-1
+              text-xs
+              text-slate-400
+            "
+          >
+            Réf. {row.code_reference}
+          </span>
 
-              <span
-                className="
-                  font-semibold
-                  text-slate-800
-                "
-              >
-                {row.exp_nom}{" "}
-                {
-                  row.exp_postnom
-                }
-              </span>
+        </div>
+      ),
+    },
 
-              <span
-                className="
-                  mt-1
-                  text-xs
-                  text-slate-400
-                "
-              >
-                {
-                  row.exp_phone
-                }
-              </span>
+    {
+      header: "Date",
 
-            </div>
-          ),
-        },
+      accessor: "created_at",
 
-        /* -------------------------------------------------------------- */
-        /* DESTINATAIRE                                                   */
-        /* -------------------------------------------------------------- */
+      render: (value) => (
 
-        {
-          header:
-            "Destinataire",
+        <div
+          className="
+            text-sm
+            text-slate-600
+          "
+        >
+          {new Date(
+            String(value)
+          ).toLocaleDateString(
+            "fr-FR"
+          )}
+        </div>
+      ),
+    },
 
-          accessor:
-            "dest_nom",
+    {
+      header: "Action",
 
-          render: (
-            _v,
-            row
-          ) => (
+      accessor: "id",
 
-            <div
-              className="
-                flex
-                flex-col
-              "
-            >
+      render: (_v, row) => {
 
-              <span
-                className="
-                  font-semibold
-                  text-slate-800
-                "
-              >
-                {row.dest_nom}{" "}
-                {
-                  row.dest_postnom
-                }
-              </span>
+        const active =
+          selected?.id === row.id;
 
-              <span
-                className="
-                  mt-1
-                  text-xs
-                  text-slate-400
-                "
-              >
-                {
-                  row.dest_phone
-                }
-              </span>
+        return (
 
-            </div>
-          ),
-        },
+          <button
+            onClick={() =>
+              setSelected(row)
+            }
+            className={`
+              inline-flex
+              items-center
+              gap-2
+              rounded-2xl
+              border
+              px-4
+              py-2
+              text-sm
+              font-semibold
+              transition-all
 
-        /* -------------------------------------------------------------- */
-        /* MONTANT                                                        */
-        /* -------------------------------------------------------------- */
+              ${
+                active
+                  ? `
+                    border-red-200
+                    bg-red-50
+                    text-red-700
+                  `
+                  : `
+                    border-slate-200
+                    bg-white
+                    text-slate-700
+                    hover:border-red-200
+                    hover:bg-red-50
+                    hover:text-red-700
+                  `
+              }
+            `}
+          >
 
-        {
-          header:
-            "Montant",
+            {active ? (
+              <BadgeCheck size={15} />
+            ) : (
+              <ArrowRight size={15} />
+            )}
 
-          accessor:
-            "montant",
+            {
+              active
+                ? "Sélectionné"
+                : "Retirer"
+            }
 
-          render: (
-            value,
-            row
-          ) => {
-
-            const montant =
-              Number(value);
-
-            return (
-              <div
-                className="
-                  flex
-                  flex-col
-                "
-              >
-
-                <span
-                  className="
-                    text-base
-                    font-semibold
-                    text-emerald-600
-                  "
-                >
-                  {montant.toLocaleString()}{" "}
-                  {row.devise}
-                </span>
-
-                <span
-                  className="
-                    mt-1
-                    text-[11px]
-                    text-slate-400
-                  "
-                >
-                  Disponible
-                  au retrait
-                </span>
-
-              </div>
-            );
-          },
-        },
-
-        /* -------------------------------------------------------------- */
-        /* PIECE                                                          */
-        /* -------------------------------------------------------------- */
-
-        // {
-        //   header:
-        //     "Pièce",
-
-        //   accessor:
-        //     "exp_numero_piece",
-
-        //   render: (
-        //     value
-        //   ) => (
-
-        //     <span
-        //       className="
-        //         rounded-xl
-        //         bg-slate-100
-        //         px-3
-        //         py-2
-        //         font-mono
-        //         text-xs
-        //         text-slate-600
-        //       "
-        //     >
-        //       {value}
-        //     </span>
-        //   ),
-        // },
-
-        /* -------------------------------------------------------------- */
-        /* DATE                                                           */
-        /* -------------------------------------------------------------- */
-
-        {
-          header:
-            "Date",
-
-          accessor:
-            "created_at",
-
-          render: (
-            value
-          ) => (
-
-            <div
-              className="
-                flex
-                flex-col
-              "
-            >
-
-              <span
-                className="
-                  text-sm
-                  text-slate-700
-                "
-              >
-                {new Date(
-                  String(
-                    value
-                  )
-                ).toLocaleDateString(
-                  "fr-FR"
-                )}
-              </span>
-
-              <span
-                className="
-                  mt-1
-                  text-[11px]
-                  text-slate-400
-                "
-              >
-                En attente
-              </span>
-
-            </div>
-          ),
-        },
-
-        /* -------------------------------------------------------------- */
-        /* ACTION                                                         */
-        /* -------------------------------------------------------------- */
-
-        {
-          header:
-            "Action",
-
-          accessor:
-            "id",
-
-          render: (
-            _v,
-            row
-          ) => {
-
-            const active =
-              selected?.id ===
-              row.id;
-
-            return (
-
-              <button
-                onClick={() =>
-                  setSelected(
-                    row
-                  )
-                }
-                className={`
-                  inline-flex
-                  items-center
-                  gap-2
-                  rounded-2xl
-                  border
-                  px-4
-                  py-2
-                  text-sm
-                  font-semibold
-                  transition-all
-
-                  ${
-                    active
-                      ? `
-                        border-red-200
-                        bg-red-50
-                        text-red-700
-                      `
-                      : `
-                        border-slate-200
-                        bg-white
-                        text-slate-700
-                        hover:border-red-200
-                        hover:bg-red-50
-                        hover:text-red-700
-                      `
-                  }
-                `}
-              >
-
-                {active ? (
-
-                  <BadgeCheck
-                    size={15}
-                  />
-
-                ) : (
-
-                  <ArrowRight
-                    size={15}
-                  />
-
-                )}
-
-                {
-                  active
-                    ? "Sélectionné"
-                    : "Retirer"
-                }
-
-              </button>
-            );
-          },
-        },
-      ];
+          </button>
+        );
+      },
+    },
+  ];
 
   /* ------------------------------------------------------------------------ */
   /*                                   RENDER                                 */
@@ -560,6 +304,18 @@ export default function RetraitPendingTab() {
               ? {
                   code_reference:
                     selected.code_reference,
+
+                  devise_destination:
+                    selected.devise_destination,
+
+                  montant_destination:
+                    selected.montant_destination,
+
+                  destinataire_name:
+                    selected.destinataire_name,
+
+                  destinataire_telephone:
+                    selected.destinataire_telephone,
                 }
               : null
           }
@@ -780,7 +536,7 @@ export default function RetraitPendingTab() {
         {/* TABLE                                                      */}
         {/* ---------------------------------------------------------- */}
 
-        <Table<Transfert>
+        <Table<TransfertRetrait>
           data={filtered}
           columns={columns}
           loading={isLoading}

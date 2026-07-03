@@ -100,9 +100,28 @@ export function useIdleLogout() {
           WARNING_TIME
         );
 
+      // logoutTimeout.current =
+      //   window.setTimeout(
+      //     () => {
+
+      //       logout();
+
+      //       window.location.href =
+      //         "/login";
+
+      //     },
+      //     LOGOUT_TIME
+      //   );
+
       logoutTimeout.current =
         window.setTimeout(
           () => {
+
+            if (
+              import.meta.env.DEV
+            ) {
+              return;
+            }
 
             logout();
 

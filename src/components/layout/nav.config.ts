@@ -12,17 +12,33 @@ import {
   Send,
   UserPlus,
   ShieldCheck,
+  Settings,
+  // Landmark,
+  ScrollText,
+  // ReceiptText,
+  BookOpen,
+  Scale,
+  ArrowLeftRight,
+  // FileSpreadsheet,
 } from "lucide-react";
 
 /* ========================================================= */
 /* TYPES */
 /* ========================================================= */
 
-type Role =
+export type Role =
   | "ADMIN"
   | "CAISSIER"
   | "N+1"
   | "N+2";
+
+export type NavItemType = {
+  label: string;
+  path?: string;
+  icon: React.ElementType;
+  roles?: string[];
+  children?: NavItemType[];
+};
 
 /* ========================================================= */
 /* NAV FACTORY */
@@ -53,43 +69,39 @@ export const getNavItems = (
     },
 
     /* ===================================================== */
-    /* ENVOI */
+    /* OPERATION */
     /* ===================================================== */
 
     {
-      label: "Envoi",
-      icon: Send,
-      path:
-        `${base}/transfert-client`,
+      label: "Opérations",
+
+      icon: Repeat,
+
+      children: [
+
+        {
+          label: "Envoi",
+          icon: Send,
+          path:
+            `${base}/transfert-client`,
+        },
+
+        {
+          label: "Paiement",
+          icon: Banknote,
+          path:
+            `${base}/retrait`,
+        },
+
+        {
+          label: "Change",
+          icon: ArrowLeftRight,
+          path:
+            `${base}/change`,
+        },
+
+      ],
     },
-
-    /* ===================================================== */
-    /* RETRAIT */
-    /* ===================================================== */
-
-    {
-      label: "Paiement",
-      icon: Banknote,
-      path:
-        `${base}/retrait`,
-    },
-
-    /* ===================================================== */
-    /* AGENCES */
-    /* ===================================================== */
-
-    ...(
-      !isCaissier
-        ? [
-            {
-              label: "Agences",
-              icon: Building2,
-              path:
-                `${base}/agences`,
-            },
-          ]
-        : []
-    ),
 
     /* ===================================================== */
     /* TRANSFERT CAISSE */
@@ -137,70 +149,165 @@ export const getNavItems = (
     /* ===================================================== */
 
     {
-      label: "Registre",
+      label: "Comptabilité",
 
-      icon: FileText,
+      icon: BookOpen,
 
-      path:
-        `${base}/ledger`,
+      children: [
+
+        {
+          label: "Balance comptable",
+          icon: Scale,
+          path: `${base}/balance`,
+        },
+
+        {
+          label: "Grand Livre",
+          icon: ScrollText,
+          path: `${base}/grand-livre`,
+        },
+
+        {
+          label: "Journal comptable",
+          icon: FileText,
+          path: `${base}/ledger`,
+        },
+
+        // {
+        //   label: "Écritures comptables",
+        //   icon: ReceiptText,
+        //   path: `${base}/ecritures-comptables`,
+        // },
+
+        // {
+        //   label: "Comptes comptables",
+        //   icon: Landmark,
+        //   path: `${base}/comptes-comptables`,
+        // },
+      ],
     },
+    // {
+    //   label: "Comptabilité",
 
-    /* ===================================================== */
-    /* ADMIN ONLY */
-    /* ===================================================== */
+    //   icon: BookOpen,
 
-    ...(
+    //   children: [
+
+    //     {
+    //       label: "Écritures",
+
+    //       icon: ReceiptText,
+
+    //       path:
+    //         `${base}/ecritures-comptables`,
+    //     },
+
+    //     {
+    //       label: "Journaux",
+
+    //       icon: FileText,
+
+    //       path:
+    //         `${base}/journaux`,
+    //     },
+
+    //     {
+    //       label: "Grand Livre",
+
+    //       icon: ScrollText,
+
+    //       path:
+    //         `${base}/grand-livre`,
+    //     },
+
+    //     {
+    //       label: "Registre",
+
+    //       icon: FileText,
+          
+    //       path: `${base}/ledger`,
+    //     },
+
+    //     {
+    //       label: "Balance",
+
+    //       icon: Scale,
+
+    //       path:
+    //         `${base}/balance-comptable`,
+    //     },
+
+    //     {
+    //       label: "Comptes",
+
+    //       icon: Landmark,
+
+    //       path:
+    //         `${base}/comptes-comptables`,
+    //     },
+
+    //     {
+    //       label: "Exports",
+
+    //       icon: FileSpreadsheet,
+
+    //       path:
+    //         `${base}/exports-comptables`,
+    //     },
+
+    //   ],
+    // },
+
+    /**
+     * ==================================================
+     * PARAMETRES
+     * ==================================================
+     */
+      ...(
       !isCaissier
         ? [
             {
-              label:
-                "Audit Logs",
+              label: "Configurations",
 
-              icon:
-                ShieldCheck,
+              icon: ShieldCheck,
 
-              path:
-                `${base}/audit-logs`,
+              children: [
 
-              roles: [
-                "ADMIN",
-                "N+1",
-                "N+2",
-              ] as Role[],
-            },
+                {
+                  label: "Agences",
+                  icon: Building2,
+                  path:
+                    `${base}/agences`,
+                },
 
-            {
-              label:
-                "Validation Logs",
+                {
+                  label: "Utilisateurs",
+                  icon: UserPlus,
+                  path:
+                    `${base}/register`,
+                },
 
-              icon:
-                History,
+                {
+                  label: "Audit Logs",
+                  icon: ShieldCheck,
+                  path:
+                    `${base}/audit-logs`,
+                },
 
-              path:
-                `${base}/validation-logs`,
+                {
+                  label: "Validation Logs",
+                  icon: History,
+                  path:
+                    `${base}/validation-logs`,
+                },
 
-              roles: [
-                "ADMIN",
-                "N+1",
-                "N+2",
-              ] as Role[],
-            },
-
-            {
-              label:
-                "Utilisateurs",
-
-              icon:
-                UserPlus,
-
-              path:
-                `${base}/register`,
-
-              roles: [
-                "ADMIN",
-                "N+1",
-                "N+2",
-              ] as Role[],
+                {
+                  label: "Paramètres",
+                  icon: Settings,
+                  path:
+                    `${base}/parametres`,
+                },
+              ],
             },
           ]
         : []

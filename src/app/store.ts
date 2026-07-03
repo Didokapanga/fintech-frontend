@@ -12,6 +12,7 @@ type User = {
   agence_id?: string;
   agence_name?: string; // (optionnel mais recommandé)
   code_agence?: string;
+  permissions: string[];
 };
 
 type AuthState = {

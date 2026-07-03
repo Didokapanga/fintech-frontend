@@ -1,39 +1,144 @@
+// src/modules/caisse/services/caisse.service.ts
+import { useAuthStore } from "../../../app/store";
 import { api } from "../../../services/api";
 import type { Caisse } from "../types";
 
 export interface CreateCaisseDto {
   agence_id: string;
   agent_id?: string;
-  type: string;
-  devise: string;
-  code_caisse: string;
+  type: "AGENCE" | "AGENT";
+
+  devises: string[];
 }
 
-// ✅ GET ALL
+// ✅ GET ALL (intelligent selon permissions)
 export const getCaisses = async (
   page = 1,
   limit = 10
 ) => {
 
-  const res = await api.get(
-    `/caisses?page=${page}&limit=${limit}`
-  );
+  const user =
+    useAuthStore.getState().user;
+
+  const permissions =
+    user?.permissions ?? [];
+
+  /**
+   * =====================================
+   * GLOBAL
+   * caisse.read
+   * =====================================
+   */
+  if (
+    permissions.includes(
+      "caisse.read"
+    )
+  ) {
+
+    const res =
+      await api.get(
+        `/caisses?page=${page}&limit=${limit}`
+      );
+
+    return {
+      data:
+        res.data?.data || [],
+
+      total:
+        res.data?.meta?.total || 0,
+
+      page:
+        res.data?.meta?.page || 1,
+
+      limit:
+        res.data?.meta?.limit || 10,
+
+      totalPages:
+        res.data?.meta?.totalPages || 1,
+    };
+  }
+
+  /**
+   * =====================================
+   * AGENCE
+   * caisse.readByagence
+   * =====================================
+   */
+  if (
+    permissions.includes(
+      "caisse.readByagence"
+    ) &&
+    user?.agence_id
+  ) {
+
+    const res =
+      await api.get(
+        `/caisses/agence/${user.agence_id}`
+      );
+
+    return {
+      data:
+        res.data?.data || [],
+
+      total:
+        res.data?.meta?.total || 0,
+
+      page:
+        res.data?.meta?.page || 1,
+
+      limit:
+        res.data?.meta?.limit || 10,
+
+      totalPages:
+        res.data?.meta?.totalPages || 1,
+    };
+  }
+
+  /**
+   * =====================================
+   * USER
+   * caisse.readByuser
+   * =====================================
+   */
+  if (
+    permissions.includes(
+      "caisse.readByuser"
+    )
+  ) {
+
+    const res =
+      await api.get(
+        "/caisses/me"
+      );
+
+    return {
+      data:
+        res.data?.data
+          ? [res.data.data]
+          : [],
+
+      total:
+        res.data?.data
+          ? 1
+          : 0,
+
+      page: 1,
+
+      limit,
+
+      totalPages:
+        res.data?.data
+          ? 1
+          : 0,
+    };
+  }
 
   return {
-    data:
-      res.data?.data || [],
-
-    total:
-      res.data?.meta?.total || 0,
-
-    page:
-      res.data?.meta?.page || 1,
-
-    limit:
-      res.data?.meta?.limit || 10,
-
-    totalPages:
-      res.data?.meta?.totalPages || 1,
+    data: [],
+    total: 0,
+    page: 1,
+    limit,
+    totalPages: 0,
   };
 };
 

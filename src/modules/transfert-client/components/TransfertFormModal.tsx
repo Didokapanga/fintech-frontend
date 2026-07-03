@@ -3,16 +3,13 @@
 import {
   ArrowRightLeft,
   Building2,
-  CalendarRange,
-  CreditCard,
   Landmark,
-  Phone,
   Send,
   User2,
   Wallet,
 } from "lucide-react";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   useForm,
   useWatch,
@@ -34,6 +31,10 @@ import type {
   CreateTransfertClientDto,
 } from "../services/transfert.service";
 
+import type {
+  Caisse,
+} from "../../caisse/types";
+
 import {
   useCaisses,
 } from "../../caisse/hooks/useCaisses";
@@ -45,16 +46,11 @@ import {
 import {
   useAuthStore,
 } from "../../../app/store";
+import { useClients } from "../../clients/hooks/useClients";
 
 /* -------------------------------------------------------------------------- */
 /*                                   TYPES                                    */
 /* -------------------------------------------------------------------------- */
-
-type Caisse = {
-  id: string;
-  code_caisse: string;
-  devise?: string;
-};
 
 type Agence = {
   id: string;
@@ -65,10 +61,6 @@ type Props = {
   open: boolean;
 
   onClose: () => void;
-
-  selectedCaisseId: string;
-
-  selectedDevise: string;
 };
 
 type MessageState = {
@@ -104,8 +96,6 @@ type CreateTransfertResponse =
 export default function TransfertFormModal({
   open,
   onClose,
-  selectedCaisseId,
-  selectedDevise,
 }: Props) {
 
   /* ------------------------------------------------------------------------ */
@@ -121,12 +111,10 @@ export default function TransfertFormModal({
      formState: { errors },
   } = useForm<CreateTransfertClientDto>();
 
-  const montant = Number(
-    useWatch({
-      control,
-      name: "montant",
-    }) || 0
-  );
+  useWatch({
+    control,
+    name: "montant_destination",
+  })
 
   /* ------------------------------------------------------------------------ */
   /*                                   STORE                                  */
@@ -148,55 +136,18 @@ export default function TransfertFormModal({
     useCreateTransfertClient();
 
   const {
-    data:
-      caisseResponse,
-  } =
-    useCaisses();
+    data: caisseResponse,
+  } = useCaisses(
+    1,
+    100
+  );
 
-  const caisses:
-    Caisse[] =
-      caisseResponse?.data ||
-      [];
-
-  
-  const commission =
-    calculateCommission(
-      montant
-    ).toFixed(2);
-
-  useEffect(() => {
-    setValue(
-      "commission",
-      Number(commission)
+  const caisses =
+    useMemo(
+      () =>
+        caisseResponse?.data || [],
+      [caisseResponse]
     );
-  }, [
-    commission,
-    setValue,
-  ]);
-
-  useEffect(() => {
-
-    if (
-      selectedCaisseId &&
-      selectedDevise
-    ) {
-
-      setValue(
-        "caisse_id",
-        selectedCaisseId
-      );
-
-      setValue(
-        "devise",
-        selectedDevise
-      );
-    }
-
-  }, [
-    selectedCaisseId,
-    selectedDevise,
-    setValue,
-  ]);
 
   const {
     data: agences =
@@ -205,6 +156,10 @@ export default function TransfertFormModal({
     useAgences() as {
       data: Agence[];
     };
+
+  const myCaisse:
+    Caisse | undefined =
+      caisses?.[0];
 
   /* ------------------------------------------------------------------------ */
   /*                                  MESSAGE                                 */
@@ -218,6 +173,114 @@ export default function TransfertFormModal({
       null
     );
 
+  /*--------------------------------------------------------------*/
+  /* LES AJOUT                                                    */
+  /*--------------------------------------------------------------*/
+
+  const {
+    data: clients = [],
+  } = useClients();
+
+  const [
+  expSearch,
+  setExpSearch,
+] = useState("");
+
+const [
+  destSearch,
+  setDestSearch,
+] = useState("");
+
+const [
+  showExpResults,
+  setShowExpResults,
+] = useState(false);
+
+const [
+  showDestResults,
+  setShowDestResults,
+] = useState(false);
+
+const filteredExpediteurs =
+  clients.filter((client) => {
+
+    const fullName =
+      `${client.nom ?? ""}
+       ${client.postnom ?? ""}
+       ${client.prenom ?? ""}`
+        .toLowerCase();
+
+    return fullName.includes(
+      expSearch.toLowerCase()
+    );
+  });
+
+const filteredDestinataires =
+  clients.filter((client) => {
+
+    const fullName =
+      `${client.nom ?? ""}
+       ${client.postnom ?? ""}
+       ${client.prenom ?? ""}`
+        .toLowerCase();
+
+    return fullName.includes(
+      destSearch.toLowerCase()
+    );
+  });
+
+  useEffect(() => {
+
+    if (!myCaisse) return;
+
+    setValue(
+      "caisse_id",
+      myCaisse.id
+    );
+
+  }, [
+    myCaisse,
+    setValue,
+  ]);
+
+  useEffect(() => {
+
+  if (!myCaisse) return;
+
+  setValue(
+    "caisse_id",
+    myCaisse.id
+  );
+
+}, [
+  myCaisse,
+  setValue,
+]);
+
+const deviseSelectionnee =
+  useWatch({
+    control,
+    name: "devise_source",
+  });
+
+  useEffect(() => {
+
+    if (
+      deviseSelectionnee
+    ) {
+
+      setValue(
+        "devise_destination",
+        deviseSelectionnee
+      );
+
+    }
+
+  }, [
+    deviseSelectionnee,
+    setValue,
+  ]);
+
   /* ------------------------------------------------------------------------ */
   /*                                  SUBMIT                                  */
   /* ------------------------------------------------------------------------ */
@@ -227,8 +290,8 @@ export default function TransfertFormModal({
   ) => {
 
      if (
-        selectedDevise === "USD" &&
-        Number(data.montant) >= 10000
+        deviseSelectionnee === "USD" &&
+        Number(data.montant_destination) >= 10000
       ) {
 
         setAppMessage({
@@ -259,14 +322,7 @@ export default function TransfertFormModal({
       return;
     }
 
-    const payload:
-      CreateTransfertClientDto =
-        {
-          ...data,
-
-          agence_exp:
-            user.agence_id,
-        };
+    const payload = data;
 
     mutate(payload, {
 
@@ -315,31 +371,16 @@ export default function TransfertFormModal({
     });
   };
 
+  const deviseInfo =
+    myCaisse?.devises?.find(
+      (d) =>
+        d.devise ===
+        deviseSelectionnee
+    );
+
   /* ------------------------------------------------------------------------ */
   /*                                   RENDER                                 */
   /* ------------------------------------------------------------------------ */
-
-  function calculateCommission(
-    montant: number
-  ) {
-    if (montant >= 5 && montant <= 99) {
-      return montant * 0.0505;
-    }
-
-    if (montant >= 100 && montant <= 499) {
-      return montant * 0.05;
-    }
-
-    if (montant >= 500 && montant <= 999) {
-      return montant * 0.04;
-    }
-
-    if (montant >= 1000 && montant <= 9999) {
-      return montant * 0.03;
-    }
-
-    return 0;
-  }
 
   return (
     <Modal
@@ -471,9 +512,12 @@ export default function TransfertFormModal({
 
           <input
             type="hidden"
-            {...register(
-              "devise"
-            )}
+            {...register("devise_source")}
+          />
+
+          <input
+            type="hidden"
+            {...register("devise_destination")}
           />
 
           <form
@@ -492,23 +536,17 @@ export default function TransfertFormModal({
             <FormSection
               title="Configuration"
               description="Informations principales du transfert."
-              icon={
-                <Wallet
-                  size={18}
-                />
-              }
+              icon={<Wallet size={18} />}
             >
 
               <div
                 className="
                   grid
                   grid-cols-1
-                  gap-5
+                  gap-6
                   xl:grid-cols-2
                 "
               >
-
-                {/* CAISSE */}
 
                 <Field>
 
@@ -516,19 +554,12 @@ export default function TransfertFormModal({
                     Caisse source
                   </Label>
 
-                  <input
-                    type="text"
-                    readOnly
-                    value={
-                      caisses.find(
-                        c =>
-                          c.id ===
-                          selectedCaisseId
-                      )?.code_caisse || ""
-                    }
+                  <div
                     className="
+                      flex
                       h-12
-                      w-full
+                      items-center
+                      gap-3
                       rounded-2xl
                       border
                       border-slate-200
@@ -537,51 +568,114 @@ export default function TransfertFormModal({
                       text-sm
                       font-medium
                       text-slate-700
-                      cursor-not-allowed
                     "
-                  />
+                  >
+
+                    <Wallet size={16} />
+
+                    {myCaisse
+                      ? `${myCaisse.code_caisse} • ${myCaisse.agence_name}`
+                      : "Chargement..."
+                    }
+
+                  </div>
 
                 </Field>
-
-                {/* DEVISE */}
 
                 <Field>
 
                   <Label>
-                    Devise
+                    Devise du transfert
                   </Label>
 
-                  <input
-                    type="text"
-                    readOnly
-                    value={selectedDevise}
+                  <select
+                    {...register(
+                      "devise_source",
+                      {
+                        required:
+                          "Veuillez sélectionner une devise",
+                      }
+                    )}
                     className="
                       h-12
                       w-full
                       rounded-2xl
                       border
                       border-slate-200
-                      bg-slate-100
+                      bg-white
                       px-4
                       text-sm
-                      font-medium
-                      text-slate-700
-                      cursor-not-allowed
+                      outline-none
+                      transition-all
+                      focus:border-indigo-500
+                      focus:ring-4
+                      focus:ring-indigo-100
                     "
-                  />
+                  >
+
+                    <option value="">
+                      Sélectionner une devise
+                    </option>
+
+                    {myCaisse?.devises?.map(
+                      (devise) => (
+                        <option
+                          key={devise.id}
+                          value={devise.devise}
+                        >
+                          {devise.devise}
+                        </option>
+                      )
+                    )}
+
+                  </select>
+
+                  {errors.devise_source && (
+
+                    <p
+                      className="
+                        mt-2
+                        text-xs
+                        font-medium
+                        text-red-500
+                      "
+                    >
+                      {errors.devise_source.message}
+                    </p>
+
+                  )}
+
+                  {deviseInfo && (
+
+                    <p
+                      className="
+                        mt-2
+                        text-xs
+                        font-medium
+                        text-emerald-600
+                      "
+                    >
+                      Solde disponible :
+                      {" "}
+                      {Number(
+                        deviseInfo.solde
+                      ).toLocaleString()}
+                      {" "}
+                      {deviseInfo.devise}
+                    </p>
+
+                  )}
 
                 </Field>
 
               </div>
 
-              {/* AGENCES */}
-
               <div
                 className="
-                  mt-5
+                  mt-6
                   grid
                   grid-cols-1
-                  gap-5
+                  gap-6
                   xl:grid-cols-2
                 "
               >
@@ -609,18 +703,13 @@ export default function TransfertFormModal({
                     "
                   >
 
-                    <Building2
-                      size={16}
-                    />
+                    <Building2 size={16} />
 
                     {agences.find(
-                      (
-                        agence
-                      ) =>
+                      (agence) =>
                         agence.id ===
                         user?.agence_id
-                    )?.libelle ||
-                      "-"}
+                    )?.libelle || "-"}
 
                   </div>
 
@@ -634,10 +723,26 @@ export default function TransfertFormModal({
 
                   <select
                     {...register(
-                      "agence_dest"
+                      "agence_dest",
+                      {
+                        required:
+                          "Veuillez sélectionner une agence",
+                      }
                     )}
                     className="
-                      form-select
+                      h-12
+                      w-full
+                      rounded-2xl
+                      border
+                      border-slate-200
+                      bg-white
+                      px-4
+                      text-sm
+                      outline-none
+                      transition-all
+                      focus:border-indigo-500
+                      focus:ring-4
+                      focus:ring-indigo-100
                     "
                   >
 
@@ -647,33 +752,37 @@ export default function TransfertFormModal({
 
                     {agences
                       .filter(
-                        (
-                          agence
-                        ) =>
+                        (agence) =>
                           agence.id !==
                           user?.agence_id
                       )
                       .map(
-                        (
-                          agence
-                        ) => (
-
+                        (agence) => (
                           <option
-                            key={
-                              agence.id
-                            }
-                            value={
-                              agence.id
-                            }
+                            key={agence.id}
+                            value={agence.id}
                           >
-                            {
-                              agence.libelle
-                            }
+                            {agence.libelle}
                           </option>
                         )
                       )}
 
                   </select>
+
+                  {errors.agence_dest && (
+
+                    <p
+                      className="
+                        mt-2
+                        text-xs
+                        font-medium
+                        text-red-500
+                      "
+                    >
+                      {errors.agence_dest.message}
+                    </p>
+
+                  )}
 
                 </Field>
 
@@ -687,199 +796,141 @@ export default function TransfertFormModal({
 
             <FormSection
               title="Expéditeur"
-              description="Informations du client expéditeur."
-              icon={
-                <User2
-                  size={18}
-                />
-              }
+              description="Recherche et sélection du client expéditeur."
+              icon={<User2 size={18} />}
             >
 
-              <div
-                className="
-                  grid
-                  grid-cols-1
-                  gap-5
-                  xl:grid-cols-3
-                "
-              >
-
-                <Input
-                  label="Nom"
-                  placeholder="Nom"
-                  {...register(
-                    "exp_nom"
-                  )}
-                />
-
-                <Input
-                  label="Postnom"
-                  placeholder="Postnom"
-                  {...register(
-                    "exp_postnom"
-                  )}
-                />
-
-                <Input
-                  label="Prénom"
-                  placeholder="Prénom"
-                  {...register(
-                    "exp_prenom"
-                  )}
-                />
-
-              </div>
-
-              <div
-                className="
-                  mt-5
-                "
-              >
+              <Field>
 
                 <Label>
-                  Téléphone
+                  Client expéditeur
                 </Label>
 
-                <div
-                  className="
-                    relative
-                  "
-                >
-
-                  <Phone
-                    size={16}
-                    className="
-                      absolute
-                      left-4
-                      top-1/2
-                      -translate-y-1/2
-                      text-slate-400
-                    "
-                  />
+                <div className="relative">
 
                   <input
                     type="text"
-                    placeholder="+243..."
-                    {...register(
-                      "exp_phone"
-                    )}
+                    value={expSearch}
+                    onChange={(e) => {
+
+                      setExpSearch(
+                        e.target.value
+                      );
+
+                      setShowExpResults(
+                        true
+                      );
+                    }}
+                    placeholder="Rechercher un client..."
                     className="
                       h-12
                       w-full
                       rounded-2xl
                       border
                       border-slate-200
-                      bg-white
-                      pl-11
-                      pr-4
+                      px-4
                       text-sm
-                      text-slate-700
                       outline-none
-                      transition-all
-                      focus:border-indigo-400
+                      focus:border-indigo-500
                       focus:ring-4
                       focus:ring-indigo-100
                     "
                   />
 
-                </div>
+                  {showExpResults &&
+                    expSearch && (
 
-              </div>
-
-              <div
-                className="
-                  mt-5
-                  grid
-                  grid-cols-1
-                  gap-5
-                  xl:grid-cols-2
-                "
-              >
-
-                <Field>
-
-                  <Label>
-                    Type de pièce
-                  </Label>
-
-                  <select
-                    {...register(
-                      "exp_type_piece"
-                    )}
-                    className="
-                      form-select
-                    "
-                  >
-
-                    <option value="">
-                      Sélectionner
-                    </option>
-
-                    <option value="CARTE D'ELECTEUR">
-                      Carte d'électeur
-                    </option>
-
-                    <option value="PASSEPORT">
-                      Passeport
-                    </option>
-
-                  </select>
-
-                </Field>
-
-                <div>
-
-                  <Label>
-                    Numéro pièce
-                  </Label>
-
-                  <div
-                    className="
-                      relative
-                    "
-                  >
-
-                    <CreditCard
-                      size={16}
+                    <div
                       className="
                         absolute
-                        left-4
-                        top-1/2
-                        -translate-y-1/2
-                        text-slate-400
-                      "
-                    />
-
-                    <input
-                      type="text"
-                      placeholder="Numéro d'identification"
-                      {...register(
-                        "exp_numero_piece"
-                      )}
-                      className="
-                        h-12
+                        z-50
+                        mt-2
+                        max-h-60
                         w-full
+                        overflow-auto
                         rounded-2xl
                         border
                         border-slate-200
                         bg-white
-                        pl-11
-                        pr-4
-                        text-sm
-                        text-slate-700
-                        outline-none
-                        transition-all
-                        focus:border-indigo-400
-                        focus:ring-4
-                        focus:ring-indigo-100
+                        shadow-xl
                       "
-                    />
+                    >
 
-                  </div>
+                      {filteredExpediteurs.map(
+                        (client) => (
+
+                          <button
+                            type="button"
+                            key={client.id}
+                            onClick={() => {
+
+                              setValue(
+                                "expediteur_id",
+                                client.id
+                              );
+
+                              setExpSearch(
+                                `${client.nom ?? ""}
+                                ${client.postnom ?? ""}
+                                ${client.prenom ?? ""}`
+                              );
+
+                              setShowExpResults(
+                                false
+                              );
+                            }}
+                            className="
+                              flex
+                              w-full
+                              flex-col
+                              px-4
+                              py-3
+                              text-left
+                              hover:bg-slate-50
+                            "
+                          >
+
+                            <span className="font-medium">
+                              {client.nom}{" "}
+                              {client.postnom}{" "}
+                              {client.prenom}
+                            </span>
+
+                            <span className="text-xs text-slate-500">
+                              {client.telephone}
+                            </span>
+
+                          </button>
+
+                        )
+                      )}
+
+                    </div>
+
+                  )}
 
                 </div>
 
-              </div>
+                <input
+                  type="hidden"
+                  {...register(
+                    "expediteur_id",
+                    {
+                      required:
+                        "Sélectionnez un expéditeur",
+                    }
+                  )}
+                />
+
+                {errors.expediteur_id && (
+
+                  <p className="mt-2 text-xs text-red-500">
+                    {errors.expediteur_id.message}
+                  </p>
+
+                )}
+
+              </Field>
 
             </FormSection>
 
@@ -889,199 +940,167 @@ export default function TransfertFormModal({
 
             <FormSection
               title="Destinataire"
-              description="Informations du client bénéficiaire."
-              icon={
-                <Send
-                  size={18}
-                />
-              }
+              description="Recherche et sélection du bénéficiaire."
+              icon={<Send size={18} />}
             >
 
-              <div
-                className="
-                  grid
-                  grid-cols-1
-                  gap-5
-                  xl:grid-cols-3
-                "
-              >
-
-                <Input
-                  label="Nom"
-                  placeholder="Nom"
-                  {...register(
-                    "dest_nom"
-                  )}
-                />
-
-                <Input
-                  label="Postnom"
-                  placeholder="Postnom"
-                  {...register(
-                    "dest_postnom"
-                  )}
-                />
-
-                <Input
-                  label="Prénom"
-                  placeholder="Prénom"
-                  {...register(
-                    "dest_prenom"
-                  )}
-                />
-
-              </div>
-
-              <div
-                className="
-                  mt-5
-                "
-              >
+              <Field>
 
                 <Label>
-                  Téléphone
+                  Client bénéficiaire
                 </Label>
 
-                <div
-                  className="
-                    relative
-                  "
-                >
-
-                  <Phone
-                    size={16}
-                    className="
-                      absolute
-                      left-4
-                      top-1/2
-                      -translate-y-1/2
-                      text-slate-400
-                    "
-                  />
+                <div className="relative">
 
                   <input
                     type="text"
-                    placeholder="+243..."
-                    {...register(
-                      "dest_phone"
-                    )}
+                    value={destSearch}
+                    onChange={(e) => {
+
+                      setDestSearch(
+                        e.target.value
+                      );
+
+                      setShowDestResults(
+                        true
+                      );
+                    }}
+                    placeholder="Rechercher un bénéficiaire..."
                     className="
                       h-12
                       w-full
                       rounded-2xl
                       border
                       border-slate-200
-                      bg-white
-                      pl-11
-                      pr-4
+                      px-4
                       text-sm
-                      text-slate-700
                       outline-none
-                      transition-all
-                      focus:border-indigo-400
+                      focus:border-indigo-500
                       focus:ring-4
                       focus:ring-indigo-100
                     "
                   />
 
-                </div>
+                  {showDestResults &&
+                    destSearch && (
 
-              </div>
-
-              <div
-                className="
-                  mt-5
-                  grid
-                  grid-cols-1
-                  gap-5
-                  xl:grid-cols-2
-                "
-              >
-
-                <Field>
-
-                  <Label>
-                    Type de pièce
-                  </Label>
-
-                  <select
-                    {...register(
-                      "dest_type_piece"
-                    )}
-                    className="
-                      form-select
-                    "
-                  >
-
-                    <option value="">
-                      Sélectionner
-                    </option>
-
-                    <option value="CARTE D'ELECTEUR">
-                      Carte d'électeur
-                    </option>
-
-                    <option value="PASSEPORT">
-                      Passeport
-                    </option>
-
-                  </select>
-
-                </Field>
-
-                <div>
-
-                  <Label>
-                    Numéro pièce
-                  </Label>
-
-                  <div
-                    className="
-                      relative
-                    "
-                  >
-
-                    <CreditCard
-                      size={16}
+                    <div
                       className="
                         absolute
-                        left-4
-                        top-1/2
-                        -translate-y-1/2
-                        text-slate-400
-                      "
-                    />
-
-                    <input
-                      type="text"
-                      placeholder="Numéro d'identification"
-                      {...register(
-                        "dest_numero_piece"
-                      )}
-                      className="
-                        h-12
+                        z-50
+                        mt-2
+                        max-h-60
                         w-full
+                        overflow-auto
                         rounded-2xl
                         border
                         border-slate-200
                         bg-white
-                        pl-11
-                        pr-4
-                        text-sm
-                        text-slate-700
-                        outline-none
-                        transition-all
-                        focus:border-indigo-400
-                        focus:ring-4
-                        focus:ring-indigo-100
+                        shadow-xl
                       "
-                    />
+                    >
 
-                  </div>
+                      {filteredDestinataires.map(
+                        (client) => (
+
+                          <button
+                            type="button"
+                            key={client.id}
+                            onClick={() => {
+
+                              setValue(
+                                "destinataire_id",
+                                client.id
+                              );
+
+                              setDestSearch(
+                                `${client.nom ?? ""}
+                                ${client.postnom ?? ""}
+                                ${client.prenom ?? ""}`
+                              );
+
+                              setShowDestResults(
+                                false
+                              );
+                            }}
+                            className="
+                              flex
+                              w-full
+                              flex-col
+                              px-4
+                              py-3
+                              text-left
+                              hover:bg-slate-50
+                            "
+                          >
+
+                            <span className="font-medium">
+                              {client.nom}{" "}
+                              {client.postnom}{" "}
+                              {client.prenom}
+                            </span>
+
+                            <span
+                              className="
+                                text-xs
+                                text-slate-500
+                              "
+                            >
+                              {client.telephone}
+                            </span>
+
+                          </button>
+
+                        )
+                      )}
+
+                      {filteredDestinataires.length === 0 && (
+
+                        <div
+                          className="
+                            px-4
+                            py-3
+                            text-sm
+                            text-slate-500
+                          "
+                        >
+                          Aucun client trouvé
+                        </div>
+
+                      )}
+
+                    </div>
+
+                  )}
 
                 </div>
 
-              </div>
+                <input
+                  type="hidden"
+                  {...register(
+                    "destinataire_id",
+                    {
+                      required:
+                        "Sélectionnez un bénéficiaire",
+                    }
+                  )}
+                />
+
+                {errors.destinataire_id && (
+
+                  <p
+                    className="
+                      mt-2
+                      text-xs
+                      text-red-500
+                    "
+                  >
+                    {errors.destinataire_id.message}
+                  </p>
+
+                )}
+
+              </Field>
 
             </FormSection>
 
@@ -1091,12 +1110,8 @@ export default function TransfertFormModal({
 
             <FormSection
               title="Détails financiers"
-              description="Informations liées au montant et aux frais."
-              icon={
-                <Landmark
-                  size={18}
-                />
-              }
+              description="Montant et mode de paiement."
+              icon={<Landmark size={18} />}
             >
 
               <div
@@ -1113,137 +1128,71 @@ export default function TransfertFormModal({
                   label="Montant"
                   placeholder="0.00"
                   {...register(
-                    "montant",
+                    "montant_destination",
                     {
-                      validate: (value) => {
-                        if (
-                          selectedDevise === "USD" &&
-                          Number(value) >= 10000
-                        ) {
-                          return "Le montant maximum autorisé est de 9 999 USD";
-                        }
-
-                        return true;
-                      },
+                      valueAsNumber: true,
+                      required: true,
                     }
                   )}
                 />
 
-                {errors.montant && (
-                  <p
-                    className="
-                      mt-2
-                      text-sm
-                      font-medium
-                      text-red-600
-                    "
-                  >
-                    {errors.montant.message}
-                  </p>
-                )}
-
-                <div>
+                <Field>
 
                   <Label>
-                    Date opération
+                    Mode paiement
                   </Label>
 
-                  <div
+                  <select
+                    {...register(
+                      "mode_paiement",
+                      {
+                        required: true,
+                      }
+                    )}
                     className="
-                      relative
-                    "
-                  >
-
-                    <CalendarRange
-                      size={16}
-                      className="
-                        absolute
-                        left-4
-                        top-1/2
-                        -translate-y-1/2
-                        text-slate-400
-                      "
-                    />
-
-                    <input
-                      type="date"
-                      {...register(
-                        "date_operation",
-                        {
-                          required:
-                            true,
-                        }
-                      )}
-                      className="
-                        h-12
-                        w-full
-                        rounded-2xl
-                        border
-                        border-slate-200
-                        bg-white
-                        pl-11
-                        pr-4
-                        text-sm
-                        text-slate-700
-                        outline-none
-                        transition-all
-                        focus:border-indigo-400
-                        focus:ring-4
-                        focus:ring-indigo-100
-                      "
-                    />
-
-                  </div>
-
-                </div>
-
-              </div>
-
-              <div
-                className="
-                  mt-5
-                  grid
-                  grid-cols-1
-                  gap-5
-                  xl:grid-cols-2
-                "
-              >
-
-                <Input
-                  type="number"
-                  label="Frais"
-                  placeholder="0.00"
-                  {...register(
-                    "frais"
-                  )}
-                />
-
-                <div>
-
-                  <Label>
-                    Commission
-                  </Label>
-
-                  <input
-                    type="text"
-                    readOnly
-                    value={commission}
-                    className="
+                      form-select
                       h-12
                       w-full
                       rounded-2xl
                       border
                       border-slate-200
-                      bg-slate-100
+                      bg-white
                       px-4
                       text-sm
-                      font-medium
-                      text-slate-700
-                      cursor-not-allowed
-                    "
-                  />
+                      outline-none
+                      transition-all
+                      focus:border-indigo-500
+                      focus:ring-4
+                      focus:ring-indigo-100"
+                  >
 
-                </div>
+                    <option value="">
+                      Sélectionner
+                    </option>
+
+                    <option value="ESPECE">
+                      Espèce
+                    </option>
+
+                    <option value="MOBILE_MONEY">
+                      Mobile Money
+                    </option>
+
+                    <option value="COMPTE_CLIENT">
+                      Compte Client
+                    </option>
+
+                    <option value="CARTE">
+                      Carte
+                    </option>
+
+                    <option value="CHEQUE">
+                      Chèque
+                    </option>
+
+                  </select>
+
+                </Field>
 
               </div>
 

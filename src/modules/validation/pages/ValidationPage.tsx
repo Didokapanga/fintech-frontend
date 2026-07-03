@@ -1,20 +1,15 @@
 // src/modules/validation/pages/ValidationPage.tsx
 
 import {
-  ArrowRightLeft,
-  Building2,
-  CheckCircle2,
   Landmark,
   ShieldCheck,
-  Wallet,
 } from "lucide-react";
 
 import Tabs from "../../../components/ui/Tab";
 
 import ValidationCaisseTab from "../components/ValidationCaisseTab";
 import ValidationClientTab from "../components/ValidationClientTab";
-import ValidationClotureCaisseTab from "../components/ValidationClotureCaisseTab";
-import ValidationRetraitTab from "../components/ValidationRetraitTab";
+// import ValidationClotureCaisseTab from "../components/ValidationClotureCaisseTab";
 
 /* -------------------------------------------------------------------------- */
 /*                                    PAGE                                    */
@@ -146,248 +141,6 @@ export default function ValidationPage() {
 
             </div>
 
-            {/* ---------------------------------------------------------- */}
-            {/* RIGHT                                                       */}
-            {/* ---------------------------------------------------------- */}
-
-            <div
-              className="
-                grid
-                grid-cols-2
-                gap-4
-              "
-            >
-
-              {/* CARD 1 */}
-
-              <div
-                className="
-                  rounded-3xl
-                  border
-                  border-slate-200
-                  bg-slate-50
-                  p-5
-                "
-              >
-
-                <div
-                  className="
-                    flex
-                    h-11
-                    w-11
-                    items-center
-                    justify-center
-                    rounded-2xl
-                    bg-indigo-100
-                    text-indigo-600
-                  "
-                >
-
-                  <ArrowRightLeft
-                    size={18}
-                  />
-
-                </div>
-
-                <p
-                  className="
-                    mt-4
-                    text-xs
-                    font-semibold
-                    uppercase
-                    tracking-[0.12em]
-                    text-slate-400
-                  "
-                >
-                  Transferts
-                </p>
-
-                <h3
-                  className="
-                    mt-1
-                    text-base
-                    font-semibold
-                    text-slate-900
-                  "
-                >
-                  Clients & Caisses
-                </h3>
-
-              </div>
-
-              {/* CARD 2 */}
-
-              <div
-                className="
-                  rounded-3xl
-                  border
-                  border-slate-200
-                  bg-slate-50
-                  p-5
-                "
-              >
-
-                <div
-                  className="
-                    flex
-                    h-11
-                    w-11
-                    items-center
-                    justify-center
-                    rounded-2xl
-                    bg-emerald-100
-                    text-emerald-600
-                  "
-                >
-
-                  <Wallet
-                    size={18}
-                  />
-
-                </div>
-
-                <p
-                  className="
-                    mt-4
-                    text-xs
-                    font-semibold
-                    uppercase
-                    tracking-[0.12em]
-                    text-slate-400
-                  "
-                >
-                  Retraits
-                </p>
-
-                <h3
-                  className="
-                    mt-1
-                    text-base
-                    font-semibold
-                    text-slate-900
-                  "
-                >
-                  Contrôle financier
-                </h3>
-
-              </div>
-
-              {/* CARD 3 */}
-
-              <div
-                className="
-                  rounded-3xl
-                  border
-                  border-slate-200
-                  bg-slate-50
-                  p-5
-                "
-              >
-
-                <div
-                  className="
-                    flex
-                    h-11
-                    w-11
-                    items-center
-                    justify-center
-                    rounded-2xl
-                    bg-orange-100
-                    text-orange-600
-                  "
-                >
-
-                  <Building2
-                    size={18}
-                  />
-
-                </div>
-
-                <p
-                  className="
-                    mt-4
-                    text-xs
-                    font-semibold
-                    uppercase
-                    tracking-[0.12em]
-                    text-slate-400
-                  "
-                >
-                  Clôtures
-                </p>
-
-                <h3
-                  className="
-                    mt-1
-                    text-base
-                    font-semibold
-                    text-slate-900
-                  "
-                >
-                  Caisses agences
-                </h3>
-
-              </div>
-
-              {/* CARD 4 */}
-
-              <div
-                className="
-                  rounded-3xl
-                  border
-                  border-slate-200
-                  bg-slate-50
-                  p-5
-                "
-              >
-
-                <div
-                  className="
-                    flex
-                    h-11
-                    w-11
-                    items-center
-                    justify-center
-                    rounded-2xl
-                    bg-blue-100
-                    text-blue-600
-                  "
-                >
-
-                  <CheckCircle2
-                    size={18}
-                  />
-
-                </div>
-
-                <p
-                  className="
-                    mt-4
-                    text-xs
-                    font-semibold
-                    uppercase
-                    tracking-[0.12em]
-                    text-slate-400
-                  "
-                >
-                  Validation
-                </p>
-
-                <h3
-                  className="
-                    mt-1
-                    text-base
-                    font-semibold
-                    text-slate-900
-                  "
-                >
-                  Workflow sécurisé
-                </h3>
-
-              </div>
-
-            </div>
-
           </div>
 
         </section>
@@ -492,27 +245,16 @@ export default function ValidationPage() {
                   <ValidationCaisseTab />,
               },
 
-              {
-                label:
-                  "Clôture caisse",
+              // {
+              //   label:
+              //     "Clôture caisse",
 
-                value:
-                  "cloture",
+              //   value:
+              //     "cloture",
 
-                content:
-                  <ValidationClotureCaisseTab />,
-              },
-
-              {
-                label:
-                  "Retrait",
-
-                value:
-                  "retrait",
-
-                content:
-                  <ValidationRetraitTab />,
-              },
+              //   content:
+              //     <ValidationClotureCaisseTab />,
+              // },
             ]}
           />
 

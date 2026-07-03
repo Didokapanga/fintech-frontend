@@ -1,16 +1,40 @@
 import { api } from "../../../services/api";
 
 export type DashboardCaissierResponse = {
-  transfert_client: {
-    total_effectue: number;
+  caisse: {
+    id: string;
+    code_caisse: string;
+
+    type:
+      | "AGENCE"
+      | "AGENT";
+
+    state:
+      | "OUVERTE"
+      | "FERMEE"
+      | "CLOTUREE";
+
+    agence_id: string;
+    agent_id: string | null;
   };
 
-  retrait: {
-    total_effectue: number;
-  };
+  soldes: Record<
+    string,
+    number
+  >;
 
-  en_attente: {
-    total_en_attente: number;
+  stats: {
+    transfert_client: {
+      total_effectue: number;
+    };
+
+    retrait: {
+      total_effectue: number;
+    };
+
+    en_attente: {
+      total_en_attente: number;
+    };
   };
 };
 

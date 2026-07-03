@@ -78,8 +78,10 @@ export default function AdminDashboard() {
 
       return [
         {
-          label:
-            "Transfert client",
+          label: "Transfert client",
+
+          description:
+            "Transferts exécutés",
 
           volumes:
             dashboard
@@ -94,8 +96,10 @@ export default function AdminDashboard() {
         },
 
         {
-          label:
-            "Retrait",
+          label: "Retrait",
+
+          description:
+            "Retraits exécutés",
 
           volumes:
             dashboard
@@ -105,6 +109,25 @@ export default function AdminDashboard() {
           count: Number(
             dashboard
               .retrait
+              ?.total_count || 0
+          ),
+        },
+
+        {
+          label:
+            "Frais transfert",
+
+          description:
+            "Revenus générés",
+
+          volumes:
+            dashboard
+              .frais_transfert_client
+              ?.volumes || {},
+
+          count: Number(
+            dashboard
+              .frais_transfert_client
               ?.total_count || 0
           ),
         },
@@ -112,6 +135,9 @@ export default function AdminDashboard() {
         {
           label:
             "Transferts en attente",
+
+          description:
+            "Validation requise",
 
           volumes:
             dashboard
@@ -128,6 +154,9 @@ export default function AdminDashboard() {
         {
           label:
             "Retraits en attente",
+
+          description:
+            "Validation requise",
 
           volumes:
             dashboard
@@ -205,9 +234,32 @@ export default function AdminDashboard() {
         ?.total_count || 0
     );
 
+  const volumeCaisses =
+  dashboard?.volume_caisses || {};
+
+  const totalCaissesOuvertes =
+    Number(
+      dashboard?.total_caisses_ouvertes || 0
+    );
+
+  const totalCaissesFermees =
+    Number(
+      dashboard?.total_caisses_fermees || 0
+    );
+
+  const totalCaissesAgence =
+    Number(
+      dashboard?.total_agence_caisse || 0
+    );
+
+  const totalCaissesAgent =
+    Number(
+      dashboard?.total_agent_caisse || 0
+    );
+
   const totalFees =
     dashboard
-      ?.total_frais_transfert_client
+      ?.frais_transfert_client
       ?.volumes || {};
 
   /* -------------------------------------------------------------------------- */
@@ -401,6 +453,7 @@ export default function AdminDashboard() {
             grid
             grid-cols-1
             gap-5
+            md:grid-cols-2
             xl:grid-cols-4
           "
         >
@@ -437,6 +490,174 @@ export default function AdminDashboard() {
               />
             }
             values={totalFees}
+          />
+
+        </section>
+
+        <section
+          className="
+            grid
+            grid-cols-1
+            gap-5
+            md:grid-cols-2
+            xl:grid-cols-4
+          "
+        >
+
+          <MetricCard
+            title="Caisses ouvertes"
+            icon={
+              <Wallet size={18} />
+            }
+            value={
+              totalCaissesOuvertes
+            }
+          />
+
+          <MetricCard
+            title="Caisses fermées"
+            icon={
+              <Clock3 size={18} />
+            }
+            value={
+              totalCaissesFermees
+            }
+          />
+
+          <MetricCard
+            title="Caisses agence"
+            icon={
+              <Activity size={18} />
+            }
+            value={
+              totalCaissesAgence
+            }
+          />
+
+          <MetricCard
+            title="Caisses agent"
+            icon={
+              <Activity size={18} />
+            }
+            value={
+              totalCaissesAgent
+            }
+          />
+
+        </section>
+        {/* <section
+          className="
+            grid
+            grid-cols-1
+            gap-5
+            xl:grid-cols-8
+          "
+        >
+
+          <MetricCard
+            title="Volume global"
+            icon={
+              <Wallet size={18} />
+            }
+            values={totalVolumes}
+          />
+
+          <MetricCard
+            title="Total opérations"
+            icon={
+              <Activity size={18} />
+            }
+            value={totalOperations}
+          />
+
+          <MetricCard
+            title="En attente"
+            icon={
+              <Clock3 size={18} />
+            }
+            value={pendingOperations}
+          />
+
+          <MetricCard
+            title="Frais générés"
+            icon={
+              <ArrowUpRight
+                size={18}
+              />
+            }
+            values={totalFees}
+          />
+
+          <MetricCard
+            title="Caisses ouvertes"
+            icon={
+              <Wallet size={18} />
+            }
+            value={
+              totalCaissesOuvertes
+            }
+          />
+
+          <MetricCard
+            title="Caisses agence"
+            icon={
+              <Activity size={18} />
+            }
+            value={
+              totalCaissesAgence
+            }
+          />
+
+          <MetricCard
+            title="Caisses fermées"
+            icon={
+              <Clock3 size={18} />
+            }
+            value={
+              totalCaissesFermees
+            }
+          />
+
+          <MetricCard
+            title="Caisses agent"
+            icon={
+              <Activity size={18} />
+            }
+            value={
+              totalCaissesAgent
+            }
+          />
+
+        </section> */}
+
+        <section
+          className="
+            grid
+            grid-cols-1
+            gap-5
+            xl:grid-cols-2
+          "
+        >
+
+          <MetricCard
+            title="Volume caisses"
+            icon={
+              <Wallet size={18} />
+            }
+            values={
+              volumeCaisses
+            }
+          />
+
+          <MetricCard
+            title="Caisses par devise"
+            icon={
+              <Activity size={18} />
+            }
+            values={
+              dashboard
+                ?.nombre_caisses_par_devise || {}
+            }
           />
 
         </section>

@@ -1,9 +1,6 @@
 // src/layouts/Sidebar.tsx
 
 import {
-  Wallet,
-  ArrowLeftRight,
-  ShieldCheck,
   ChevronLeft,
   ChevronRight,
   LogOut,
@@ -13,7 +10,7 @@ import { useEffect, useState } from "react";
 
 import {
   NavLink,
-  useNavigate,
+  // useNavigate,
 } from "react-router-dom";
 
 import NavItem from "./NavItem";
@@ -22,11 +19,9 @@ import {
   useAuthStore,
 } from "../../app/store";
 import { getNavItems } from "./nav.config";
+import NavGroup from "./NavGroup";
 
 export default function Sidebar() {
-
-  const navigate =
-    useNavigate();
 
   const [
     collapsed,
@@ -102,11 +97,11 @@ export default function Sidebar() {
 
       <div
         className="
+          relative
           flex
+          justify-center
           items-center
-          justify-between
-          px-5
-          py-5
+          py-1
           border-b
           border-slate-100
         "
@@ -114,104 +109,34 @@ export default function Sidebar() {
 
         <NavLink
           to={basePath}
-          className={`
+          className="
             flex
-            items-center
-            gap-3
-            overflow-hidden
-            transition-all
-            ${
-              collapsed
-                ? "justify-center w-full"
-                : ""
-            }
-          `}
+            justify-center
+            py-2
+          "
         >
-
-          <div
+          <img
+            src="/logo.png"
+            alt="Logo"
             className="
-              flex
-              h-14
-              w-14
-              items-center
-              justify-center
-              rounded-2xl
-              bg-gradient-to-br
-              from-indigo-600
-              to-indigo-500
-              shadow-md
-              shrink-0
+              h-12
+              w-auto
+              object-contain
             "
-          >
-
-            <img
-              src="/logo.png"
-              alt="Fintech Logo"
-              className="
-                h-10
-                w-10
-                object-contain
-              "
-            />
-
-          </div>
-
-          {!collapsed && (
-
-            <div className="leading-tight">
-
-              <h1
-                className="
-                  text-lg
-                  font-bold
-                  text-slate-900
-                "
-              >
-                Fintech
-              </h1>
-
-              <p
-                className="
-                  text-xs
-                  text-slate-500
-                "
-              >
-                Financial System
-              </p>
-
-            </div>
-
-          )}
-
+          />
         </NavLink>
 
         {!collapsed && (
-
           <button
-            onClick={() =>
-              setCollapsed(true)
-            }
+            onClick={() => setCollapsed(true)}
             className="
-              flex
-              h-9
-              w-9
-              items-center
-              justify-center
-              rounded-xl
-              border
-              border-slate-200
-              text-slate-500
-              hover:bg-slate-100
-              transition-all
+              absolute
+              right-3
+              top-3
             "
           >
-
-            <ChevronLeft
-              size={18}
-            />
-
+            <ChevronLeft size={18} />
           </button>
-
         )}
 
       </div>
@@ -360,108 +285,34 @@ export default function Sidebar() {
 
         <div className="space-y-1.5">
 
-          {getNavItems(user?.role_name).map(
-            (item) => (
+          {
+            getNavItems(
+              user?.role_name
+            ).map((item) =>
 
-              <NavItem
-                key={item.path}
-                item={item}
-                collapsed={collapsed}
-              />
+              item.children ? (
 
+                <NavGroup
+                  key={item.label}
+                  item={item}
+                  collapsed={collapsed}
+                />
+
+              ) : (
+
+                <NavItem
+                  key={item.path}
+                  item={item}
+                  collapsed={collapsed}
+                />
+
+              )
             )
-          )}
+          }
 
         </div>
 
       </div>
-
-      {/* ================================================= */}
-      {/* QUICK ACCESS */}
-      {/* ================================================= */}
-
-      {!collapsed && (
-
-        <div className="px-4 pb-4">
-
-          <div
-            className="
-              rounded-3xl
-              border
-              border-indigo-100
-              bg-gradient-to-br
-              from-indigo-50
-              to-white
-              p-4
-            "
-          >
-
-            <h3
-              className="
-                text-sm
-                font-semibold
-                text-slate-800
-              "
-            >
-              Accès rapide
-            </h3>
-
-            <div
-              className="
-                mt-4
-                grid
-                grid-cols-3
-                gap-2
-              "
-            >
-
-              <QuickAction
-                icon={
-                  <Wallet size={16} />
-                }
-                label="Caisses"
-                onClick={() =>
-                  navigate(
-                    `${basePath}/caisses`
-                  )
-                }
-              />
-
-              <QuickAction
-                icon={
-                  <ArrowLeftRight
-                    size={16}
-                  />
-                }
-                label="Transferts"
-                onClick={() =>
-                  navigate(
-                    `${basePath}/transfert-client`
-                  )
-                }
-              />
-
-              <QuickAction
-                icon={
-                  <ShieldCheck
-                    size={16}
-                  />
-                }
-                label="Validation"
-                onClick={() =>
-                  navigate(
-                    `${basePath}/validation`
-                  )
-                }
-              />
-
-            </div>
-
-          </div>
-
-        </div>
-
-      )}
 
       {/* ================================================= */}
       {/* FOOTER */}
@@ -510,58 +361,5 @@ export default function Sidebar() {
       </div>
 
     </aside>
-  );
-}
-
-/* ======================================================== */
-/* QUICK ACTION */
-/* ======================================================== */
-
-function QuickAction({
-  icon,
-  label,
-  onClick,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  onClick: () => void;
-}) {
-
-  return (
-
-    <button
-      onClick={onClick}
-      className="
-        flex
-        flex-col
-        items-center
-        justify-center
-        gap-2
-        rounded-2xl
-        border
-        border-slate-200
-        bg-white
-        p-3
-        text-slate-600
-        transition-all
-        hover:border-indigo-200
-        hover:bg-indigo-50
-        hover:text-indigo-600
-      "
-    >
-
-      {icon}
-
-      <span
-        className="
-          text-[10px]
-          font-medium
-        "
-      >
-        {label}
-      </span>
-
-    </button>
-
   );
 }

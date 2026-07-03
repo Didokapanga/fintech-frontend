@@ -1,5 +1,5 @@
 import { api } from "../../../services/api";
-import type { CreateClientDto } from "../types";
+import type { Client, CreateClientDto } from "../types";
 
 export interface PaginatedResponse<T> {
   data: T[];
@@ -7,18 +7,23 @@ export interface PaginatedResponse<T> {
   limit: number;
 }
 
-export const getClients = async (params?: {
-  search?: string;
-  page?: number;
-  limit?: number;
-}) => {
-  // console.log("PARAMS ENVOYÉS:", params);
+export const getClients = async (
+  params?: {
+    search?: string;
+    page?: number;
+    limit?: number;
+  }
+): Promise<Client[]> => {
 
-  const res = await api.get("/clients", { params });
+  const res =
+    await api.get(
+      "/clients",
+      { params }
+    );
 
-  // console.log("RESPONSE API:", res.data);
-
-  return res.data.data ?? []; // ✅ FIX ICI
+  return (
+    res.data?.data ?? []
+  );
 };
 
 export const createClient = async (data: CreateClientDto) => {

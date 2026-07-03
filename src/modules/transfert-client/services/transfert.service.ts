@@ -9,54 +9,73 @@ export type TransfertFilters = {
 
 export type CreateTransfertClientDto = {
   caisse_id: string;
-  agence_exp: string;
+
   agence_dest: string;
 
-  exp_nom: string;
-  exp_postnom: string;
-  exp_prenom: string;
-  exp_phone: string;
-  exp_type_piece: string;
-  exp_numero_piece: string;
+  expediteur_id: string;
+  destinataire_id: string;
 
-  dest_nom: string;
-  dest_postnom: string;
-  dest_prenom: string;
-  dest_phone: string;
-  dest_type_piece: string;
-  dest_numero_piece: string;
+  devise_source: string;
+  devise_destination: string;
 
-  montant: number;
-  frais: number;
-  commission: number;
-  devise: string;
+  mode_paiement:
+    | "ESPECE"
+    | "MOBILE_MONEY"
+    | "COMPTE_CLIENT"
+    | "CARTE"
+    | "CHEQUE";
 
-  // 🔥 NOUVEAU
-  date_operation: string;
+  montant_destination: number;
 };
 
 export type TransfertClient = {
   id: string;
+
   code_reference: string;
 
-  exp_nom: string;
-  exp_postnom: string;
-  exp_phone: string;
+  agence_exp: string;
+  agence_exp_name: string;
 
-  dest_nom: string;
-  dest_postnom: string;
-  dest_phone: string;
+  agence_dest: string;
+  agence_dest_name: string;
 
-  montant: number | string;
-  devise: string;
+  caisse_id: string;
+  code_caisse: string;
 
-  frais: number;
-  commission: number;
+  created_by: string;
+  agent_name: string;
+
+  expediteur_id: string;
+  expediteur_name: string;
+  expediteur_type_piece: string;
+  expediteur_numero_piece: string;
+  expediteur_telephone: string;
+
+  destinataire_id: string;
+  destinataire_name: string;
+  destinataire_type_piece: string;
+  destinataire_numero_piece: string;
+  destinataire_telephone: string;
+
+  devise_source: string;
+  devise_destination: string;
+
+  montant_source: string;
+  montant_destination: string;
+
+  frais: string;
+  montant_total: string;
+
+  taux_utilise: string;
+  type_taux_utilise: string;
+
+  mode_paiement: string;
 
   statut: string;
 
+  date_operation: string;
   created_at: string;
-  date_operation?: string; // 🔥 NOUVEAU
+  updated_at: string;
 };
 
 export type PaginatedResponse<T> = {
@@ -127,3 +146,31 @@ export const getTransfertsByAgence = async (
 
   return res.data;
 }; 
+
+export const getAllTransferts = async (
+  page = 1,
+  limit = 10,
+  filters?: TransfertFilters
+): Promise<
+  PaginatedResponse<TransfertClient>
+> => {
+
+  const res =
+    await api.get(
+      "/transfert-client",
+      {
+        params: {
+          page,
+          limit,
+
+          statut:
+            filters?.statut,
+
+          date_operation:
+            filters?.date_operation,
+        },
+      }
+    );
+
+  return res.data;
+};

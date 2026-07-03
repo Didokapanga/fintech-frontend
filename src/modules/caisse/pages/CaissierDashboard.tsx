@@ -1,5 +1,4 @@
 import {
-  useMemo,
   useState,
 } from "react";
 
@@ -14,14 +13,6 @@ import {
   CalendarDays,
 } from "lucide-react";
 
-import type {
-  Caisse,
-} from "../types";
-
-import {
-  useCaisses,
-} from "../hooks/useCaisses";
-
 import {
   useDashboardCaissier,
 } from "../hooks/useDashboardCaissier";
@@ -29,7 +20,6 @@ import {
 import ClotureCaisseModal
 from "../../cloture-caisse/components/ClotureCaisseModal";
 import { useAuthStore } from "../../../app/store";
-import SelectAgentCaisseModal from "../../transfert-client/components/SelectAgentCaisseModal";
 
 /* ======================================================== */
 /* COMPONENT */
@@ -63,31 +53,14 @@ export default function CaissierDashboard() {
     setDateTo,
   ] = useState("");
 
+  const [
+    openCloture,
+    setOpenCloture,
+  ] = useState(false);
+
   /* ====================================================== */
   /* QUERY */
   /* ====================================================== */
-
-  const {
-    data: response,
-  } = useCaisses(
-    1,
-    100
-  );
-
-  const [openSelectCaisse, setOpenSelectCaisse] =
-  useState(false);
-
-  const [openCloture, setOpenCloture] =
-    useState(false);
-
-  const [selectedCaisseId, setSelectedCaisseId] =
-    useState("");
-
-  const [selectedDevise, setSelectedDevise] =
-    useState("");
-
-  const [selectedCodeCaisse, setSelectedCodeCaisse] =
-    useState("");
 
   /**
    * ======================================================
@@ -108,40 +81,12 @@ export default function CaissierDashboard() {
       dateTo || undefined,
   });
 
-  const caisses =
-    useMemo<Caisse[]>(
-      () =>
-        response?.data || [],
-      [response]
-    );
-
   /* ====================================================== */
   /* SELECTED CAISSE */
   /* ====================================================== */
 
   const selectedCaisse =
-    useMemo(() => {
-
-      if (
-        selectedCaisseId
-      ) {
-
-        return (
-          caisses.find(
-            (c) =>
-              c.id ===
-              selectedCaisseId
-          ) ||
-          caisses[0]
-        );
-      }
-
-      return caisses[0];
-
-    }, [
-      caisses,
-      selectedCaisseId,
-    ]);
+    dashboard?.caisse;
 
   /* ====================================================== */
   /* RENDER */
@@ -428,98 +373,6 @@ export default function CaissierDashboard() {
 
               </div>
 
-              {/* SELECT CAISSE */}
-
-              {caisses.length >
-                1 && (
-
-                <div
-                  className="
-                    w-fit
-                    rounded-3xl
-                    border
-                    border-slate-200
-                    bg-white/70
-                    p-4
-                    shadow-sm
-                  "
-                >
-
-                  <label
-                    className="
-                      mb-2
-                      block
-                      text-sm
-                      font-medium
-                      text-slate-600
-                    "
-                  >
-                    Sélectionner une caisse
-                  </label>
-
-                  <select
-                    value={
-                      selectedCaisse
-                        ?.id || ""
-                    }
-
-                    onChange={(
-                      e
-                    ) =>
-                      setSelectedCaisseId(
-                        e.target
-                          .value
-                      )
-                    }
-
-                    className="
-                      min-w-[280px]
-                      rounded-2xl
-                      border
-                      border-slate-200
-                      bg-slate-50
-                      px-4
-                      py-3
-                      text-sm
-                      font-medium
-                      outline-none
-                      transition
-                      focus:border-red-400
-                    "
-                  >
-
-                    {caisses.map(
-                      (
-                        c
-                      ) => (
-
-                        <option
-                          key={
-                            c.id
-                          }
-                          value={
-                            c.id
-                          }
-                        >
-                          {
-                            c.code_caisse
-                          }{" "}
-                          (
-                          {
-                            c.devise
-                          }
-                          )
-                        </option>
-
-                      )
-                    )}
-
-                  </select>
-
-                </div>
-
-              )}
-
             </div>
 
             {/* RIGHT */}
@@ -595,31 +448,117 @@ export default function CaissierDashboard() {
 
                     </div>
 
-                    <h2
+                    <div
                       className="
-                        mt-5
-                        text-5xl
-                        font-black
-                        tracking-[-0.06em]
+                        mt-6
+                        max-h-[260px]
+                        space-y-3
+                        overflow-y-auto
+                        pr-1
                       "
                     >
-                      {Number(
-                        selectedCaisse.solde
-                      ).toLocaleString()}
-                    </h2>
 
-                    <p
-                      className="
-                        mt-2
-                        text-lg
-                        font-medium
-                        text-slate-400
-                      "
-                    >
-                      {
-                        selectedCaisse.devise
-                      }
-                    </p>
+                      {Object.entries(
+                        dashboard?.soldes || {}
+                      ).map(
+                        ([
+                          devise,
+                          montant,
+                        ]) => (
+
+                          <div
+                            key={devise}
+                            className="
+                              flex
+                              items-center
+                              justify-between
+                              rounded-2xl
+                              border
+                              border-white/10
+                              bg-white/5
+                              px-4
+                              py-4
+                              backdrop-blur-sm
+                              transition-all
+                              hover:bg-white/10
+                            "
+                          >
+
+                            <div
+                              className="
+                                flex
+                                items-center
+                                gap-3
+                              "
+                            >
+
+                              <div
+                                className="
+                                  flex
+                                  h-10
+                                  w-10
+                                  items-center
+                                  justify-center
+                                  rounded-xl
+                                  bg-red-500/15
+                                  text-xs
+                                  font-bold
+                                  text-red-300
+                                "
+                              >
+                                {devise}
+                              </div>
+
+                              <div>
+
+                                <p
+                                  className="
+                                    text-xs
+                                    uppercase
+                                    tracking-widest
+                                    text-slate-400
+                                  "
+                                >
+                                  Solde disponible
+                                </p>
+
+                                <p
+                                  className="
+                                    mt-1
+                                    text-lg
+                                    font-bold
+                                    text-white
+                                  "
+                                >
+                                  {Number(
+                                    montant
+                                  ).toLocaleString()}
+                                </p>
+
+                              </div>
+
+                            </div>
+
+                            <div
+                              className="
+                                rounded-full
+                                bg-emerald-500/15
+                                px-3
+                                py-1
+                                text-xs
+                                font-semibold
+                                text-emerald-300
+                              "
+                            >
+                              {devise}
+                            </div>
+
+                          </div>
+
+                        )
+                      )}
+
+                    </div>
 
                   </div>
 
@@ -648,7 +587,7 @@ export default function CaissierDashboard() {
 
                 <button
                   onClick={() =>
-                   setOpenSelectCaisse(true)
+                   setOpenCloture(true)
                   }
 
                   className="
@@ -786,6 +725,7 @@ export default function CaissierDashboard() {
                 title="Transferts"
                 value={String(
                   dashboard
+                    ?.stats
                     ?.transfert_client
                     ?.total_effectue || 0
                 )}
@@ -802,6 +742,7 @@ export default function CaissierDashboard() {
                 title="Retraits"
                 value={String(
                   dashboard
+                    ?.stats
                     ?.retrait
                     ?.total_effectue || 0
                 )}
@@ -818,6 +759,7 @@ export default function CaissierDashboard() {
                 title="En attente"
                 value={String(
                   dashboard
+                    ?.stats
                     ?.en_attente
                     ?.total_en_attente || 0
                 )}
@@ -1061,60 +1003,24 @@ export default function CaissierDashboard() {
 
       </div>
 
-      {/* {openCloture && (
-
-        <ClotureCaisseModal
-          open={
-            openCloture
-          }
-          onClose={() =>
-            setOpenCloture(
-              false
-            )
-          }
-        />
-
-      )} */}
-
-      <SelectAgentCaisseModal
-        open={openSelectCaisse}
-        onClose={() =>
-          setOpenSelectCaisse(false)
-        }
-        onSelect={(
-          caisseId,
-          devise,
-        ) => {
-
-          setSelectedCaisseId(
-            caisseId
-          );
-
-          setSelectedDevise(
-            devise
-          );
-
-          setSelectedCodeCaisse("");
-
-          setOpenCloture(true);
-        }}
-      />
-
-      {openCloture && (
+      {openCloture && selectedCaisse && (
 
         <ClotureCaisseModal
           open={openCloture}
           onClose={() =>
             setOpenCloture(false)
           }
+
           selectedCaisseId={
-            selectedCaisseId
+            selectedCaisse.id
           }
-          selectedDevise={
-            selectedDevise
-          }
+
           selectedCodeCaisse={
-            selectedCodeCaisse
+            selectedCaisse.code_caisse
+          }
+
+          soldes={
+            dashboard?.soldes || {}
           }
         />
 

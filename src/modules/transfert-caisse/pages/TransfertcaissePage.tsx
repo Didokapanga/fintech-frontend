@@ -31,13 +31,12 @@ import {
   useTransfertsCaisse,
 } from "../hooks/useTransfertCaisse";
 
-import type {
-  TransfertCaisse,
-} from "../services/transfertCaisse.service";
 
 import TransfertCaisseModal from "../components/transfertCaisseModal";
-import SelectCaisseModal from "../components/SelectCaisseModal";
 import Pagination from "../../../components/ui/Pagination";
+import type { TransfertCaisse } from "../types";
+import { PermissionGate } from "../../../components/auth/PermissionGate";
+import { PERMISSIONS } from "../../../constants/permissions";
 
 /* -------------------------------------------------------------------------- */
 /*                                    PAGE                                    */
@@ -54,22 +53,7 @@ export default function TransfertCaissePage() {
     setOpen,
   ] =
     useState(false);
-
-  const [
-    openSelectCaisse,
-    setOpenSelectCaisse,
-  ] =
-    useState(false);
-
-  const [
-    selectedCaisse,
-    setSelectedCaisse,
-  ] =
-    useState<{
-      id: string;
-      devise: string;
-    } | null>(null);
-
+    
   const [
     page,
     setPage,
@@ -771,26 +755,35 @@ export default function TransfertCaissePage() {
 
               </div>
 
-              <Button
-                onClick={() =>
-                  setOpenSelectCaisse(true)
-                }
-                className="
-                  h-14
-                  rounded-2xl
-                  bg-indigo-600
-                  px-6
-                  hover:bg-indigo-700
-                "
+              <PermissionGate
+                permissions={[
+                  PERMISSIONS.TRANSFERT_CAISSE_CREATE,
+                  PERMISSIONS.TRANSFERT_CAISSE_CREATE_AGENCE,
+                ]}
               >
 
-                <Plus
-                  size={17}
-                />
+                <Button
+                  onClick={() =>
+                    setOpen(true)
+                  }
+                  className="
+                    h-14
+                    rounded-2xl
+                    bg-indigo-600
+                    px-6
+                    hover:bg-indigo-700
+                  "
+                >
 
-                Nouveau transfert
+                  <Plus
+                    size={17}
+                  />
 
-              </Button>
+                  Nouveau transfert
+
+                </Button>
+
+              </PermissionGate>
 
             </div>
 
@@ -1041,50 +1034,12 @@ export default function TransfertCaissePage() {
       {/* -------------------------------------------------------------- */}
       {/* MODAL                                                          */}
       {/* -------------------------------------------------------------- */}
-
-      <SelectCaisseModal
-        open={
-          openSelectCaisse
-        }
-
-        onClose={() =>
-          setOpenSelectCaisse(
-            false
-          )
-        }
-
-        onSelect={(
-          caisseId,
-          devise
-        ) => {
-
-          setSelectedCaisse({
-            id: caisseId,
-            devise,
-          });
-
-          setOpenSelectCaisse(
-            false
-          );
-
-          setOpen(true);
-        }}
-      />
-
       {open && (
 
         <TransfertCaisseModal
           open={open}
           onClose={() =>
             setOpen(false)
-          }
-
-          selectedCaisseId={
-            selectedCaisse?.id
-          }
-
-          selectedDevise={
-            selectedCaisse?.devise
           }
         />
 

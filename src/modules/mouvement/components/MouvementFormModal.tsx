@@ -5,6 +5,15 @@ import {
   useMemo,
 } from "react";
 
+import { usePermission }
+from "../../../hooks/usePermission";
+
+import { PERMISSIONS }
+from "../../../constants/permissions";
+
+import { useAuthStore }
+from "../../../app/store";
+
 import {
   useForm,
   useWatch,
@@ -33,6 +42,7 @@ import {
 import type {
   CreateMouvementDto,
 } from "../types";
+import type { Caisse } from "../../caisse/types";
 
 /* -------------------------------------------------------------------------- */
 /*                                   TYPES                                    */
@@ -41,17 +51,6 @@ import type {
 type Props = {
   open: boolean;
   onClose: () => void;
-
-  selectedCaisseId: string;
-  selectedDevise: string;
-};
-
-type CaisseItem = {
-  id: string;
-  type?: string;
-  devise: string;
-  code_caisse: string;
-  state?: string;
 };
 
 /* -------------------------------------------------------------------------- */
@@ -61,9 +60,26 @@ type CaisseItem = {
 export default function MouvementFormModal({
   open,
   onClose,
-  selectedCaisseId,
-  selectedDevise,
 }: Props) {
+
+
+  const { can } =
+    usePermission();
+
+  const user =
+    useAuthStore(
+      (state) => state.user
+    );
+
+  const canCreateGlobal =
+    can(
+      PERMISSIONS.MOUVEMENT_CREATE
+    );
+
+  const canCreateAgence =
+    can(
+      PERMISSIONS.MOUVEMENT_CREATE_AGENCE
+    );
 
   /* ---------------------------------------------------------------------- */
   /* FORM                                                                   */
@@ -80,16 +96,30 @@ export default function MouvementFormModal({
     },
   } = useForm<CreateMouvementDto>({
     defaultValues: {
-      devise:
-        selectedDevise,
+      caisse_id: "",
 
-      caisse_id:
-        selectedCaisseId,
+      devise: "",
 
-      type_mouvement:
-        "APPROVISIONNEMENT",
+      type_mouvement: "APPROVISIONNEMENT",
+
+      source_type: "BANQUE",
+
+      motif: "",
     },
   });
+
+  const typeMouvement =
+    useWatch({
+      control,
+      name:
+        "type_mouvement",
+    });
+  
+  const selectedCaisseId =
+    useWatch({
+      control,
+      name: "caisse_id",
+    });
 
   /* ---------------------------------------------------------------------- */
   /* MUTATION                                                               */
@@ -119,10 +149,16 @@ export default function MouvementFormModal({
     onSuccess: () => {
 
       reset({
-        caisse_id: selectedCaisseId,
-        devise: selectedDevise,
-        type_mouvement: "APPROVISIONNEMENT",
-      });
+      caisse_id: "",
+
+      devise: "",
+
+      type_mouvement: "APPROVISIONNEMENT",
+
+      source_type: "BANQUE",
+
+      motif: "",
+    });
 
       setTimeout(() => {
 
@@ -148,10 +184,9 @@ export default function MouvementFormModal({
     100
   );
 
-  const caisses: CaisseItem[] =
+  const caisses: Caisse[] =
     useMemo(
-      () =>
-        response?.data || [],
+      () => response?.data || [],
       [response]
     );
 
@@ -159,41 +194,60 @@ export default function MouvementFormModal({
   /* WATCH                                                                  */
   /* ---------------------------------------------------------------------- */
 
-  const watchedCaisseId =
-  useWatch({
-    control,
-    name: "caisse_id",
-  });
-
-  const selectedCaisse =
+  const caisseAgence =
     caisses.find(
-      (c: CaisseItem) =>
-        c.id === watchedCaisseId
+      (c) =>
+        c.agence_id ===
+        user?.agence_id &&
+        c.type === "AGENCE"
     );
 
+  const caissesAgence =
+    caisses.filter(
+      (c) =>
+        c.type === "AGENCE"
+    );
+
+  const selectedCaisse =
+    caissesAgence.find(
+      (c) =>
+        c.id ===
+        selectedCaisseId
+    );
   /* ---------------------------------------------------------------------- */
   /* AUTO DEVISE                                                            */
   /* ---------------------------------------------------------------------- */
 
   useEffect(() => {
 
-    if (selectedCaisseId) {
+    if (
+      canCreateAgence &&
+      caisseAgence
+    ) {
 
       setValue(
         "caisse_id",
-        selectedCaisseId
+        caisseAgence.id
       );
+
+    }
+
+    if (
+      canCreateAgence &&
+      caisseAgence &&
+      caisseAgence.devises?.length
+    ) {
 
       setValue(
         "devise",
-        selectedDevise
+        caisseAgence.devises[0].devise
       );
+
     }
 
   }, [
-    open,
-    selectedCaisseId,
-    selectedDevise,
+    canCreateAgence,
+    caisseAgence,
     setValue,
   ]);
 
@@ -258,25 +312,78 @@ export default function MouvementFormModal({
           className="space-y-4"
         >
 
-          {/* CAISSE */}
+         {/* CAISSE */}
 
-          <Input
-            label="Caisse"
-            value={
-              selectedCaisse
-                ? `${selectedCaisse.code_caisse} (${selectedDevise})`
-                : ""
-            }
-            readOnly
-            className="
-                w-full
-                rounded-xl
-                px-1
-                py-1
-                text-sm
-                font-medium
-              "
-          />
+          {canCreateGlobal && (
+
+            <div>
+
+              <label
+                className="
+                  mb-1.5
+                  block
+                  text-sm
+                  font-medium
+                  text-slate-700
+                "
+              >
+                Caisse
+              </label>
+
+              <select
+                {...register(
+                  "caisse_id",
+                  {
+                    required:
+                      "La caisse est obligatoire",
+                  }
+                )}
+                className="
+                  w-full
+                  rounded-xl
+                  border
+                  border-slate-200
+                  px-3
+                  py-3
+                "
+              >
+
+                <option value="">
+                  Sélectionner une caisse
+                </option>
+
+                {caissesAgence.map(
+                  (c) => (
+
+                    <option
+                      key={c.id}
+                      value={c.id}
+                    >
+                      {c.code_caisse}
+                      {" | "}
+                      {c.agence_name}
+                    </option>
+
+                  )
+                )}
+
+              </select>
+
+            </div>
+
+          )}
+
+          {canCreateAgence &&
+            !canCreateGlobal &&
+            caisseAgence && (
+
+              <Input
+                label="Caisse"
+                value={`${caisseAgence.code_caisse} | ${caisseAgence.agence_name}`}
+                readOnly
+              />
+
+            )}
 
           {/* TYPE */}
 
@@ -323,12 +430,20 @@ export default function MouvementFormModal({
                 ➕ Approvisionnement
               </option>
 
-              <option value="RETRAIT_SORTIE">
-                ➖ Retrait (sortie)
+              <option value="REVERSEMENT">
+                ➖ Reversement
               </option>
 
-              <option value="TRANSFERT_SORTIE">
-                🔁 Transfert vers une autre caisse
+              <option value="MOBILE_MONEY_ENTREE">
+                📲 Mobile Money Entrée
+              </option>
+
+              <option value="MOBILE_MONEY_SORTIE">
+                📲 Mobile Money Sortie
+              </option>
+
+              <option value="AJUSTEMENT">
+                ⚖️ Ajustement
               </option>
 
             </select>
@@ -364,35 +479,195 @@ export default function MouvementFormModal({
             )}
           />
 
+          {/* SENS AJUSTEMENT */}
+
+          {typeMouvement === "AJUSTEMENT" && (
+
+            <div>
+
+              <label
+                className="
+                  mb-1.5
+                  block
+                  text-sm
+                  font-medium
+                  text-slate-700
+                "
+              >
+                Sens ajustement
+              </label>
+
+              <select
+                {...register(
+                  "ajustement_sens",
+                  {
+                    required:
+                      "Le sens est obligatoire",
+                  }
+                )}
+                className="
+                  w-full
+                  rounded-xl
+                  border
+                  border-slate-200
+                  px-3
+                  py-3
+                "
+              >
+
+                <option value="ENTREE">
+                  Entrée
+                </option>
+
+                <option value="SORTIE">
+                  Sortie
+                </option>
+
+              </select>
+
+            </div>
+
+          )}
+
           {/* DEVISE */}
 
           <div>
 
-            <input
-              type="hidden"
-              {...register("devise")}
-            />
+            <label
+              className="
+                mb-1.5
+                block
+                text-sm
+                font-medium
+                text-slate-700
+              "
+            >
+              Devise
+            </label>
 
-            <Input
-              label="Devise"
-              value={selectedDevise}
-              readOnly
-            />
-
-            {errors.devise && (
-
-              <p className="mt-1 text-xs text-red-500">
-
+            <select
+              {...register(
+                "devise",
                 {
-                  errors
-                    .devise
-                    .message
+                  required:
+                    "La devise est obligatoire",
                 }
+              )}
+              className="
+                w-full
+                rounded-xl
+                border
+                border-slate-200
+                px-3
+                py-3
+              "
+            >
 
-              </p>
-            )}
+              <option value="">
+                Sélectionner une devise
+              </option>
+
+              {selectedCaisse?.devises?.map(
+                (d) => (
+
+                  <option
+                    key={d.id}
+                    value={d.devise}
+                  >
+                    {d.devise}
+                  </option>
+
+                )
+              )}
+
+            </select>
 
           </div>
+
+          {/* SOURCE */}
+
+          <div>
+            <label className="mb-1.5 block text-sm font-medium text-slate-700">
+              Source
+            </label>
+
+            <select
+              {...register("source_type", {
+                required: "La source est obligatoire",
+              })}
+              className="
+                w-full
+                rounded-xl
+                border
+                border-slate-200
+                px-3
+                py-3
+              "
+            >
+              <option value="BANQUE">
+                Banque
+              </option>
+
+              <option value="SIEGE">
+                Siège
+              </option>
+
+              <option value="AGENCE">
+                Agence
+              </option>
+
+              <option value="MOBILE_MONEY">
+                Mobile Money
+              </option>
+
+              <option value="AUTRE">
+                Autre
+              </option>
+            </select>
+          </div>
+
+          {/*REFERENCE */}
+
+          <Input
+            label="Référence source"
+            placeholder="VRT-2026-001"
+            {...register(
+              "source_reference"
+            )}
+          />
+
+          {/*MOTIF */}
+
+          <Input
+            label="Motif"
+            placeholder="Motif du mouvement"
+            error={
+              errors.motif?.message
+            }
+            {...register("motif", {
+              required:
+                "Le motif est obligatoire",
+            })}
+          />
+
+          {/*NUMERO DE PIECE */}
+          <Input
+            label="Numéro de pièce"
+            placeholder="REC-00045"
+            {...register(
+              "numero_piece"
+            )}
+          />
+          
+          {/*URL */}
+
+          <Input
+            label="Document URL"
+            placeholder="https://..."
+            {...register(
+              "document_url"
+            )}
+          />
 
           {/* ACTIONS */}
 

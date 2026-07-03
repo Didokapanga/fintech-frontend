@@ -339,50 +339,6 @@ export default function ValidationLogTable({
     },
 
     /* -------------------------------------------------------------- */
-    /* DATE                                                           */
-    /* -------------------------------------------------------------- */
-
-    {
-      header: "Date",
-
-      accessor: "created_at",
-
-      render: (v) => (
-
-        <div className="flex flex-col">
-
-          <span
-            className="
-              text-sm
-              font-medium
-              text-slate-700
-            "
-          >
-            {new Date(
-              String(v)
-            ).toLocaleDateString(
-              "fr-FR"
-            )}
-          </span>
-
-          <span
-            className="
-              text-xs
-              text-slate-500
-            "
-          >
-            {new Date(
-              String(v)
-            ).toLocaleTimeString(
-              "fr-FR"
-            )}
-          </span>
-
-        </div>
-      ),
-    },
-
-    /* -------------------------------------------------------------- */
     /* ACTIONS                                                        */
     /* -------------------------------------------------------------- */
 

@@ -2,7 +2,6 @@
 
 import {
   ArrowUpRight,
-  CalendarRange,
   Filter,
   Plus,
   Printer,
@@ -16,10 +15,6 @@ import {
 } from "react";
 
 import {
-  useQuery,
-} from "@tanstack/react-query";
-
-import {
   Button,
   Table,
 } from "../../../components/ui";
@@ -29,11 +24,17 @@ import type {
 } from "../../../components/ui/Table.types";
 
 import {
-  useMyTransferts,
+  useTransferts,
 } from "../hooks/useTransfert";
 
 import {
-  getTransfertsByAgence,
+  usePermission,
+} from "../../../hooks/usePermission";
+
+import {
+  PERMISSIONS,
+} from "../../../constants/permissions";
+import {
   type TransfertClient,
 } from "../services/transfert.service";
 
@@ -45,17 +46,13 @@ import {
   useAuthStore,
 } from "../../../app/store";
 
-import {
-  api,
-} from "../../../services/api";
-
 import TransfertClientModal
 from "../components/TransfertFormModal";
 
 import Pagination
 from "../../../components/ui/Pagination";
 import { useNavigate } from "react-router-dom";
-import SelectAgentCaisseModal from "../components/SelectAgentCaisseModal";
+import TransfertClientDetailsModal from "../components/TransfertClientDetailsModal";
 
 /* -------------------------------------------------------------------------- */
 /*                                    PAGE                                    */
@@ -97,15 +94,6 @@ export default function TransfertClientPage() {
 
   const [openForm, setOpenForm] = useState(false);
 
-  const [openCaisseModal, setOpenCaisseModal] =
-    useState(false);
-
-  const [selectedCaisseId, setSelectedCaisseId] =
-    useState("");
-
-  const [selectedDevise, setSelectedDevise] =
-    useState("");
-
   /* ------------------------------------------------------------------------ */
   /*                                    AUTH                                  */
   /* ------------------------------------------------------------------------ */
@@ -113,15 +101,23 @@ export default function TransfertClientPage() {
   const { user } =
     useAuthStore();
 
-  const isGlobalAdmin =
-    user?.role_name ===
-    "ADMIN";
+  const { can } =
+  usePermission();
 
-  const isAgenceView =
-    ["N+1", "N+2"]
-      .includes(
-        user?.role_name || ""
-      );
+  const canReadAll =
+    can(
+      PERMISSIONS.TRANSFERT_CLIENT_READ
+    );
+
+  const canCreate =
+    can(
+      PERMISSIONS.TRANSFERT_CLIENT_CREATE
+    );
+
+  const canCreateAgence =
+    can(
+      PERMISSIONS.TRANSFERT_CLIENT_CREATE_AGENCE
+    );
 
   /* ------------------------------------------------------------------------ */
   /*                                  AGENCES                                 */
@@ -135,125 +131,22 @@ export default function TransfertClientPage() {
   /*                                   QUERY                                  */
   /* ------------------------------------------------------------------------ */
 
-  const myTransfertsQuery =
-    useMyTransferts(
-      page,
-      10,
-      {
-        statut,
-        date_operation:
-          dateOperation,
-      },
-
-      !isGlobalAdmin &&
-      !isAgenceView
-    );
-
-  const agenceTransfertsQuery =
-    useQuery({
-      queryKey: [
-        "agence-transferts",
-        user?.agence_id,
-        page,
-        statut,
+  const {
+    data,
+    isLoading,
+  } = useTransferts(
+    page,
+    10,
+    {
+      statut,
+      date_operation:
         dateOperation,
-      ],
-
-      queryFn: () =>
-        getTransfertsByAgence(
-          String(
-            user?.agence_id
-          ),
-          page,
-          10,
-          {
-            statut,
-            date_operation:
-              dateOperation,
-          }
-        ),
-
-      enabled:
-        isAgenceView &&
-        !!user?.agence_id,
-    });
-
-  const globalTransfertsQuery =
-    useQuery({
-      queryKey: [
-        "global-transferts",
-        page,
-        statut,
-        dateOperation,
-        selectedAgence,
-      ],
-
-      queryFn: async () => {
-
-        const params =
-          new URLSearchParams();
-
-        params.append(
-          "page",
-          String(page)
-        );
-
-        params.append(
-          "limit",
-          "10"
-        );
-
-        if (statut) {
-
-          params.append(
-            "statut",
-            statut
-          );
-        }
-
-        if (dateOperation) {
-
-          params.append(
-            "date_operation",
-            dateOperation
-          );
-        }
-
-        if (selectedAgence) {
-
-          params.append(
-            "agence_exp",
-            selectedAgence
-          );
-        }
-
-        const res =
-          await api.get(
-            `/transfert-client?${params.toString()}`
-          );
-
-        return res.data;
-      },
-
-      enabled:
-        isGlobalAdmin,
-    });
+    }
+  );
 
   /* ------------------------------------------------------------------------ */
   /*                              CURRENT QUERY                               */
   /* ------------------------------------------------------------------------ */
-
-  const currentQuery =
-    isGlobalAdmin
-      ? globalTransfertsQuery
-      : isAgenceView
-      ? agenceTransfertsQuery
-      : myTransfertsQuery;
-
-  const {
-    data,
-    isLoading,
-  } = currentQuery;
 
   /* ------------------------------------------------------------------------ */
   /*                               TRANSFERTS                                 */
@@ -288,6 +181,11 @@ export default function TransfertClientPage() {
     !Array.isArray(data)
       ? data?.meta
       : undefined;
+
+  const [
+    selectedTransfert,
+    setSelectedTransfert,
+  ] = useState<TransfertClient | null>(null);
 
   /* ------------------------------------------------------------------------ */
   /*                              STATUS STYLE                                */
@@ -361,402 +259,255 @@ export default function TransfertClientPage() {
   /*                                  COLUMNS                                 */
   /* ------------------------------------------------------------------------ */
 
-  const columns:
-    Column<TransfertClient>[] =
-      [
+  const columns: Column<TransfertClient>[] = [
 
-        {
-          header:
-            "Référence",
+  {
+    header: "Référence",
 
-          accessor:
-            "code_reference",
+    accessor: "code_reference",
 
-          render: (
-            value
-          ) => (
+    render: (value) => (
 
-            <div
-              className="
-                flex
-                items-center
-                gap-3
-              "
-            >
+      <div className="flex items-center gap-3">
 
-              <div
-                className="
-                  flex
-                  h-10
-                  w-10
-                  items-center
-                  justify-center
-                  rounded-2xl
-                  bg-indigo-50
-                "
-              >
+        <div
+          className="
+            flex
+            h-10
+            w-10
+            items-center
+            justify-center
+            rounded-2xl
+            bg-indigo-50
+          "
+        >
+          <Send
+            size={16}
+            className="text-indigo-600"
+          />
+        </div>
 
-                <Send
-                  size={16}
-                  className="
-                    text-indigo-600
-                  "
-                />
+        <div>
 
-              </div>
+          <p
+            className="
+              text-sm
+              font-semibold
+              text-slate-900
+            "
+          >
+            {value}
+          </p>
 
-              <div>
+        </div>
 
-                <p
-                  className="
-                    text-sm
-                    font-semibold
-                    text-slate-900
-                  "
-                >
-                  {value}
-                </p>
+      </div>
+    ),
+  },
 
-                <p
-                  className="
-                    mt-1
-                    text-xs
-                    text-slate-400
-                  "
-                >
-                  Référence opération
-                </p>
+  {
+    header: "Expéditeur",
 
-              </div>
+    accessor: "expediteur_name",
 
-            </div>
-          ),
-        },
+    render: (_v, row) => (
 
-        {
-          header:
-            "Expéditeur",
+      <div className="flex flex-col">
 
-          accessor:
-            "exp_nom",
+        <span
+          className="
+            font-semibold
+            text-slate-800
+          "
+        >
+          {row.expediteur_name}
+        </span>
 
-          render: (
-            _v,
-            row
-          ) => (
+        <span
+          className="
+            mt-1
+            text-xs
+            text-slate-400
+          "
+        >
+          {row.expediteur_telephone}
+        </span>
 
-            <div
-              className="
-                flex
-                flex-col
-              "
-            >
+      </div>
+    ),
+  },
 
-              <span
-                className="
-                  font-semibold
-                  text-slate-800
-                "
-              >
-                {row.exp_nom}{" "}
-                {
-                  row.exp_postnom
-                }
-              </span>
+  {
+    header: "Destinataire",
 
-              <span
-                className="
-                  mt-1
-                  text-xs
-                  text-slate-400
-                "
-              >
-                {
-                  row.exp_phone
-                }
-              </span>
+    accessor: "destinataire_name",
 
-            </div>
-          ),
-        },
+    render: (_v, row) => (
 
-        {
-          header:
-            "Destinataire",
+      <div className="flex flex-col">
 
-          accessor:
-            "dest_nom",
+        <span
+          className="
+            font-semibold
+            text-slate-800
+          "
+        >
+          {row.destinataire_name}
+        </span>
 
-          render: (
-            _v,
-            row
-          ) => (
+        <span
+          className="
+            mt-1
+            text-xs
+            text-slate-400
+          "
+        >
+          {row.destinataire_telephone}
+        </span>
 
-            <div
-              className="
-                flex
-                flex-col
-              "
-            >
+      </div>
+    ),
+  },
 
-              <span
-                className="
-                  font-semibold
-                  text-slate-800
-                "
-              >
-                {row.dest_nom}{" "}
-                {
-                  row.dest_postnom
-                }
-              </span>
+  {
+    header: "Montant",
 
-              <span
-                className="
-                  mt-1
-                  text-xs
-                  text-slate-400
-                "
-              >
-                {
-                  row.dest_phone
-                }
-              </span>
+    accessor: "montant_source",
 
-            </div>
-          ),
-        },
+    render: (_v, row) => (
 
-        {
-          header:
-            "Montant",
+      <div className="flex flex-col">
 
-          accessor:
-            "montant",
+        <span
+          className="
+            text-base
+            font-semibold
+            text-emerald-600
+          "
+        >
+          {Number(
+            row.montant_source
+          ).toLocaleString()}
+          {" "}
+          {row.devise_source}
+        </span>
 
-          render: (
-            value,
-            row
-          ) => {
+        <span
+          className="
+            mt-1
+            text-xs
+            text-slate-400
+          "
+        >
+          Total :
+          {" "}
+          {Number(
+            row.montant_total
+          ).toLocaleString()}
+          {" "}
+          {row.devise_source}
+        </span>
 
-            const amount =
-              typeof value ===
-              "number"
-                ? value
-                : Number(
-                    value
-                  );
+      </div>
+    ),
+  },
 
-            return (
+  {
+    header: "Statut",
 
-              <div
-                className="
-                  flex
-                  flex-col
-                "
-              >
+    accessor: "statut",
 
-                <span
-                  className="
-                    text-base
-                    font-semibold
-                    text-emerald-600
-                  "
-                >
-                  {amount.toLocaleString()}{" "}
-                  {
-                    row.devise
-                  }
-                </span>
+    render: (value) => (
 
-                <span
-                  className="
-                    mt-1
-                    text-xs
-                    text-slate-400
-                  "
-                >
-                  Frais:{" "}
-                  {row.frais}
-                </span>
+      <span
+        className={`
+          inline-flex
+          items-center
+          rounded-full
+          border
+          px-3
+          py-1
+          text-xs
+          font-semibold
+          ${getStatusStyle(
+            String(value)
+          )}
+        `}
+      >
+        {String(value)}
+      </span>
+    ),
+  },
 
-              </div>
-            );
-          },
-        },
+  {
+    header: "Actions",
 
-        {
-          header:
-            "Commission",
+    accessor: "id",
 
-          accessor:
-            "commission",
+    render: (_v, row) => (
 
-          render: (
-            value,
-            row
-          ) => {
+      <div className="flex items-center gap-2">
 
-            const commission =
-              typeof value ===
-              "number"
-                ? value
-                : Number(
-                    value
-                  );
+        <button
+          onClick={() =>
+            setSelectedTransfert(row)
+          }
+          className="
+            inline-flex
+            items-center
+            gap-2
+            rounded-xl
+            border
+            border-slate-200
+            bg-white
+            px-3
+            py-2
+            text-sm
+            font-medium
+            text-slate-700
+            transition-all
+            hover:bg-slate-50
+          "
+        >
 
-            return (
+          Détail
 
-              <div
-                className="
-                  flex
-                  flex-col
-                "
-              >
+        </button>
 
-                <span
-                  className="
-                    text-base
-                    font-semibold
-                    text-blue-600
-                  "
-                >
-                  {commission.toLocaleString()}{" "}
-                  {
-                    row.devise
-                  }
-                </span>
+        <button
+          onClick={() =>
+            handlePrint(row)
+          }
+          className="
+            inline-flex
+            items-center
+            gap-2
+            rounded-xl
+            border
+            border-slate-200
+            bg-white
+            px-3
+            py-2
+            text-sm
+            font-medium
+            text-slate-700
+            transition-all
+            hover:bg-indigo-50
+            hover:text-indigo-600
+          "
+        >
 
-              </div>
-            );
-          },
-        },
+          <Printer size={16} />
 
-        {
-          header:
-            "Statut",
+          Imprimer
 
-          accessor:
-            "statut",
+        </button>
 
-          render: (
-            value
-          ) => (
+      </div>
+    ),
+  },
 
-            <span
-              className={`
-                inline-flex
-                items-center
-                rounded-full
-                border
-                px-3
-                py-1
-                text-xs
-                font-semibold
-                ${getStatusStyle(
-                  String(
-                    value
-                  )
-                )}
-              `}
-            >
-              {String(value)}
-            </span>
-          ),
-        },
-
-        {
-          header:
-            "Date",
-
-          accessor:
-            "date_operation",
-
-          render: (
-            value,
-            row
-          ) => {
-
-            const finalDate =
-              value ||
-              row.created_at;
-
-            return (
-
-              <div
-                className="
-                  flex
-                  items-center
-                  gap-2
-                  text-sm
-                  text-slate-600
-                "
-              >
-
-                <CalendarRange
-                  size={15}
-                />
-
-                {new Date(
-                  String(
-                    finalDate
-                  )
-                ).toLocaleDateString(
-                  "fr-FR"
-                )}
-
-              </div>
-            );
-          },
-        },
-
-        {
-          header:
-            "Action",
-
-          accessor:
-            "id",
-
-          render: (
-            _v,
-            row
-          ) => (
-
-            <button
-              onClick={() =>
-                handlePrint(
-                  row
-                )
-              }
-              className="
-                inline-flex
-                items-center
-                gap-2
-                rounded-xl
-                border
-                border-slate-200
-                bg-white
-                px-3
-                py-2
-                text-sm
-                font-medium
-                text-slate-700
-                transition-all
-                hover:bg-indigo-50
-                hover:text-indigo-600
-              "
-            >
-
-              <Printer
-                size={16}
-              />
-
-              Imprimer
-
-            </button>
-          ),
-        },
-      ];
+];
 
   /* ------------------------------------------------------------------------ */
   /*                                   RESET                                  */
@@ -860,26 +611,33 @@ export default function TransfertClientPage() {
 
           </div>
 
-          <Button
-           onClick={() =>
-              setOpenCaisseModal(true)
-            }
-            className="
-              h-12
-              rounded-2xl
-              bg-indigo-600
-              px-5
-              hover:bg-indigo-700
-            "
-          >
+          {(
+            canCreate ||
+            canCreateAgence
+          ) && (
 
-            <Plus
-              size={17}
-            />
+            <Button
+              onClick={() =>
+                setOpenForm(true)
+              }
+              className="
+                h-12
+                rounded-2xl
+                bg-indigo-600
+                px-5
+                hover:bg-indigo-700
+              "
+            >
 
-            Nouveau transfert
+              <Plus
+                size={17}
+              />
 
-          </Button>
+              Nouveau transfert
+
+            </Button>
+
+          )}
 
         </section>
 
@@ -993,7 +751,7 @@ export default function TransfertClientPage() {
               "
             />
 
-            {isGlobalAdmin && (
+            {canReadAll  && (
 
               <select
                 value={
@@ -1101,27 +859,6 @@ export default function TransfertClientPage() {
 
       {/* MODAL */}
 
-      <SelectAgentCaisseModal
-        open={openCaisseModal}
-        onClose={() =>
-          setOpenCaisseModal(false)
-        }
-        onSelect={(
-          caisseId,
-          devise
-        ) => {
-          setSelectedCaisseId(
-            caisseId
-          );
-
-          setSelectedDevise(
-            devise
-          );
-
-          setOpenForm(true);
-        }}
-      />
-
       {openForm && (
 
         <TransfertClientModal
@@ -1129,15 +866,17 @@ export default function TransfertClientPage() {
           onClose={() =>
             setOpenForm(false)
           }
-          selectedCaisseId={
-            selectedCaisseId
-          }
-          selectedDevise={
-            selectedDevise
-          }
         />
 
       )}
+
+      <TransfertClientDetailsModal
+        open={!!selectedTransfert}
+        transfert={selectedTransfert}
+        onClose={() =>
+          setSelectedTransfert(null)
+        }
+      />
 
     </div>
   );

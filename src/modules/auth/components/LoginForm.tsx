@@ -25,34 +25,16 @@ import {
   useAuthStore,
 } from "../../../app/store";
 
+import type {
+  AuthResponse,
+} from "../types";
+
 import {
   useApiMutationWithFeedback,
 } from "../../../hooks/useApiMutationWithFeedback";
 
 import AppMessageState
 from "../../../components/ui/AppMessageState";
-
-/* ======================================================== */
-/* TYPES */
-/* ======================================================== */
-
-type LoginResponse = {
-  token: string;
-
-  user: {
-    id: string;
-
-    user_name: string;
-
-    role_name: string;
-
-    agence_id?: string;
-
-    agence_name?: string;
-
-    code_agence?: string;
-  };
-};
 
 /* ======================================================== */
 /* COMPONENT */
@@ -104,7 +86,7 @@ export default function LoginForm() {
     clearMessage,
   } =
     useApiMutationWithFeedback<
-      LoginResponse,
+      AuthResponse,
       LoginDto
     >({
 
@@ -122,29 +104,23 @@ export default function LoginForm() {
       ) => {
 
         setAuth({
-
-          token:
-            res.token,
+          token: res.token,
 
           user: {
+            id: res.user.id,
 
-            id:
-              res.user.id,
+            user_name: res.user.user_name,
 
-            user_name:
-              res.user.user_name,
+            role_name: res.user.role_name,
 
-            role_name:
-              res.user.role_name,
+            agence_id: res.user.agence_id,
 
-            agence_id:
-              res.user.agence_id,
+            agence_name: res.user.agence_name,
 
-            agence_name:
-              res.user.agence_name,
+            code_agence: res.user.code_agence,
 
-            code_agence:
-              res.user.code_agence,
+            permissions:
+              res.user.permissions ?? [],
           },
         });
 

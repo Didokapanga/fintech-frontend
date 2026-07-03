@@ -1,30 +1,65 @@
+// src/modules/ledger/hooks/useLedger.ts
+
 import { useQuery } from "@tanstack/react-query";
+
 import {
-  getLedgerByCaisse,
-  getMyLedger,
-  type LedgerFilters,
+  getLedger,
 } from "../services/ledger.service";
 
-// 🔴 ADMIN
-export const useLedgerByCaisse = (
-  caisse_id: string,
-  page: number,
-  limit: number,
-  filters: LedgerFilters
-) =>
-  useQuery({
-    queryKey: ["ledger", caisse_id, page, limit, filters],
-    queryFn: () =>
-      getLedgerByCaisse(caisse_id, page, limit, filters),
-    enabled: !!caisse_id,
-  });
+import type {
+  LedgerFilters,
+} from "../types";
 
-export const useMyLedger = (
-  page: number,
-  limit: number,
-  filters: LedgerFilters
+export const useLedger = (
+  page = 1,
+  limit = 10,
+  filters?: LedgerFilters
 ) =>
   useQuery({
-    queryKey: ["ledger-me", page, limit, filters],
-    queryFn: () => getMyLedger(page, limit, filters),
+
+    queryKey: [
+      "ledger",
+      page,
+      limit,
+      filters,
+    ],
+
+    queryFn: async () => {
+
+      const result =
+        await getLedger(
+          page,
+          limit,
+          filters
+        );
+
+      // console.log(
+      //   "LEDGER RESULT",
+      //   result
+      // );
+
+      return result;
+    },
   });
+  
+// export const useLedger = (
+//   page = 1,
+//   limit = 10,
+//   filters?: LedgerFilters
+// ) =>
+//   useQuery({
+
+//     queryKey: [
+//       "ledger",
+//       page,
+//       limit,
+//       filters,
+//     ],
+
+//     queryFn: () =>
+//       getLedger(
+//         page,
+//         limit,
+//         filters
+//       ),
+//   });

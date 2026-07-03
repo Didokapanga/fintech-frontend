@@ -19,6 +19,8 @@ type Row = {
   >;
 
   count: number;
+
+  description?: string;
 };
 
 type Props = {
@@ -399,6 +401,23 @@ export default function DashboardTable({
                   Transactions
                 </th>
 
+                <th
+                  className="
+                    border-b
+                    border-slate-200
+                    px-7
+                    py-5
+                    text-right
+                    text-[11px]
+                    font-semibold
+                    uppercase
+                    tracking-[0.14em]
+                    text-slate-400
+                  "
+                >
+                  Devise(s)
+                </th>
+
               </tr>
 
             </thead>
@@ -480,7 +499,8 @@ export default function DashboardTable({
                                 text-slate-400
                               "
                             >
-                              Flux opérationnel
+                              {row.description ||
+                                "Flux opérationnel"}
                             </p>
 
                           </div>
@@ -544,6 +564,32 @@ export default function DashboardTable({
 
                       </td>
 
+                      <td
+                        className="
+                          border-b
+                          border-slate-100
+                          px-7
+                          py-6
+                          text-right
+                        "
+                      >
+
+                        <span
+                          className="
+                            text-sm
+                            font-semibold
+                            text-slate-700
+                          "
+                        >
+                          {
+                            Object.keys(
+                              row.volumes || {}
+                            ).length
+                          }
+                        </span>
+
+                      </td>
+
                     </tr>
                   )
                 )
@@ -553,7 +599,7 @@ export default function DashboardTable({
                 <tr>
 
                   <td
-                    colSpan={3}
+                    colSpan={4}
                     className="
                       px-6
                       py-20

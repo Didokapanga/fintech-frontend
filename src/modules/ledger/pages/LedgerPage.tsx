@@ -21,23 +21,20 @@ import type {
   Column,
 } from "../../../components/ui/Table.types";
 
-import type {
-  Ledger,
-} from "../services/ledger.service";
-
 import {
   exportLedgerExcel,
 } from "../services/ledger-export.service";
 
 import {
-  useLedgerByCaisse,
-  useMyLedger,
+  useLedger,
 } from "../hooks/useLeger";
 
 import {
   useCaisses,
 } from "../../caisse/hooks/useCaisses";
 import Pagination from "../../../components/ui/Pagination";
+import type { Ledger } from "../types";
+import LedgerDetailsModal from "../components/LedgerDetailsModal";
 
 /* -------------------------------------------------------------------------- */
 /*                                   TYPES                                    */
@@ -88,12 +85,12 @@ export default function LedgerPage() {
       date_to: "",
     });
 
+  const [selectedLedger, setSelectedLedger] =
+    useState<Ledger | null>(null);
   /* ---------------------------------------------------------------------- */
   /* MODE                                                                   */
   /* ---------------------------------------------------------------------- */
 
-  const isAdminMode =
-    !!caisseId;
 
   /* ---------------------------------------------------------------------- */
   /* CAISSES                                                                */
@@ -118,29 +115,48 @@ export default function LedgerPage() {
   /* LEDGER                                                                 */
   /* ---------------------------------------------------------------------- */
 
-  const adminQuery =
-    useLedgerByCaisse(
-      caisseId,
+  const ledgerQuery =
+    useLedger(
       page,
       10,
-      filters
-    );
+      {
+        caisse_id:
+          caisseId || undefined,
 
-  const userQuery =
-    useMyLedger(
-      page,
-      10,
-      filters
+        type_operation:
+          filters.type_operation ||
+          undefined,
+
+        sens:
+          filters.sens ||
+          undefined,
+
+        date_from:
+          filters.date_from ||
+          undefined,
+
+        date_to:
+          filters.date_to ||
+          undefined,
+      }
     );
 
   const response =
-    (
-      isAdminMode
-        ? adminQuery.data
-        : userQuery.data
-    ) as
+    ledgerQuery.data as
       | LedgerResponse
       | undefined;
+
+    // console.log("QUERY", ledgerQuery);
+
+    // console.log(
+    //   "QUERY DATA",
+    //   ledgerQuery.data
+    // );
+
+    // console.log(
+    //   "RESPONSE",
+    //   response
+    // );
 
   const data =
     response?.data || [];
@@ -149,29 +165,11 @@ export default function LedgerPage() {
     response?.meta;
 
   const isLoading =
-    isAdminMode
-      ? adminQuery.isLoading
-      : userQuery.isLoading;
+    ledgerQuery.isLoading;
 
   /* ---------------------------------------------------------------------- */
   /* HELPERS                                                                */
   /* ---------------------------------------------------------------------- */
-
-  const getSensStyle = (
-    sens: string
-  ) =>
-
-    sens === "ENTREE"
-      ? "text-emerald-600"
-      : "text-red-600";
-
-  const getSensBadge = (
-    sens: string
-  ) =>
-
-    sens === "ENTREE"
-      ? "bg-emerald-100 text-emerald-700"
-      : "bg-red-100 text-red-700";
 
   /* ---------------------------------------------------------------------- */
   /* EXPORT                                                                 */
@@ -230,75 +228,114 @@ export default function LedgerPage() {
   /* COLUMNS                                                                */
   /* ---------------------------------------------------------------------- */
 
-  const columns:
-    Column<Ledger>[] = [
+  const columns: Column<Ledger>[] = [
+
+  /* ---------------------------------------------------------- */
+  /* REFERENCE                                                  */
+  /* ---------------------------------------------------------- */
 
     {
-      header:
-        "Opération",
+      header: "Référence",
 
-      accessor:
-        "libelle_operation",
+      accessor: "reference_metier",
 
-      render: (
-        _,
-        row
-      ) => (
+      render: (_v, row) => (
 
-        <div className="flex flex-col">
+        <div className="flex flex-col gap-1">
 
-          <span className="font-medium text-slate-800">
-
-            {
-              row.libelle_operation
-            }
-
+          <span
+            className="
+              font-semibold
+              text-slate-800
+            "
+          >
+            {row.reference_metier}
           </span>
 
-          <span className="text-xs text-slate-500">
+          <div
+            className="
+              flex
+              items-center
+              gap-2
+            "
+          >
 
-            {
-              row.reference_metier ||
-              "-"
-            }
+            <span
+              className="
+                text-xs
+                text-slate-400
+              "
+            >
+              {row.libelle_operation}
+            </span>
 
-          </span>
+            <span
+              className={`
+                rounded-full
+                px-2
+                py-0.5
+                text-[10px]
+                font-semibold
+
+                ${
+                  row.reference_type ===
+                  "TRANSFERT_CAISSE"
+                    ? "bg-blue-100 text-blue-700"
+                    : row.reference_type ===
+                      "TRANSFERT_CLIENT"
+                    ? "bg-violet-100 text-violet-700"
+                    : "bg-amber-100 text-amber-700"
+                }
+              `}
+            >
+              {row.reference_type ===
+              "TRANSFERT_CAISSE"
+                ? "Transfert caisse"
+                : row.reference_type ===
+                  "TRANSFERT_CLIENT"
+                ? "Transfert client"
+                : "Retrait"}
+            </span>
+
+          </div>
 
         </div>
       ),
     },
 
+    /* ---------------------------------------------------------- */
+    /* MONTANT                                                    */
+    /* ---------------------------------------------------------- */
+
     {
-      header:
-        "Montant",
+      header: "Montant",
 
-      accessor:
-        "montant",
+      accessor: "montant",
 
-      render: (
-        value,
-        row
-      ) => (
+      render: (value, row) => (
 
         <div className="flex flex-col">
 
           <span
-            className={`font-semibold ${getSensStyle(
-              row.sens
-            )}`}
+            className={`
+              text-base
+              font-semibold
+              ${
+                row.sens === "ENTREE"
+                  ? "text-emerald-600"
+                  : "text-red-600"
+              }
+            `}
           >
-
-            {row.sens ===
-            "ENTREE"
+            {row.sens === "ENTREE"
               ? "+"
               : "-"}
 
-            {Number(
-              value
-            ).toLocaleString()}{" "}
+            {Number(value).toLocaleString()}
+
+            {" "}
 
             {row.devise}
-
           </span>
 
           <span
@@ -311,162 +348,163 @@ export default function LedgerPage() {
               py-0.5
               text-[10px]
               font-semibold
-              ${getSensBadge(
-                row.sens
-              )}
+
+              ${
+                row.sens === "ENTREE"
+                  ? "bg-emerald-100 text-emerald-700"
+                  : "bg-red-100 text-red-700"
+              }
             `}
           >
-
             {row.sens}
-
           </span>
 
         </div>
       ),
     },
 
-    {
-      header:
-        "Client",
-
-      accessor:
-        "expediteur_complet",
-
-      render: (
-        _,
-        row
-      ) => {
-
-        const isClientOperation =
-
-          row.type_operation ===
-            "TRANSFERT_CLIENT" ||
-
-          row.type_operation ===
-            "RETRAIT";
-
-        if (
-          !isClientOperation
-        ) {
-
-          return (
-
-            <span className="text-sm text-slate-400">
-
-              Opération interne
-
-            </span>
-          );
-        }
-
-        return (
-
-          <div className="flex flex-col text-sm gap-1">
-
-            <span>
-
-              <strong>
-                Exp:
-              </strong>{" "}
-
-              {row.expediteur_complet ||
-                "-"}
-
-            </span>
-
-            <span>
-
-              <strong>
-                Dest:
-              </strong>{" "}
-
-              {row.destinataire_complet ||
-                "-"}
-
-            </span>
-
-          </div>
-        );
-      },
-    },
+    /* ---------------------------------------------------------- */
+    /* PARTIES                                                    */
+    /* ---------------------------------------------------------- */
 
     {
-      header:
-        "Agence / Caisse",
+      header: "Parties",
 
-      accessor:
-        "agence_display",
+      accessor: "id",
 
-      render: (
-        _,
-        row
-      ) => (
+      render: (_v, row) => (
 
         <div className="flex flex-col">
 
-          <span className="font-medium text-slate-800">
-
-            {
-              row.agence_display
-            }
-
+          <span
+            className="
+              font-medium
+              text-slate-800
+            "
+          >
+            {row.expediteur
+              ? row.expediteur.nom_complet
+              : "Opération interne"}
           </span>
 
-          <span className="text-xs text-slate-500">
+          {row.destinataire && (
 
-            Caisse{" "}
+            <span
+              className="
+                mt-1
+                text-xs
+                text-slate-400
+              "
+            >
+              →
+              {" "}
+              {row.destinataire.nom_complet}
+            </span>
 
-            {
-              row.code_caisse
-            }
-
-          </span>
-
-        </div>
-      ),
-    },
-
-    {
-      header:
-        "Agent",
-
-      accessor:
-        "agent_operation",
-
-      render: (
-        value
-      ) => (
-
-        <span className="text-sm text-slate-700">
-
-          {value || "-"}
-
-        </span>
-      ),
-    },
-
-    {
-      header:
-        "Date",
-
-      accessor:
-        "created_at",
-
-      render: (
-        value
-      ) => (
-
-        <div className="text-sm text-slate-600">
-
-          {new Date(
-            String(value)
-          ).toLocaleString(
-            "fr-FR"
           )}
 
         </div>
       ),
     },
+
+    /* ---------------------------------------------------------- */
+    /* AGENCE / CAISSE                                            */
+    /* ---------------------------------------------------------- */
+
+    {
+      header: "Agence",
+
+      accessor: "agence_display",
+
+      render: (_v, row) => (
+
+        <div className="flex flex-col">
+
+          <span
+            className="
+              font-medium
+              text-slate-800
+            "
+          >
+            {row.agence_display}
+          </span>
+
+          <span
+            className="
+              mt-1
+              text-xs
+              text-slate-400
+            "
+          >
+            Caisse {row.code_caisse}
+          </span>
+
+        </div>
+      ),
+    },
+
+    /* ---------------------------------------------------------- */
+    /* AGENT                                                      */
+    /* ---------------------------------------------------------- */
+
+    {
+      header: "Agent",
+
+      accessor: "id",
+
+      render: (_v, row) => (
+
+        <span
+          className="
+            text-sm
+            text-slate-700
+          "
+        >
+          {row.agent?.user_name ??
+            "SYSTEME"}
+        </span>
+      ),
+    },
+
+    /* ---------------------------------------------------------- */
+    /* ACTION                                                     */
+    /* ---------------------------------------------------------- */
+
+    {
+      header: "Action",
+
+      accessor: "id",
+
+      render: (_v, row) => (
+
+        <button
+          onClick={() =>
+            setSelectedLedger(
+              row
+            )
+          }
+          className="
+            inline-flex
+            items-center
+            rounded-xl
+            border
+            border-slate-200
+            bg-white
+            px-3
+            py-2
+            text-sm
+            font-medium
+            text-slate-700
+            transition-all
+            hover:bg-indigo-50
+            hover:text-indigo-600
+          "
+        >
+          Détails
+        </button>
+      ),
+    },
+
   ];
 
   /* ---------------------------------------------------------------------- */
@@ -962,6 +1000,14 @@ export default function LedgerPage() {
           onChange={setPage}
         />
       )}
+
+      <LedgerDetailsModal
+        ledger={selectedLedger}
+        open={!!selectedLedger}
+        onClose={() =>
+          setSelectedLedger(null)
+        }
+      />
 
     </div>
   );
