@@ -35,61 +35,79 @@ export default function ClientsPage() {
   };
 
   // 🔥 FIX GLOBAL : supporte les 2 formats (array OU paginated)
-  const clients = Array.isArray(data)
-    ? data
-    : data?.data ?? [];
-
-  const meta = !Array.isArray(data) ? data?.meta : undefined;
+  const clients = data ?? [];
 
   const columns: Column<Client>[] = [
-    {
-      header: "Nom complet",
-      accessor: "name",
-      render: (_v, row) => (
-        <div className="flex flex-col">
-          <span className="font-medium text-gray-800">
-            {row.name} {row.first_name}
-          </span>
-          <span className="text-xs text-gray-500">
-            {row.second_name}
-          </span>
-        </div>
-      ),
-    },
-    {
-      header: "Téléphone",
-      accessor: "phone",
-      render: (value) => (
-        <span className="text-sm text-gray-700">
-          {value}
+  {
+    header: "Nom complet",
+    accessor: "nom",
+
+    render: (_value, row) => (
+
+      <div className="flex flex-col">
+
+        <span className="font-medium text-gray-800">
+          {row.nom} {row.postnom}
         </span>
-      ),
-    },
-    {
-      header: "Ville",
-      accessor: "ville",
-      render: (value) => (
-        <span className="px-2 py-1 text-xs rounded bg-gray-100 text-gray-600">
-          {value}
+
+        <span className="text-xs text-gray-500">
+          {row.prenom}
         </span>
-      ),
-    },
-    {
-      header: "Actions",
-      accessor: "id",
-      render: (_value, row) => (
-        <div className="flex gap-2">
-          <Button
-            variant="danger"
-            className="text-xs px-3 py-1"
-            onClick={() => setSelectedId(row.id)}
-          >
-            Supprimer
-          </Button>
-        </div>
-      ),
-    },
-  ];
+
+      </div>
+
+    ),
+  },
+
+  {
+    header: "Téléphone",
+    accessor: "telephone",
+
+    render: (value) => (
+
+      <span className="text-sm text-gray-700">
+        {String(value ?? "-")}
+      </span>
+
+    ),
+  },
+
+  {
+    header: "Ville",
+    accessor: "ville",
+
+    render: (value) => (
+
+      <span className="px-2 py-1 text-xs rounded bg-gray-100 text-gray-600">
+        {String(value ?? "-")}
+      </span>
+
+    ),
+  },
+
+  {
+    header: "Actions",
+    accessor: "id",
+
+    render: (_value, row) => (
+
+      <div className="flex gap-2">
+
+        <Button
+          variant="danger"
+          className="text-xs px-3 py-1"
+          onClick={() =>
+            setSelectedId(row.id)
+          }
+        >
+          Supprimer
+        </Button>
+
+      </div>
+
+    ),
+  },
+];
 
   return (
     <div className="space-y-6">
@@ -143,7 +161,7 @@ export default function ClientsPage() {
       )}
 
       {/* PAGINATION */}
-      {meta && (
+      {/* {meta && (
         <div className="flex justify-center items-center gap-3">
           <Button
             variant="secondary"
@@ -165,7 +183,7 @@ export default function ClientsPage() {
             →
           </Button>
         </div>
-      )}
+      )} */}
 
       {/* MODALS */}
       {open && (

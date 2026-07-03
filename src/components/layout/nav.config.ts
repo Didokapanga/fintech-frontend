@@ -19,6 +19,7 @@ import {
   BookOpen,
   Scale,
   ArrowLeftRight,
+  Users,
   // FileSpreadsheet,
 } from "lucide-react";
 
@@ -66,6 +67,12 @@ export const getNavItems = (
       label: "Dashboard",
       icon: Home,
       path: base,
+    },
+
+    {
+      label: "Clients",
+      icon: Users,
+      path: `${base}/clients`,
     },
 
     /* ===================================================== */

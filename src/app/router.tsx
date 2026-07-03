@@ -323,6 +323,13 @@ export const router =
         },
 
         {
+          path: "clients",
+
+          element:
+            <ClientsPage />,
+        },
+
+        {
           path: "retrait",
 
           element:
