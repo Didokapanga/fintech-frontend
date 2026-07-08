@@ -29,10 +29,12 @@ export const PERMISSIONS = {
   TRANSFERT_CAISSE_ME: "transfert_caisse.me",
   TRANSFERT_CAISSE_CREATE: "transfert_caisse.create",
   TRANSFERT_CAISSE_CREATE_AGENCE: "transfert_caisse.createByAgence",
+  TRANSFERT_CAISSE_PROCESS: "transfert_caisse.process",
+  TRANSFERT_CAISSE_PROCESS_AGENCE: "transfert_caisse.processByAgence",
 
   // TRANSFERT CLIENT
   TRANSFERT_CLIENT_READ: "transfert_client.read",
-  TRANSFERT_CLIENT_READ_AGENCE: "transfert_client.readByAgence",
+  TRANSFERT_CLIENT_READ_AGENCE: "transfert_client.readByagence",
   TRANSFERT_CLIENT_READ_ME: "transfert_client.readByUser",
   TRANSFERT_CLIENT_CREATE: "transfert_client.create",
   TRANSFERT_CLIENT_CREATE_AGENCE: "transfert_client.createByAgence",
@@ -44,4 +46,9 @@ export const PERMISSIONS = {
   RETRAIT_READ_MINE: "retrait.read.mine",
   RETRAIT_READ_AGENCY: "retrait.read.agency",
   
+  // TARIF
+  TARIF_CREATE: "tarif.create",
+  TARIF_UPDATE: "tarif.update",
+  TARIF_DELETE: "tarif.delete",
+
 } as const;

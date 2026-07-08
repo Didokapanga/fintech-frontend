@@ -8,6 +8,7 @@ import {
   Phone,
   Plus,
   ShieldCheck,
+  Trash2,
   User2,
   Users,
 } from "lucide-react";
@@ -25,6 +26,7 @@ import RegisterForm
 from "../components/RegisterForm";
 
 import {
+  useDeleteUser,
   useUsers,
 } from "../hooks/useAuth";
 
@@ -68,6 +70,9 @@ const {
   data,
   isLoading,
 } = useUsers();
+
+const deleteMutation =
+  useDeleteUser();
 
 const users = useMemo<User[]>(() => {
 
@@ -382,6 +387,87 @@ const users = useMemo<User[]>(() => {
           </span>
         );
       },
+    },
+
+    {
+      header: "Type",
+
+      accessor: "is_caisse_user",
+
+      render: (value) => {
+
+        const isCaisse =
+          Boolean(value);
+
+        return (
+
+          <span
+            className={`
+              inline-flex
+              items-center
+              rounded-full
+              px-3
+              py-1
+              text-xs
+              font-semibold
+              ${
+                isCaisse
+                  ? "bg-blue-100 text-blue-700"
+                  : "bg-slate-100 text-slate-700"
+              }
+            `}
+          >
+            {isCaisse
+              ? "Caissier"
+              : "Administratif"}
+          </span>
+
+        );
+      },
+    },
+
+    {
+      header: "Actions",
+
+      accessor: "id",
+
+      render: (_, row) => (
+
+        <div className="flex items-center gap-2">
+
+          <button
+            onClick={() => {
+
+              if (
+                confirm(
+                  `Supprimer ${row.user_name} ?`
+                )
+              ) {
+
+                deleteMutation.mutate(
+                  row.id
+                );
+
+              }
+
+            }}
+            className="
+              rounded-xl
+              bg-red-50
+              p-2
+              text-red-600
+              transition-all
+              hover:bg-red-100
+            "
+          >
+
+            <Trash2 size={16} />
+
+          </button>
+
+        </div>
+
+      ),
     },
   ];
 

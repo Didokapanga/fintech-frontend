@@ -61,8 +61,7 @@ export default function ProtectedRoute({
   /* ======================================================= */
 
   const isCaissier =
-    user?.role_name ===
-    "CAISSIER";
+    !!user?.is_caisse_user;
 
   const currentPath =
     location.pathname;

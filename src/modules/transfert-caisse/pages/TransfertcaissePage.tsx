@@ -24,10 +24,6 @@ import type {
 } from "../../../components/ui/Table.types";
 
 import {
-  useCaisses,
-} from "../../caisse/hooks/useCaisses";
-
-import {
   useTransfertsCaisse,
 } from "../hooks/useTransfertCaisse";
 
@@ -101,23 +97,6 @@ export default function TransfertCaissePage() {
   /*                                  CAISSES                                 */
   /* ------------------------------------------------------------------------ */
 
-  const {
-    data:
-      caissesResponse,
-  } =
-    useCaisses(
-      1,
-      100
-    );
-
-  const caissesData =
-    useMemo(
-      () =>
-        caissesResponse?.data ||
-        [],
-      [caissesResponse]
-    );
-
   /* ------------------------------------------------------------------------ */
   /*                               TRANSFERTS                                 */
   /* ------------------------------------------------------------------------ */
@@ -137,48 +116,6 @@ export default function TransfertCaissePage() {
   /* ------------------------------------------------------------------------ */
   /*                             HELPER CAISSE                                */
   /* ------------------------------------------------------------------------ */
-
-  const getCaisseInfo = (
-    caisseId: string
-  ) => {
-
-    const caisse =
-      caissesData.find(
-        (c: {
-          id: string;
-
-          code_caisse?: string;
-
-          agence?: {
-            libelle?: string;
-          };
-
-          agence_libelle?: string;
-        }) =>
-          String(c.id) ===
-          String(caisseId)
-      );
-
-    if (!caisse) {
-
-      return {
-        code: "-",
-        agence: "-",
-      };
-    }
-
-    return {
-      code:
-        caisse.code_caisse ||
-        "-",
-
-      agence:
-        caisse.agence
-          ?.libelle ||
-        caisse.agence_libelle ||
-        "-",
-    };
-  };
 
   /* ------------------------------------------------------------------------ */
   /*                              STATUS STYLE                                */
@@ -240,30 +177,20 @@ export default function TransfertCaissePage() {
         /* -------------------------------------------------------------- */
 
         {
-          header:
-            "Référence",
+          header: "Référence",
 
-          accessor:
-            "code_reference",
+          accessor: "code_reference",
 
-          render: (
-            value
-          ) => (
+          render: (value) => (
 
-            <div
-              className="
-                flex
-                flex-col
-              "
-            >
+            <div className="flex flex-col">
 
               <span
                 className="
                   font-mono
-                  text-xs
+                  text-sm
                   font-semibold
-                  tracking-wide
-                  text-slate-700
+                  text-slate-800
                 "
               >
                 {value}
@@ -272,11 +199,11 @@ export default function TransfertCaissePage() {
               <span
                 className="
                   mt-1
-                  text-[11px]
+                  text-xs
                   text-slate-400
                 "
               >
-                Transaction
+                Transfert caisse
               </span>
 
             </div>
@@ -288,53 +215,37 @@ export default function TransfertCaissePage() {
         /* -------------------------------------------------------------- */
 
         {
-          header:
-            "Caisse source",
+          header: "Source",
 
-          accessor:
-            "caisse_source_id",
+          accessor: "agence_source_name",
 
-          render: (
-            value
-          ) => {
+          render: (_v, row) => (
 
-            const info =
-              getCaisseInfo(
-                String(value)
-              );
+            <div className="flex flex-col">
 
-            return (
-              <div
+              <span
                 className="
-                  flex
-                  flex-col
+                  font-semibold
+                  text-slate-800
                 "
               >
+                {row.agence_source_name}
+              </span>
 
-                <span
-                  className="
-                    font-semibold
-                    text-slate-800
-                  "
-                >
-                  {info.code}
-                </span>
+              <span
+                className="
+                  mt-1
+                  text-xs
+                  text-slate-400
+                "
+              >
+                Caisse {row.source_code_caisse}
+                {" • "}
+                {row.source_caisse_type}
+              </span>
 
-                <span
-                  className="
-                    mt-1
-                    text-xs
-                    text-slate-400
-                  "
-                >
-                  {
-                    info.agence
-                  }
-                </span>
-
-              </div>
-            );
-          },
+            </div>
+          ),
         },
 
         /* -------------------------------------------------------------- */
@@ -342,53 +253,37 @@ export default function TransfertCaissePage() {
         /* -------------------------------------------------------------- */
 
         {
-          header:
-            "Caisse destination",
+          header: "Destination",
 
-          accessor:
-            "caisse_destination_id",
+          accessor: "agence_destination_name",
 
-          render: (
-            value
-          ) => {
+          render: (_v, row) => (
 
-            const info =
-              getCaisseInfo(
-                String(value)
-              );
+            <div className="flex flex-col">
 
-            return (
-              <div
+              <span
                 className="
-                  flex
-                  flex-col
+                  font-semibold
+                  text-slate-800
                 "
               >
+                {row.agence_destination_name}
+              </span>
 
-                <span
-                  className="
-                    font-semibold
-                    text-slate-800
-                  "
-                >
-                  {info.code}
-                </span>
+              <span
+                className="
+                  mt-1
+                  text-xs
+                  text-slate-400
+                "
+              >
+                Caisse {row.destination_code_caisse}
+                {" • "}
+                {row.destination_caisse_type}
+              </span>
 
-                <span
-                  className="
-                    mt-1
-                    text-xs
-                    text-slate-400
-                  "
-                >
-                  {
-                    info.agence
-                  }
-                </span>
-
-              </div>
-            );
-          },
+            </div>
+          ),
         },
 
         /* -------------------------------------------------------------- */
@@ -447,6 +342,38 @@ export default function TransfertCaissePage() {
               </div>
             );
           },
+        },
+
+        {
+          header: "Agent",
+
+          accessor: "created_by_name",
+
+          render: (_v, row) => (
+
+            <div className="flex flex-col">
+
+              <span
+                className="
+                  font-semibold
+                  text-slate-800
+                "
+              >
+                {row.created_by_name}
+              </span>
+
+              <span
+                className="
+                  mt-1
+                  text-xs
+                  text-slate-400
+                "
+              >
+                {row.destination_agent_name || "-"}
+              </span>
+
+            </div>
+          ),
         },
 
         /* -------------------------------------------------------------- */

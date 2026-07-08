@@ -50,7 +50,16 @@ export default function PermissionFormModal({
     register,
     handleSubmit,
     reset,
-  } = useForm<FormData>();
+    formState: {
+      errors,
+    },
+  } = useForm<FormData>({
+    defaultValues: {
+      code: "",
+      permission_name: "",
+      description: "",
+    },
+  });
 
   const createMutation =
     useCreatePermission();
@@ -58,51 +67,43 @@ export default function PermissionFormModal({
   const updateMutation =
     useUpdatePermission();
 
-  useEffect(() => {
+    useEffect(() => {
 
-    if (!open) return;
+      if (!open) return;
 
-    if (permission) {
+      if (permission) {
 
-      reset({
-        code:
-          permission.code,
+        reset({
+          code: permission.code,
+          permission_name:
+            permission.permission_name,
+          description:
+            permission.description ?? "",
+        });
 
-        permission_name:
-          permission.permission_name,
+      }
 
-        description:
-          permission.description ||
-          "",
-      });
-
-    } else {
-
-      reset({
-        code: "",
-        permission_name: "",
-        description: "",
-      });
-
-    }
-
-  }, [
-    permission,
-    reset,
-    open,
-  ]);
+    }, [
+      open,
+      permission?.id,
+      reset,
+    ]);
+  
 
   const onSubmit = (
     data: FormData
   ) => {
 
-    if (isEdit) {
+    console.log(
+      "FORM DATA =>",
+      data
+    );
+
+    if (isEdit && permission) {
 
       updateMutation.mutate(
         {
-          id:
-            permission.id,
-
+          id: permission.id,
           data,
         },
         {
@@ -123,6 +124,7 @@ export default function PermissionFormModal({
         },
       }
     );
+
   };
 
   if (!open)
@@ -191,6 +193,10 @@ export default function PermissionFormModal({
 
         </div>
 
+        <div className="mb-4 text-red-500">
+          TEST MODAL VERSION 2
+        </div>
+
         {/* BODY */}
 
         <form
@@ -221,7 +227,7 @@ export default function PermissionFormModal({
                 "code",
                 {
                   required:
-                    true,
+                    "Le code est obligatoire",
                 }
               )}
               placeholder="client.create"
@@ -234,6 +240,12 @@ export default function PermissionFormModal({
                 py-3
               "
             />
+
+            {errors.code && (
+              <p className="mt-1 text-sm text-red-500">
+                {errors.code.message}
+              </p>
+            )}
 
           </div>
 
@@ -255,7 +267,7 @@ export default function PermissionFormModal({
                 "permission_name",
                 {
                   required:
-                    true,
+                    "Le nom est obligatoire",
                 }
               )}
               placeholder="Créer un client"
@@ -268,6 +280,12 @@ export default function PermissionFormModal({
                 py-3
               "
             />
+
+          {errors.permission_name && (
+            <p className="mt-1 text-sm text-red-500">
+              {errors.permission_name.message}
+            </p>
+          )}
 
           </div>
 

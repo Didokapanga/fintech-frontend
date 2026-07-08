@@ -64,8 +64,7 @@ export default function Sidebar() {
   /* ====================================================== */
 
   const basePath =
-    user?.role_name ===
-    "CAISSIER"
+    user?.is_caisse_user
       ? "/caissier"
       : "/admin";
 
@@ -286,9 +285,13 @@ export default function Sidebar() {
         <div className="space-y-1.5">
 
           {
-            getNavItems(
-              user?.role_name
-            ).map((item) =>
+            getNavItems({
+              role:
+                user?.role_name,
+
+              isCaisseUser:
+                user?.is_caisse_user,
+            }).map((item) =>
 
               item.children ? (
 

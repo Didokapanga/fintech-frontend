@@ -1,13 +1,11 @@
 // src/modules/settings/components/SettingsTabs.tsx
 
 import {
-  // Settings,
-  // Coins,
-  // Wallet,
-  Shield,
-  // Building2,
-  KeyRound,
+  ShieldCheck,
   Users,
+  KeyRound,
+  BadgeDollarSign,
+  Receipt,
 } from "lucide-react";
 
 type Props = {
@@ -18,46 +16,37 @@ type Props = {
 };
 
 const tabs = [
-  // {
-  //   key: "general",
-  //   label: "Général",
-  //   icon: Settings,
-  // },
-  // {
-  //   key: "devises",
-  //   label: "Devises",
-  //   icon: Coins,
-  // },
-  // {
-  //   key: "frais",
-  //   label: "Frais",
-  //   icon: Wallet,
-  // },
+
   {
     key: "permissions",
     label: "Permissions",
-    icon: KeyRound,
+    icon: ShieldCheck,
   },
+
   {
     key: "roles",
     label: "Rôles",
     icon: Users,
   },
+
   {
     key: "role-permissions",
-    label: "Permissions rôles",
-    icon: Shield,
+    label: "Permissions par rôle",
+    icon: KeyRound,
   },
-  // {
-  //   key: "caisses",
-  //   label: "Types caisse",
-  //   icon: Building2,
-  // },
-  // {
-  //   key: "securite",
-  //   label: "Sécurité",
-  //   icon: Shield,
-  // },
+
+  {
+    key: "taux-change",
+    label: "Taux de change",
+    icon: BadgeDollarSign,
+  },
+
+  {
+    key: "transfert-tarifs",
+    label: "Tarifs transfert",
+    icon: Receipt,
+  },
+
 ];
 
 export default function SettingsTabs({
@@ -68,21 +57,15 @@ export default function SettingsTabs({
   return (
 
     <div
-    className="
-        sticky
-        top-6
-        rounded-3xl
-        border
-        border-slate-200
-        bg-white
-        p-4
-        shadow-sm
-    "
+      className="
+        flex
+        flex-wrap
+        gap-3
+      "
     >
 
-      <div className="space-y-2">
-
-        {tabs.map((tab) => {
+      {tabs.map(
+        (tab) => {
 
           const Icon =
             tab.icon;
@@ -92,47 +75,52 @@ export default function SettingsTabs({
             <button
               key={tab.key}
               onClick={() =>
-                onChange(tab.key)
+                onChange(
+                  tab.key
+                )
               }
               className={`
                 flex
-                w-full
                 items-center
-                gap-3
+                gap-2
                 rounded-2xl
-                px-4
+                border
+                px-5
                 py-3
                 text-sm
                 font-medium
                 transition-all
-
                 ${
                   activeTab ===
                   tab.key
                     ? `
+                      border-blue-600
                       bg-blue-600
                       text-white
                     `
                     : `
-                      text-slate-600
-                      hover:bg-slate-100
+                      border-slate-200
+                      bg-white
+                      text-slate-700
+                      hover:bg-slate-50
                     `
                 }
               `}
             >
 
-              <Icon size={18} />
+              <Icon size={16} />
 
               {tab.label}
 
             </button>
 
           );
-        })}
 
-      </div>
+        }
+      )}
 
     </div>
 
   );
+
 }

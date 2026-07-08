@@ -30,6 +30,14 @@ import type {
   Permission,
 } from "../types";
 
+import AppMessageState
+from "../../../components/ui/AppMessageState";
+
+import {
+  useApiMutationWithFeedback,
+} from "../../../hooks/useApiMutationWithFeedback";
+
+
 export default function RolePermissionTab() {
 
   const [
@@ -120,7 +128,29 @@ const selectedPermissions =
   /* ===================================== */
 
   const assignMutation =
-    useAssignPermissions();
+  useAssignPermissions();
+
+  const {
+    mutate: savePermissions,
+    appMessage,
+    clearMessage,
+  } =
+    useApiMutationWithFeedback({
+
+      mutationFn:
+        assignMutation.mutateAsync,
+
+      successMessage:
+        "Permissions enregistrées avec succès",
+
+      errorMessage:
+        "Impossible d'enregistrer les permissions",
+
+      invalidateQueries: [
+        "role-permissions",
+      ],
+
+    });
 
   const removeMutation =
     useRemoveRolePermission();
@@ -242,14 +272,9 @@ const selectedPermissions =
         return;
       }
 
-      assignMutation.mutate({
-
-        role_id:
-          selectedRole.id,
-
-        permission_ids:
-          newPermissions,
-
+      savePermissions({
+        role_id: selectedRole.id,
+        permission_ids: newPermissions,
       });
 
     };
@@ -368,6 +393,28 @@ const selectedPermissions =
           p-6
         "
       >
+        {appMessage && (
+
+        <div className="mb-4">
+
+          <AppMessageState
+            variant={
+              appMessage.variant
+            }
+            title={
+              appMessage.title
+            }
+            message={
+              appMessage.message
+            }
+            onAction={
+              clearMessage
+            }
+          />
+
+        </div>
+
+      )}
 
         {!selectedRole ? (
 

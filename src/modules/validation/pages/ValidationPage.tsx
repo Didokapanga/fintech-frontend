@@ -9,7 +9,6 @@ import Tabs from "../../../components/ui/Tab";
 
 import ValidationCaisseTab from "../components/ValidationCaisseTab";
 import ValidationClientTab from "../components/ValidationClientTab";
-// import ValidationClotureCaisseTab from "../components/ValidationClotureCaisseTab";
 
 /* -------------------------------------------------------------------------- */
 /*                                    PAGE                                    */
@@ -122,22 +121,6 @@ export default function ValidationPage() {
               >
                 Validation des opérations
               </h1>
-
-              <p
-                className="
-                  mt-4
-                  max-w-3xl
-                  text-sm
-                  leading-7
-                  text-slate-500
-                "
-              >
-                Centralisez et contrôlez
-                l’ensemble des opérations
-                financières nécessitant une
-                validation hiérarchique ou
-                opérationnelle.
-              </p>
 
             </div>
 

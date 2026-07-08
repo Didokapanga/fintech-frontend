@@ -1,6 +1,6 @@
 // src/modules/settings/pages/Setting.tsx
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import {
   Settings,
@@ -11,15 +11,38 @@ from "../components/SettingsTabs";
 
 import PermissionTab
 from "../components/PermissionTab";
-import RoleTab from "../components/RoleTab";
-import RolePermissionTab from "../components/RolePermissionTab";
+
+import RoleTab
+from "../components/RoleTab";
+
+import RolePermissionTab
+from "../components/RolePermissionTab";
+import TauxChangeTab from "../components/TauxChangeTab";
+import TransfertTarifTab from "../components/TransfertTarifTab";
 
 export default function Setting() {
 
   const [
     activeTab,
     setActiveTab,
-  ] = useState("general");
+  ] = useState(() => {
+
+    return (
+      localStorage.getItem(
+        "settings-active-tab"
+      ) || "permissions"
+    );
+
+  });
+
+  useEffect(() => {
+
+    localStorage.setItem(
+      "settings-active-tab",
+      activeTab
+    );
+
+  }, [activeTab]);
 
   return (
 
@@ -87,180 +110,59 @@ export default function Setting() {
       </div>
 
       {/* ===================================================== */}
-      {/* BODY */}
+      {/* TABS HORIZONTALES */}
+      {/* ===================================================== */}
+
+      <SettingsTabs
+        activeTab={activeTab}
+        onChange={setActiveTab}
+      />
+
+      {/* ===================================================== */}
+      {/* CONTENU */}
       {/* ===================================================== */}
 
       <div
         className="
-          grid
-          gap-6
-          xl:grid-cols-[1fr_280px]
+          min-h-[700px]
+          rounded-3xl
+          border
+          border-slate-200
+          bg-white
+          p-8
+          shadow-sm
         "
       >
 
-        {/* ================================================= */}
-        {/* CONTENU */}
-        {/* ================================================= */}
+        {activeTab ===
+          "permissions" && (
+            <PermissionTab />
+        )}
 
-        <div
-          className="
-            min-h-[700px]
-            rounded-3xl
-            border
-            border-slate-200
-            bg-white
-            p-8
-            shadow-sm
-          "
-        >
-
-          {activeTab ===
-            "permissions" && (
-              <PermissionTab />
-          )}
-
-          {activeTab === "roles" && (
+        {activeTab ===
+          "roles" && (
             <RoleTab />
-          )}
+        )}
 
-          {activeTab ===
-            "role-permissions" && (
-                <RolePermissionTab />
-          )}
+        {activeTab ===
+          "role-permissions" && (
+            <RolePermissionTab />
+        )}
 
-          {activeTab ===
-            "general" && (
+        {activeTab ===
+          "taux-change" && (
+            <TauxChangeTab />
+        )}
 
-              <div
-                className="
-                  flex
-                  h-full
-                  min-h-[500px]
-                  items-center
-                  justify-center
-                  text-slate-500
-                "
-              >
-                Paramètres généraux
-              </div>
-
-          )}
-
-          {activeTab ===
-            "devises" && (
-
-              <div
-                className="
-                  flex
-                  h-full
-                  min-h-[500px]
-                  items-center
-                  justify-center
-                  text-slate-500
-                "
-              >
-                Gestion des devises
-              </div>
-
-          )}
-
-          {activeTab ===
-            "frais" && (
-
-              <div
-                className="
-                  flex
-                  h-full
-                  min-h-[500px]
-                  items-center
-                  justify-center
-                  text-slate-500
-                "
-              >
-                Gestion des frais
-              </div>
-
-          )}
-
-          {activeTab ===
-            "references" && (
-
-              <div
-                className="
-                  flex
-                  h-full
-                  min-h-[500px]
-                  items-center
-                  justify-center
-                  text-slate-500
-                "
-              >
-                Gestion des références
-              </div>
-
-          )}
-
-          {activeTab ===
-            "caisses" && (
-
-              <div
-                className="
-                  flex
-                  h-full
-                  min-h-[500px]
-                  items-center
-                  justify-center
-                  text-slate-500
-                "
-              >
-                Types de caisses
-              </div>
-
-          )}
-
-          {activeTab ===
-            "securite" && (
-
-              <div
-                className="
-                  flex
-                  h-full
-                  min-h-[500px]
-                  items-center
-                  justify-center
-                  text-slate-500
-                "
-              >
-                Paramètres de sécurité
-              </div>
-
-          )}
-
-        </div>
-
-        {/* ================================================= */}
-        {/* MENU */}
-        {/* ================================================= */}
-
-        <div
-          className="
-            sticky
-            top-6
-            h-fit
-            self-start
-          "
-        >
-
-          <SettingsTabs
-            activeTab={activeTab}
-            onChange={setActiveTab}
-          />
-
-        </div>
+        {activeTab ===
+          "transfert-tarifs" && (
+            <TransfertTarifTab />
+        )}
 
       </div>
 
     </div>
 
   );
+
 }

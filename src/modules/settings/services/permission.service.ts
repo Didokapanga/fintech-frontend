@@ -33,19 +33,37 @@ export const getPermissions =
     return res.data;
   };
 
-export const createPermission =
-  async (
-    data: PermissionPayload
-  ) => {
+  export const createPermission =
+    async (
+      data: PermissionPayload
+    ) => {
 
-    const res =
-      await api.post(
-        "/permissions",
+      console.log(
+        "PAYLOAD FRONT =>",
         data
       );
 
-    return res.data;
-  };
+      const res =
+        await api.post(
+          "/permissions",
+          data
+        );
+
+      return res.data;
+    };
+// export const createPermission =
+//   async (
+//     data: PermissionPayload
+//   ) => {
+
+//     const res =
+//       await api.post(
+//         "/permissions",
+//         data
+//       );
+
+//     return res.data;
+//   };
 
 export const updatePermission =
   async (

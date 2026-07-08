@@ -127,6 +127,61 @@ export const getTransferts = async (
 
   /**
    * =====================================
+   *  PAR AGENCE
+   * transfert_caisse.readByAgence
+   * =====================================
+   */
+
+  if (
+    permissions.includes(
+      "transfert_caisse.readByAgence"
+    )
+  ) {
+
+    const res =
+      await api.get(
+        "/transferts",
+        {
+          params: {
+            page,
+            limit,
+
+            devise:
+              filters?.devise ||
+              undefined,
+
+            statut:
+              filters?.statut ||
+              undefined,
+
+            date_operation:
+              filters?.date_operation ||
+              undefined,
+          },
+        }
+      );
+
+    return {
+      data:
+        res.data.data.map(
+          (
+            t: TransfertCaisseApi
+          ) => ({
+            ...t,
+            montant:
+              Number(
+                t.montant
+              ),
+          })
+        ),
+
+      meta:
+        res.data.meta,
+    };
+  }
+
+  /**
+   * =====================================
    * MES TRANSFERTS
    * transfert_caisse.me
    * =====================================

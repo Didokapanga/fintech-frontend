@@ -104,7 +104,7 @@ export default function LoginForm() {
       ) => {
 
         setAuth({
-          token: res.token,
+  token: res.token,
 
           user: {
             id: res.user.id,
@@ -113,29 +113,25 @@ export default function LoginForm() {
 
             role_name: res.user.role_name,
 
+            is_caisse_user: res.user.is_caisse_user,
+
             agence_id: res.user.agence_id,
 
             agence_name: res.user.agence_name,
 
             code_agence: res.user.code_agence,
 
-            permissions:
-              res.user.permissions ?? [],
+            permissions: res.user.permissions ?? [],
           },
         });
 
-        const role =
-          res.user.role_name;
+        // const role =
+        //   res.user.role_name;
 
-        if (role === "CAISSIER") {
-
-          window.location.href =
-            "/caissier";
-
+        if (res.user.is_caisse_user) {
+          window.location.href = "/caissier";
         } else {
-
-          window.location.href =
-            "/admin";
+          window.location.href = "/admin";
         }
       },
     });

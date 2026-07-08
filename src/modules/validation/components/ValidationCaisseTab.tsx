@@ -26,10 +26,6 @@ import Pagination from "../../../components/ui/Pagination";
 import AppMessageState from "../../../components/ui/AppMessageState";
 
 import {
-  useAuthStore,
-} from "../../../app/store";
-
-import {
   useApiMutationWithFeedback,
 } from "../../../hooks/useApiMutationWithFeedback";
 
@@ -45,6 +41,8 @@ import {
   useValidateOperation,
 } from "../hooks/useValidation";
 import TransfertCaisseDetailsModal from "./TransfertCaisseDetailsModal";
+import { usePermission } from "../../../hooks/usePermission";
+import { PERMISSIONS } from "../../../constants/permissions";
 
 /* -------------------------------------------------------------------------- */
 /*                                   TYPES                                    */
@@ -76,21 +74,15 @@ export default function ValidationCaisseTab() {
   /*                                    USER                                  */
   /* ------------------------------------------------------------------------ */
 
-  const user =
-    useAuthStore(
-      (s) => s.user
-    );
+  const { can } =
+    usePermission();
 
   const canValidate =
-    [
-      "ADMIN",
-      "N+1",
-      "N+2",
-      "CAISSIER",
-    ].includes(
-      user
-        ?.role_name
-        ?.toUpperCase() || ""
+    can(
+      PERMISSIONS.TRANSFERT_CAISSE_PROCESS
+    ) ||
+    can(
+      PERMISSIONS.TRANSFERT_CAISSE_PROCESS_AGENCE
     );
 
   /* ------------------------------------------------------------------------ */

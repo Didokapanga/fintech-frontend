@@ -8,10 +8,12 @@ type User = {
   user_name: string;
   role_name: string;
 
-  // ✅ AJOUT
+  is_caisse_user: boolean;
+
   agence_id?: string;
-  agence_name?: string; // (optionnel mais recommandé)
+  agence_name?: string;
   code_agence?: string;
+
   permissions: string[];
 };
 

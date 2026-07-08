@@ -8,8 +8,6 @@ import {
 
 import { useState } from "react";
 
-import { useQuery } from "@tanstack/react-query";
-
 import {
   useAuthStore,
 } from "../../../app/store";
@@ -28,17 +26,15 @@ import type {
 } from "../../../components/ui/Table.types";
 
 import {
-  useRetraitHistory,
+  useRetraits,
 } from "../hooks/useRetraitHistory";
 
-import {
-  getAllRetraits,
-  getRetraitsByAgence,
-} from "../services/retrait.service";
 import Pagination from "../../../components/ui/Pagination";
 import { useNavigate } from "react-router-dom";
 import RetraitDetailsModal from "./RetraitDetailsModal";
 import type { Retrait } from "../types";
+import { PERMISSIONS } from "../../../constants/permissions";
+import { usePermission } from "../../../hooks/usePermission";
 
 /* -------------------------------------------------------------------------- */
 /*                                    PAGE                                    */
@@ -84,15 +80,26 @@ export default function RetraitHistoryTab() {
   const { user } =
     useAuthStore();
 
-  const isGlobalAdmin =
-    user?.role_name ===
-    "ADMIN";
+  const { can } =
+    usePermission();
 
-  const isAgenceView =
-    ["N+1", "N+2"]
-      .includes(
-        user?.role_name || ""
-      );
+  const canReadAll =
+    can(
+      PERMISSIONS.RETRAIT_READ
+    );
+
+  const {
+    data,
+    isLoading,
+  } = useRetraits(
+    page,
+    10,
+    {
+      agence_id: selectedAgence,
+      statut,
+      date_operation: dateOperation,
+    }
+  );
 
   /* ------------------------------------------------------------------------ */
   /*                                  AGENCES                                 */
@@ -107,94 +114,9 @@ export default function RetraitHistoryTab() {
   /*                                   QUERY                                  */
   /* ------------------------------------------------------------------------ */
 
-  const myRetraitsQuery =
-    useRetraitHistory(
-      page,
-      10,
-      {
-        statut,
-        date_operation:
-          dateOperation,
-      },
-
-      !isGlobalAdmin &&
-      !isAgenceView
-    );
-
-  const agenceRetraitsQuery =
-    useQuery({
-      queryKey: [
-        "agence-retraits",
-        user?.agence_id,
-        page,
-        statut,
-        dateOperation,
-      ],
-
-      queryFn: () =>
-        getRetraitsByAgence(
-          String(
-            user?.agence_id
-          ),
-          page,
-          10,
-          {
-            statut,
-            date_operation:
-              dateOperation,
-          }
-        ),
-
-      enabled:
-        isAgenceView &&
-        !!user?.agence_id,
-    });
-
-  const globalRetraitsQuery =
-    useQuery({
-      queryKey: [
-        "global-retraits",
-        page,
-        statut,
-        dateOperation,
-        selectedAgence,
-      ],
-
-      queryFn: () =>
-        getAllRetraits(
-          page,
-          10,
-          {
-            agence_id:
-              selectedAgence,
-
-            statut,
-
-            date_operation:
-              dateOperation,
-          }
-        ),
-
-      enabled:
-        isGlobalAdmin,
-    });
-
   /* ------------------------------------------------------------------------ */
   /*                              CURRENT QUERY                               */
   /* ------------------------------------------------------------------------ */
-
-  const currentQuery =
-    isGlobalAdmin
-      ? globalRetraitsQuery
-      : isAgenceView
-      ? agenceRetraitsQuery
-      : myRetraitsQuery;
-
-  const {
-    data,
-    isLoading,
-  } =
-    currentQuery;
 
   const retraits:
     Retrait[] =
@@ -728,7 +650,7 @@ export default function RetraitHistoryTab() {
 
           {/* AGENCE */}
 
-          {isGlobalAdmin && (
+          {canReadAll  && (
 
             <select
               value={

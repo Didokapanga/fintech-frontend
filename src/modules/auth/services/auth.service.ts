@@ -14,6 +14,7 @@ export type RegisterDto = {
   phone: string;
   email: string;
   password: string;
+  is_caisse_user: boolean;
 };
 
 export const login = async (data: LoginDto): Promise<AuthResponse> => {
@@ -43,5 +44,17 @@ export const getAllUsers = async (): Promise<User[]> => {
 
 export const registerUser = async (data: RegisterDto) => {
   const res = await api.post("/auth/register", data);
+  return res.data.data;
+};
+
+export const deleteUser = async (
+  id: string
+) => {
+
+  const res =
+    await api.delete(
+      `/auth/${id}`
+    );
+
   return res.data.data;
 };

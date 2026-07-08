@@ -2,8 +2,6 @@
 
 import {
   ArrowDownCircle,
-  Clock3,
-  History,
 } from "lucide-react";
 
 import Tabs from "../../../components/ui/Tab";
@@ -122,57 +120,7 @@ export default function RetraitPage() {
                 Gestion des retraits
               </h1>
 
-              <p
-                className="
-                  mt-3
-                  max-w-3xl
-                  text-sm
-                  leading-7
-                  text-slate-500
-                "
-              >
-                Supervisez les demandes
-                de retrait, les validations
-                opérationnelles et
-                l’historique complet des
-                transactions financières.
-              </p>
-
             </div>
-
-            {/* RIGHT */}
-
-            <div
-              className="
-                grid
-                min-w-[320px]
-                grid-cols-2
-                gap-4
-              "
-            >
-
-              <MiniStat
-                icon={
-                  <Clock3
-                    size={16}
-                  />
-                }
-                label="Workflow"
-                value="Validation active"
-              />
-
-              <MiniStat
-                icon={
-                  <History
-                    size={16}
-                  />
-                }
-                label="Historique"
-                value="Synchronisé"
-              />
-
-            </div>
-
           </div>
 
         </section>
@@ -230,63 +178,3 @@ export default function RetraitPage() {
 /* -------------------------------------------------------------------------- */
 /*                                 MINI STAT                                  */
 /* -------------------------------------------------------------------------- */
-
-function MiniStat({
-  icon,
-  label,
-  value,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  value: string;
-}) {
-
-  return (
-    <div
-      className="
-        rounded-2xl
-        border
-        border-slate-200
-        bg-slate-50/70
-        px-4
-        py-4
-      "
-    >
-
-      <div
-        className="
-          flex
-          items-center
-          gap-2
-          text-slate-400
-        "
-      >
-        {icon}
-
-        <span
-          className="
-            text-[11px]
-            font-semibold
-            uppercase
-            tracking-[0.12em]
-          "
-        >
-          {label}
-        </span>
-
-      </div>
-
-      <p
-        className="
-          mt-3
-          text-sm
-          font-semibold
-          text-slate-800
-        "
-      >
-        {value}
-      </p>
-
-    </div>
-  );
-}

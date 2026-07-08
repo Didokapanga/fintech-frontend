@@ -38,19 +38,20 @@ export default function ClientsPage() {
   const clients = data ?? [];
 
   const columns: Column<Client>[] = [
+
   {
-    header: "Nom complet",
+    header: "Client",
     accessor: "nom",
 
     render: (_value, row) => (
 
       <div className="flex flex-col">
 
-        <span className="font-medium text-gray-800">
+        <span className="font-semibold text-slate-800">
           {row.nom} {row.postnom}
         </span>
 
-        <span className="text-xs text-gray-500">
+        <span className="text-xs text-slate-500">
           {row.prenom}
         </span>
 
@@ -65,9 +66,69 @@ export default function ClientsPage() {
 
     render: (value) => (
 
-      <span className="text-sm text-gray-700">
+      <span className="font-medium text-slate-700">
         {String(value ?? "-")}
       </span>
+
+    ),
+  },
+
+  {
+    header: "Sexe",
+    accessor: "sexe",
+
+    render: (value) => (
+
+      <span
+        className={`
+          rounded-full
+          px-2
+          py-1
+          text-xs
+          font-medium
+          ${
+            value === "M"
+              ? "bg-blue-100 text-blue-700"
+              : "bg-pink-100 text-pink-700"
+          }
+        `}
+      >
+        {value || "-"}
+      </span>
+
+    ),
+  },
+
+  {
+    header: "Profession",
+    accessor: "profession",
+
+    render: (value) => (
+
+      <span className="text-slate-600">
+        {String(value ?? "-")}
+      </span>
+
+    ),
+  },
+
+  {
+    header: "Pièce",
+    accessor: "numero_piece",
+
+    render: (_value, row) => (
+
+      <div className="flex flex-col">
+
+        <span className="text-sm font-medium">
+          {row.type_piece ?? "-"}
+        </span>
+
+        <span className="text-xs text-slate-500">
+          {row.numero_piece ?? "-"}
+        </span>
+
+      </div>
 
     ),
   },
@@ -78,8 +139,45 @@ export default function ClientsPage() {
 
     render: (value) => (
 
-      <span className="px-2 py-1 text-xs rounded bg-gray-100 text-gray-600">
+      <span
+        className="
+          rounded-lg
+          bg-slate-100
+          px-2
+          py-1
+          text-xs
+          text-slate-700
+        "
+      >
         {String(value ?? "-")}
+      </span>
+
+    ),
+  },
+
+  {
+    header: "Statut",
+    accessor: "is_activated",
+
+    render: (value) => (
+
+      <span
+        className={`
+          rounded-full
+          px-2
+          py-1
+          text-xs
+          font-medium
+          ${
+            value
+              ? "bg-emerald-100 text-emerald-700"
+              : "bg-red-100 text-red-700"
+          }
+        `}
+      >
+        {value
+          ? "Actif"
+          : "Inactif"}
       </span>
 
     ),
@@ -107,6 +205,7 @@ export default function ClientsPage() {
 
     ),
   },
+
 ];
 
   return (

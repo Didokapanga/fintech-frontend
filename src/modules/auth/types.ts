@@ -16,6 +16,8 @@ export type User = {
 
   role_name: string;
 
+  is_caisse_user: boolean;
+
   agence_id: string;
 
   agence_name: string;

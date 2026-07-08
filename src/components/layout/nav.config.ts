@@ -18,20 +18,15 @@ import {
   // ReceiptText,
   BookOpen,
   Scale,
-  ArrowLeftRight,
+  // ArrowLeftRight,
   Users,
+  ArrowLeftRight,
   // FileSpreadsheet,
 } from "lucide-react";
 
 /* ========================================================= */
 /* TYPES */
 /* ========================================================= */
-
-export type Role =
-  | "ADMIN"
-  | "CAISSIER"
-  | "N+1"
-  | "N+2";
 
 export type NavItemType = {
   label: string;
@@ -45,12 +40,16 @@ export type NavItemType = {
 /* NAV FACTORY */
 /* ========================================================= */
 
-export const getNavItems = (
-  role?: string
-) => {
+export const getNavItems = ({
+  // role,
+  isCaisseUser,
+}: {
+  role?: string;
+  isCaisseUser?: boolean;
+}) => {
 
   const isCaissier =
-    role === "CAISSIER";
+    isCaisseUser === true;
 
   const base =
     isCaissier
@@ -162,35 +161,29 @@ export const getNavItems = (
 
       children: [
 
-        {
-          label: "Balance comptable",
-          icon: Scale,
-          path: `${base}/balance`,
-        },
+        ...(
+          !isCaissier
+            ? [
+                {
+                  label: "Balance comptable",
+                  icon: Scale,
+                  path: `${base}/balance`,
+                },
 
-        {
-          label: "Grand Livre",
-          icon: ScrollText,
-          path: `${base}/grand-livre`,
-        },
+                {
+                  label: "Grand Livre",
+                  icon: ScrollText,
+                  path: `${base}/grand-livre`,
+                },
+              ]
+            : []
+        ),
 
         {
           label: "Journal comptable",
           icon: FileText,
           path: `${base}/ledger`,
         },
-
-        // {
-        //   label: "Écritures comptables",
-        //   icon: ReceiptText,
-        //   path: `${base}/ecritures-comptables`,
-        // },
-
-        // {
-        //   label: "Comptes comptables",
-        //   icon: Landmark,
-        //   path: `${base}/comptes-comptables`,
-        // },
       ],
     },
     // {

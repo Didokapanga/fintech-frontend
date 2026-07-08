@@ -45,7 +45,22 @@ export default function RoleFormModal({
     register,
     handleSubmit,
     reset,
-  } = useForm<FormData>();
+    watch,
+  } = useForm<FormData>({
+    defaultValues: {
+      role_name: "",
+    },
+  });
+
+  /**
+   * Maintient la souscription RHF active.
+   * Sans cette ligne certains champs numériques
+   * reviennent à undefined dans ce projet.
+   */
+
+  const watchedValues = watch();
+
+  void watchedValues;
 
   const createRole =
     useCreateRole();
@@ -53,29 +68,31 @@ export default function RoleFormModal({
   const updateRole =
     useUpdateRole();
 
+  const roleName =
+    role?.role_name;
+
   useEffect(() => {
 
-    if (!open)
-      return;
+    if (!open) return;
 
-    if (role) {
-
-      reset({
-        role_name:
-          role.role_name,
-      });
-
-    } else {
+    if (!role?.id) {
 
       reset({
         role_name: "",
       });
 
+      return;
+
     }
 
+    reset({
+      role_name: roleName,
+    });
+
   }, [
-    role,
     open,
+    role?.id,
+    roleName,
     reset,
   ]);
 

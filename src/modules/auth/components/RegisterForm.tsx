@@ -87,12 +87,23 @@ export default function RegisterForm({
   /* FORM                                                                   */
   /* ---------------------------------------------------------------------- */
 
+  // const {
+  //   register,
+  //   handleSubmit,
+  //   formState: { errors },
+  //   reset,
+  // } = useForm<RegisterDto>();
+
   const {
     register,
     handleSubmit,
     formState: { errors },
     reset,
-  } = useForm<RegisterDto>();
+  } = useForm<RegisterDto>({
+    defaultValues: {
+      is_caisse_user: false,
+    },
+  });
 
   /* ---------------------------------------------------------------------- */
   /* MUTATION                                                               */
@@ -171,7 +182,10 @@ export default function RegisterForm({
             "Utilisateur créé avec succès",
         });
 
-        reset();
+        // reset();
+        reset({
+          is_caisse_user: false,
+        });
 
         setTimeout(() => {
           onClose?.();
@@ -661,6 +675,63 @@ export default function RegisterForm({
             )}
 
           </select>
+
+        </div>
+
+      </div>
+
+      {/* TYPE UTILISATEUR */}
+
+      <div className="space-y-2">
+
+        <label
+          className="
+            text-sm
+            font-medium
+            text-slate-700
+          "
+        >
+          Type d'utilisateur
+        </label>
+
+        <div
+          className="
+            flex
+            items-center
+            gap-3
+            rounded-xl
+            border
+            border-slate-200
+            bg-white
+            px-4
+            py-3
+          "
+        >
+
+          <input
+            id="is_caisse_user"
+            type="checkbox"
+            {...register("is_caisse_user")}
+            className="
+              h-4
+              w-4
+              rounded
+              border-slate-300
+              text-indigo-600
+              focus:ring-indigo-500
+            "
+          />
+
+          <label
+            htmlFor="is_caisse_user"
+            className="
+              text-sm
+              text-slate-700
+              cursor-pointer
+            "
+          >
+            Cet utilisateur est un caissier
+          </label>
 
         </div>
 
