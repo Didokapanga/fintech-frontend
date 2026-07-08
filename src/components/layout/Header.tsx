@@ -7,6 +7,7 @@ import {
 
 import { useAuthStore }
 from "../../app/store";
+import { useTauxChanges } from "../../modules/settings/hooks/useTauxChange";
 
 export default function Header() {
 
@@ -25,6 +26,15 @@ export default function Header() {
 
   const agenceCode =
     user?.code_agence || "—";
+
+  const {
+    data: taux = [],
+  } = useTauxChanges();
+
+  const tauxActifs =
+    taux.filter(
+      (t) => t.is_activated
+    );
 
   return (
 
@@ -99,6 +109,75 @@ export default function Header() {
           </h1>
 
         </div>
+
+      </div>
+
+      <div
+        className="
+          hidden
+          lg:flex
+          items-center
+          gap-3
+        "
+      >
+
+        {tauxActifs.map((taux) => (
+
+          <div
+            key={taux.id}
+            className="
+              rounded-2xl
+              border
+              border-blue-100
+              bg-blue-50
+              px-4
+              py-2
+            "
+          >
+
+            <p
+              className="
+                text-[10px]
+                font-semibold
+                uppercase
+                tracking-wider
+                text-blue-600
+              "
+            >
+              {taux.devise_source}
+              {" → "}
+              {taux.devise_destination}
+            </p>
+
+            <p
+              className="
+                text-xs
+                text-slate-700
+              "
+            >
+              Achat :
+              <span className="font-semibold">
+                {" "}
+                {Number(taux.taux_achat)}
+              </span>
+            </p>
+
+            <p
+              className="
+                text-xs
+                text-slate-700
+              "
+            >
+              Vente :
+              <span className="font-semibold">
+                {" "}
+                {Number(taux.taux_vente)}
+              </span>
+            </p>
+
+          </div>
+
+        ))}
 
       </div>
 

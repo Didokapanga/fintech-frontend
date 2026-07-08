@@ -193,9 +193,9 @@ export default function PermissionFormModal({
 
         </div>
 
-        <div className="mb-4 text-red-500">
+        {/* <div className="mb-4 text-red-500">
           TEST MODAL VERSION 2
-        </div>
+        </div> */}
 
         {/* BODY */}
 
