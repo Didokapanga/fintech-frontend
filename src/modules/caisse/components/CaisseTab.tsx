@@ -212,77 +212,72 @@ export default function CaisseTab() {
     [
 
       {
-        header:
-          "Caisse",
+        header: "Caisse",
 
-        accessor:
-          "code_caisse",
+        accessor: "code_caisse",
 
-        render:
-          (
-            value
-          ) => (
+        render: (
+          value,
+          row
+        ) => (
+
+          <div
+            className="
+              flex
+              items-center
+              gap-3
+            "
+          >
 
             <div
               className="
                 flex
+                h-11
+                w-11
                 items-center
-                gap-3
+                justify-center
+                rounded-2xl
+                bg-indigo-50
+                text-indigo-600
               "
             >
 
-              <div
-                className="
-                  flex
-                  h-11
-                  w-11
-                  items-center
-                  justify-center
-                  rounded-2xl
-                  bg-indigo-50
-                  text-indigo-600
-                "
-              >
-
-                <Wallet2
-                  size={18}
-                />
-
-              </div>
-
-              <div
-                className="
-                  flex
-                  flex-col
-                "
-              >
-
-                <span
-                  className="
-                    font-semibold
-                    text-slate-800
-                  "
-                >
-                  {String(
-                    value
-                  )}
-                </span>
-
-                <span
-                  className="
-                    text-xs
-                    text-slate-500
-                  "
-                >
-                  Identifiant
-                  caisse
-                </span>
-
-              </div>
+              <Wallet2
+                size={18}
+              />
 
             </div>
 
-          ),
+            <div
+              className="
+                flex
+                flex-col
+              "
+            >
+
+              <span
+                className="
+                  font-semibold
+                  text-slate-800
+                "
+              >
+                {String(value)}
+              </span>
+
+              <span
+                className="
+                  text-xs
+                  text-slate-500
+                "
+              >
+                {row.agence_name}
+              </span>
+
+            </div>
+
+          </div>
+
+        ),
       },
 
       {

@@ -388,22 +388,6 @@ export default function AdminDashboard() {
                 </span>
               </h1>
 
-              <p
-                className="
-                  mt-3
-                  max-w-2xl
-                  text-[15px]
-                  leading-7
-                  text-slate-500
-                "
-              >
-                Supervisez les flux
-                financiers, les opérations
-                multi-agences et les
-                validations critiques depuis
-                une vue consolidée temps réel.
-              </p>
-
             </div>
 
             {/* RIGHT */}
