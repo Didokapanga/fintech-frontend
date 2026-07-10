@@ -263,6 +263,12 @@ const deviseSelectionnee =
     name: "devise_source",
   });
 
+const typeCalculFrais =
+  useWatch({
+    control,
+    name: "type_calcul_frais",
+  });
+
   useEffect(() => {
 
     if (
@@ -280,6 +286,15 @@ const deviseSelectionnee =
     deviseSelectionnee,
     setValue,
   ]);
+
+  useEffect(() => {
+
+    setValue(
+      "type_calcul_frais",
+      "FORFAITAIRE"
+    );
+
+  }, [setValue]);
 
   /* ------------------------------------------------------------------------ */
   /*                                  SUBMIT                                  */
@@ -1135,6 +1150,68 @@ const deviseSelectionnee =
                     }
                   )}
                 />
+
+                <Field>
+
+                  <Label>
+                    Calcul des frais
+                  </Label>
+
+                  <select
+                    {...register(
+                      "type_calcul_frais",
+                      {
+                        required: true,
+                      }
+                    )}
+                    className="
+                      h-12
+                      w-full
+                      rounded-2xl
+                      border
+                      border-slate-200
+                      bg-white
+                      px-4
+                      text-sm
+                      outline-none
+                      transition-all
+                      focus:border-indigo-500
+                      focus:ring-4
+                      focus:ring-indigo-100
+                    "
+                  >
+                    <option value="FORFAITAIRE">
+                      Tarif configuré
+                    </option>
+
+                    <option value="POURCENTAGE">
+                      Pourcentage
+                    </option>
+
+                  </select>
+
+                </Field>
+
+                {
+                  typeCalculFrais === "POURCENTAGE" && (
+
+                    <Input
+                      type="number"
+                      label="Pourcentage (%)"
+                      placeholder="Ex : 2.5"
+                      {...register("pourcentage_frais", {
+                        required:
+                          typeCalculFrais === "POURCENTAGE",
+
+                        setValueAs: (value) =>
+                          value === ""
+                            ? undefined
+                            : Number(value),
+                      })}
+                    />
+
+                  )
+                }
 
                 <Field>
 

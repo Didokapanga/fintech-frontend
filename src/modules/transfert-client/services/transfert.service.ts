@@ -18,14 +18,20 @@ export type CreateTransfertClientDto = {
   devise_source: string;
   devise_destination: string;
 
+  montant_destination: number;
+
+  type_calcul_frais:
+    | "FORFAITAIRE"
+    | "POURCENTAGE";
+
+  pourcentage_frais?: number;
+
   mode_paiement:
     | "ESPECE"
     | "MOBILE_MONEY"
     | "COMPTE_CLIENT"
     | "CARTE"
     | "CHEQUE";
-
-  montant_destination: number;
 };
 
 export type TransfertClient = {
