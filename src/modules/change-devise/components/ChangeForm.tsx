@@ -30,11 +30,33 @@ import {
 import type {
   CreateChangeDeviseDto,
 } from "../types";
+import { useApiMutationWithFeedback } from "../../../hooks/useApiMutationWithFeedback";
+import AppMessageState from "../../../components/ui/AppMessageState";
 
 export default function ChangeForm() {
 
   const createMutation =
     useCreateChange();
+
+  const {
+    mutate,
+    // isPending,
+    appMessage,
+    clearMessage,
+  } = useApiMutationWithFeedback({
+    mutationFn:
+      createMutation.mutateAsync,
+
+    successMessage:
+      "Change effectué avec succès",
+
+    errorMessage:
+      "Impossible d'effectuer le change.",
+
+    invalidateQueries: [
+      "changes",
+    ],
+  });
 
   const [
     form,
@@ -96,18 +118,27 @@ const filteredClients =
     }
   );
 
-  const handleSubmit =
-    async (
-      e: React.FormEvent
-    ) => {
+  const handleSubmit = async (
+    e: React.FormEvent
+  ) => {
 
-      e.preventDefault();
+    e.preventDefault();
 
-      await createMutation.mutateAsync(
-        form
-      );
+    mutate(form);
 
-    };
+  };
+  // const handleSubmit =
+  //   async (
+  //     e: React.FormEvent
+  //   ) => {
+
+  //     e.preventDefault();
+
+  //     await createMutation.mutateAsync(
+  //       form
+  //     );
+
+  //   };
 
   return (
 
@@ -175,6 +206,17 @@ const filteredClients =
         </div>
 
       </div>
+
+      {appMessage && (
+
+        <AppMessageState
+          variant={appMessage.variant}
+          title={appMessage.title}
+          message={appMessage.message}
+          onAction={clearMessage}
+        />
+
+      )}
 
       <form
         onSubmit={

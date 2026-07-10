@@ -413,6 +413,63 @@ export default function TransfertClientPage() {
   },
 
   {
+    header: "Calcul frais",
+
+    accessor: "type_calcul_frais",
+
+    render: (_v, row) => (
+
+      <div className="flex flex-col">
+
+        <span
+          className="
+            font-semibold
+            text-slate-800
+          "
+        >
+          {row.type_calcul_frais === "FORFAITAIRE"
+            ? "Forfaitaire"
+            : "Pourcentage"}
+        </span>
+
+        {row.pourcentage_frais && (
+          <span
+            className="
+              mt-1
+              text-xs
+              text-slate-400
+            "
+          >
+            {Number(row.pourcentage_frais)} %
+          </span>
+        )}
+
+      </div>
+    ),
+  },
+
+  {
+    header: "Frais",
+
+    accessor: "frais",
+
+    render: (_v, row) => (
+
+      <span
+        className="
+          font-semibold
+          text-amber-600
+        "
+      >
+        {Number(row.frais).toLocaleString()}
+        {" "}
+        {row.devise_source}
+      </span>
+
+    ),
+  },
+
+  {
     header: "Statut",
 
     accessor: "statut",
