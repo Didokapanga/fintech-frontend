@@ -1,13 +1,16 @@
 // src/components/layout/Header.tsx
 
 import {
-  Building2,
+  ChevronLeft,
+  ChevronRight,
   LogOut,
 } from "lucide-react";
 
 import { useAuthStore }
 from "../../app/store";
 import { useTauxChanges } from "../../modules/settings/hooks/useTauxChange";
+import { useTransfertTarifs } from "../../modules/settings/hooks/useTransfertTarif";
+import { useState } from "react";
 
 export default function Header() {
 
@@ -36,6 +39,76 @@ export default function Header() {
       (t) => t.is_activated
     );
 
+  const {
+    data: tarifs = [],
+  } = useTransfertTarifs();
+
+  const tarifsActifs =
+    tarifs.filter(
+      (t) => t.is_activated
+    );
+
+  const cards = [
+
+    ...tauxActifs.map((taux) => ({
+      id: taux.id,
+      type: "taux",
+
+      title:
+        `${taux.devise_source} → ${taux.devise_destination}`,
+
+      achat:
+        Number(taux.taux_achat),
+
+      vente:
+        Number(taux.taux_vente),
+    })),
+
+    ...tarifsActifs.map((tarif) => ({
+      id: tarif.id,
+      type: "tarif",
+
+      devise:
+        tarif.devise,
+
+      min:
+        Number(tarif.montant_min),
+
+      max:
+        Number(tarif.montant_max),
+
+      frais:
+        Number(tarif.frais),
+    })),
+
+  ];
+
+  const [currentCard, setCurrentCard] =
+    useState(0);
+
+  const current =
+    cards[currentCard];
+
+  const nextCard = () => {
+
+    setCurrentCard((index) =>
+      index === cards.length - 1
+        ? 0
+        : index + 1
+    );
+
+  };
+
+  const previousCard = () => {
+
+    setCurrentCard((index) =>
+      index === 0
+        ? cards.length - 1
+        : index - 1
+    );
+
+  };
+
   return (
 
     <header
@@ -44,7 +117,7 @@ export default function Header() {
         top-0
         z-30
         flex
-        h-[74px]
+        h-[92px]
         items-center
         justify-between
         border-b
@@ -62,46 +135,19 @@ export default function Header() {
       <div
         className="
           flex
+          w-[280px]
+          shrink-0
           items-center
-          gap-4
         "
       >
 
-        <div
-          className="
-            flex
-            h-12
-            w-12
-            items-center
-            justify-center
-            rounded-2xl
-            bg-indigo-50
-            text-indigo-600
-          "
-        >
-
-          <Building2 size={20} />
-
-        </div>
-
         <div className="leading-tight">
-
-          <p
-            className="
-              text-xs
-              font-semibold
-              uppercase
-              tracking-[0.14em]
-              text-slate-400
-            "
-          >
-            Agence connectée
-          </p>
 
           <h1
             className="
-              text-lg
-              font-semibold
+              truncate
+              text-xl
+              font-bold
               text-slate-900
             "
           >
@@ -115,69 +161,166 @@ export default function Header() {
       <div
         className="
           hidden
-          lg:flex
+          xl:flex
+          flex-1
           items-center
-          gap-3
+          justify-center
+          gap-4
+          px-8
         "
       >
 
-        {tauxActifs.map((taux) => (
+        <button
+          onClick={previousCard}
+          className="
+            flex
+            h-10
+            w-10
+            items-center
+            justify-center
+            rounded-full
+            border
+            border-slate-200
+            bg-white
+            hover:bg-slate-50
+          "
+        >
+          <ChevronLeft size={18} />
+        </button>
 
-          <div
-            key={taux.id}
-            className="
-              rounded-2xl
-              border
-              border-blue-100
-              bg-blue-50
-              px-4
-              py-2
-            "
-          >
+        <div
+          className="
+            w-[300px]
+            rounded-2xl
+            border
+            border-slate-200
+            bg-white
+            px-5
+            py-3
+            shadow-sm
+          "
+        >
 
-            <p
-              className="
-                text-[10px]
-                font-semibold
-                uppercase
-                tracking-wider
-                text-blue-600
-              "
-            >
-              {taux.devise_source}
-              {" → "}
-              {taux.devise_destination}
-            </p>
+          {current && ("achat" in current ? (
 
-            <p
-              className="
-                text-xs
-                text-slate-700
-              "
-            >
-              Achat :
-              <span className="font-semibold">
-                {" "}
-                {Number(taux.taux_achat)}
-              </span>
-            </p>
+            <>
 
-            <p
-              className="
-                text-xs
-                text-slate-700
-              "
-            >
-              Vente :
-              <span className="font-semibold">
-                {" "}
-                {Number(taux.taux_vente)}
-              </span>
-            </p>
+              <p
+                className="
+                  text-xs
+                  font-semibold
+                  uppercase
+                  tracking-wider
+                  text-blue-600
+                "
+              >
+                💱 TAUX DE CHANGE
+              </p>
 
-          </div>
+              <h3
+                className="
+                  mt-1
+                  text-sm
+                  font-bold
+                  text-slate-900
+                "
+              >
+                {current.title}
+              </h3>
 
-        ))}
+              <div
+                className="
+                  mt-2
+                  flex
+                  justify-between
+                  text-sm
+                "
+              >
+
+                <span>
+                  Achat
+                  <strong>
+                    {" "}
+                    {current.achat}
+                  </strong>
+                </span>
+
+                <span>
+                  Vente
+                  <strong>
+                    {" "}
+                    {current.vente}
+                  </strong>
+                </span>
+
+              </div>
+
+            </>
+
+          ) : (
+
+            <>
+
+              <p
+                className="
+                  text-xs
+                  font-semibold
+                  uppercase
+                  tracking-wider
+                  text-emerald-600
+                "
+              >
+                💵 TARIF TRANSFERT
+              </p>
+
+              <h3
+                className="
+                  mt-1
+                  text-sm
+                  font-bold
+                "
+              >
+                {current.min} - {current.max} {current.devise}
+              </h3>
+
+              <div
+                className="
+                  mt-2
+                  text-sm
+                "
+              >
+                Frais
+
+                <strong>
+                  {" "}
+                  {current.frais} {current.devise}
+                </strong>
+
+              </div>
+
+            </>
+
+          ))}
+
+        </div>
+
+        <button
+          onClick={nextCard}
+          className="
+            flex
+            h-10
+            w-10
+            items-center
+            justify-center
+            rounded-full
+            border
+            border-slate-200
+            bg-white
+            hover:bg-slate-50
+          "
+        >
+          <ChevronRight size={18} />
+        </button>
 
       </div>
 
@@ -188,6 +331,9 @@ export default function Header() {
       <div
         className="
           flex
+          w-[320px]
+          shrink-0
+          justify-end
           items-center
           gap-4
         "
