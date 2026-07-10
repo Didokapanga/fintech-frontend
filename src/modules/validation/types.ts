@@ -55,6 +55,12 @@ export type TransfertClientValidation = {
   frais: string;
   montant_total: string;
 
+  type_calcul_frais:
+    | "FORFAITAIRE"
+    | "POURCENTAGE";
+
+  pourcentage_frais: string | null;
+
   taux_utilise: string;
   type_taux_utilise: string;
 
