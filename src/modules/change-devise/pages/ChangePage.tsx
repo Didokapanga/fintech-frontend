@@ -58,19 +58,8 @@ export default function ChangePage() {
               text-slate-900
             "
           >
-            Change de devise
+            Bureau de change
           </h1>
-
-          <p
-            className="
-              text-sm
-              text-slate-500
-            "
-          >
-            Achat et vente de devises
-            avec génération automatique
-            des écritures comptables
-          </p>
 
         </div>
 

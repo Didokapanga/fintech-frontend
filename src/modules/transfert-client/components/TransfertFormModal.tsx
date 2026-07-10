@@ -47,6 +47,7 @@ import {
   useAuthStore,
 } from "../../../app/store";
 import { useClients } from "../../clients/hooks/useClients";
+import type { Client } from "../../clients/types";
 
 /* -------------------------------------------------------------------------- */
 /*                                   TYPES                                    */
@@ -200,6 +201,15 @@ const [
   showDestResults,
   setShowDestResults,
 ] = useState(false);
+
+const getClientFullName = (client: Client) =>
+  [
+    client.nom,
+    client.postnom,
+    client.prenom,
+  ]
+    .filter(Boolean)
+    .join(" ");
 
 const filteredExpediteurs =
   clients.filter((client) => {
@@ -885,9 +895,7 @@ const typeCalculFrais =
                               );
 
                               setExpSearch(
-                                `${client.nom ?? ""}
-                                ${client.postnom ?? ""}
-                                ${client.prenom ?? ""}`
+                               getClientFullName(client)
                               );
 
                               setShowExpResults(
@@ -1029,9 +1037,7 @@ const typeCalculFrais =
                               );
 
                               setDestSearch(
-                                `${client.nom ?? ""}
-                                ${client.postnom ?? ""}
-                                ${client.prenom ?? ""}`
+                               getClientFullName(client)
                               );
 
                               setShowDestResults(

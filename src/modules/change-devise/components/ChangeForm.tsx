@@ -58,25 +58,38 @@ export default function ChangeForm() {
     ],
   });
 
+  const initialForm: CreateChangeDeviseDto = {
+    caisse_id: "",
+    client_id: "",
+    devise_source: "CDF",
+    devise_destination: "USD",
+    montant_source: 0,
+    mode_paiement: "ESPECE",
+  };
+
   const [
     form,
     setForm,
-    ] = useState<CreateChangeDeviseDto>({
+  ] = useState<CreateChangeDeviseDto>(initialForm);
+  // const [
+  //   form,
+  //   setForm,
+  //   ] = useState<CreateChangeDeviseDto>({
 
-    caisse_id: "",
+  //   caisse_id: "",
 
-    client_id: "",
+  //   client_id: "",
 
-    devise_source: "CDF",
+  //   devise_source: "CDF",
 
-    devise_destination: "USD",
+  //   devise_destination: "USD",
 
-    montant_source: 0,
+  //   montant_source: 0,
 
-    mode_paiement:
-        "ESPECE",
+  //   mode_paiement:
+  //       "ESPECE",
 
-    });
+  //   });
 
   const {
   data: clients = [],
@@ -102,14 +115,21 @@ const [
   setShowClients,
 ] = useState(false);
 
+const getClientFullName = (client: typeof clients[number]) =>
+  [
+    client.nom,
+    client.postnom,
+    client.prenom,
+  ]
+    .filter(Boolean)
+    .join(" ");
+
 const filteredClients =
   clients.filter(
     (client) => {
 
       const fullname =
-        `${client.nom ?? ""}
-         ${client.postnom ?? ""}
-         ${client.prenom ?? ""}`
+        getClientFullName(client)
           .toLowerCase();
 
       return fullname.includes(
@@ -124,21 +144,21 @@ const filteredClients =
 
     e.preventDefault();
 
-    mutate(form);
+    mutate(form, {
+
+    onSuccess: () => {
+
+      setForm(initialForm);
+
+      setClientSearch("");
+
+      setShowClients(false);
+
+    },
+
+  });
 
   };
-  // const handleSubmit =
-  //   async (
-  //     e: React.FormEvent
-  //   ) => {
-
-  //     e.preventDefault();
-
-  //     await createMutation.mutateAsync(
-  //       form
-  //     );
-
-  //   };
 
   return (
 
@@ -327,9 +347,7 @@ const filteredClients =
                         });
 
                         setClientSearch(
-                        `${client.nom ?? ""}
-                        ${client.postnom ?? ""}
-                        ${client.prenom ?? ""}`
+                          getClientFullName(client)
                         );
 
                         setShowClients(
@@ -348,15 +366,11 @@ const filteredClients =
                     >
 
                     <span
-                        className="
+                      className="
                         font-medium
-                        "
+                      "
                     >
-                        {client.nom}
-                        {" "}
-                        {client.postnom}
-                        {" "}
-                        {client.prenom}
+                      {getClientFullName(client)}
                     </span>
 
                     <span
