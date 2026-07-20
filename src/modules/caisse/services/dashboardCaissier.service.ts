@@ -1,7 +1,8 @@
 import { api } from "../../../services/api";
 
 export type DashboardCaissierResponse = {
-  caisse: {
+
+  caisses: {
     id: string;
     code_caisse: string;
 
@@ -16,12 +17,20 @@ export type DashboardCaissierResponse = {
 
     agence_id: string;
     agent_id: string | null;
-  };
 
-  soldes: Record<
-    string,
-    number
-  >;
+    support: string;
+    devise_principale: string;
+    prestataire: string | null;
+
+    devises: {
+      id: string;
+      devise: string;
+      solde: number;
+      is_activated: boolean;
+    }[];
+  }[];
+
+  soldes: Record<string, number>;
 
   stats: {
     transfert_client: {

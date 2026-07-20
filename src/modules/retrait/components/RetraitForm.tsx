@@ -2,7 +2,6 @@
 
 import {
   ArrowDownCircle,
-  CalendarRange,
   CreditCard,
   LockKeyhole,
   Wallet,
@@ -35,7 +34,6 @@ import {
 import {
   useAuthStore,
 } from "../../../app/store";
-import { useCaisses } from "../../caisse/hooks/useCaisses";
 import { usePermission } from "../../../hooks/usePermission";
 import { PERMISSIONS } from "../../../constants/permissions";
 
@@ -56,15 +54,9 @@ type SelectedTransfert = {
 };
 
 type FormData = {
-  code_reference: string;
-
-  code_secret: string;
-
-  caisse_id: string;
-
-  numero_piece: string;
-
-  date_operation: string;
+    code_reference: string;
+    code_secret: string;
+    numero_piece: string;
 };
 
 type Props = {
@@ -112,16 +104,6 @@ export default function RetraitForm({
       (s) => s.user
     );
 
-  const {
-    data: caisseResponse,
-  } = useCaisses(
-    1,
-    10
-  );
-
-  const myCaisse =
-    caisseResponse?.data?.[0];
-
   const { can } =
     usePermission();
 
@@ -157,22 +139,6 @@ export default function RetraitForm({
 
   useEffect(() => {
 
-    if (myCaisse) {
-
-      setValue(
-        "caisse_id",
-        myCaisse.id
-      );
-
-    }
-
-  }, [
-    myCaisse,
-    setValue,
-  ]);
-
-  useEffect(() => {
-
   if (selected) {
 
     setValue(
@@ -190,20 +156,6 @@ export default function RetraitForm({
   /* ------------------------------------------------------------------------ */
   /*                              DEFAULT DATE                                */
   /* ------------------------------------------------------------------------ */
-
-  useEffect(() => {
-
-    const today =
-      new Date()
-        .toISOString()
-        .split("T")[0];
-
-    setValue(
-      "date_operation",
-      today
-    );
-
-  }, [setValue]);
 
   /* ------------------------------------------------------------------------ */
   /*                                  SUBMIT                                  */
@@ -230,37 +182,9 @@ export default function RetraitForm({
     }
 
     const payload = {
-      code_reference:
-        data.code_reference,
-
-      code_secret:
-        data.code_secret,
-
-      caisse_id:
-        data.caisse_id,
-
-      numero_piece:
-        data.numero_piece,
-
-      details: [
-        {
-          devise:
-            selected?.devise_destination ||
-            "",
-
-          montant:
-            Number(
-              selected?.montant_destination ||
-                0
-            ),
-
-          montant_reference:
-            Number(
-              selected?.montant_destination ||
-                0
-            ),
-        },
-      ],
+        code_reference: data.code_reference,
+        code_secret: data.code_secret,
+        numero_piece: data.numero_piece,
     };
 
     mutate(payload, {
@@ -281,10 +205,8 @@ export default function RetraitForm({
         });
 
         reset({
-          date_operation:
-            new Date()
-              .toISOString()
-              .split("T")[0],
+            code_secret: "",
+            numero_piece: "",
         });
       },
 
@@ -597,150 +519,11 @@ export default function RetraitForm({
 
             {/* DATE */}
 
-            <div>
-
-              <label
-                className="
-                  mb-2
-                  block
-                  text-sm
-                  font-semibold
-                  text-slate-700
-                "
-              >
-                Date opération
-              </label>
-
-              <div
-                className="
-                  relative
-                "
-              >
-
-                <CalendarRange
-                  size={16}
-                  className="
-                    absolute
-                    left-4
-                    top-1/2
-                    -translate-y-1/2
-                    text-slate-400
-                  "
-                />
-
-                <input
-                  type="date"
-                  {...register(
-                    "date_operation",
-                    {
-                      required:
-                        true,
-                    }
-                  )}
-                  className="
-                    h-14
-                    w-full
-                    rounded-2xl
-                    border
-                    border-slate-200
-                    bg-white
-                    pl-11
-                    pr-4
-                    text-sm
-                    text-slate-700
-                    outline-none
-                    transition-all
-                    focus:border-red-400
-                    focus:ring-4
-                    focus:ring-red-100
-                  "
-                />
-
-              </div>
-
-            </div>
-
           </div>
 
           {/* ---------------------------------------------------------- */}
           {/* CAISSE                                                     */}
           {/* ---------------------------------------------------------- */}
-
-          <div className="mt-6">
-
-            <label
-              className="
-                mb-2
-                block
-                text-sm
-                font-semibold
-                text-slate-700
-              "
-            >
-              Caisse utilisée
-            </label>
-
-            <input
-              type="hidden"
-              {...register("caisse_id")}
-            />
-
-            <div
-              className="
-                flex
-                items-center
-                justify-between
-                rounded-2xl
-                border
-                border-slate-200
-                bg-slate-50
-                px-5
-                py-4
-              "
-            >
-
-              <div>
-
-                <p
-                  className="
-                    text-xs
-                    uppercase
-                    tracking-wide
-                    text-slate-400
-                  "
-                >
-                  Caisse agent
-                </p>
-
-                <p
-                  className="
-                    mt-1
-                    font-semibold
-                    text-slate-900
-                  "
-                >
-                  {myCaisse?.code_caisse}
-                </p>
-
-              </div>
-
-              <div
-                className="
-                  rounded-xl
-                  bg-indigo-100
-                  px-3
-                  py-1
-                  text-sm
-                  font-semibold
-                  text-indigo-700
-                "
-              >
-                {myCaisse?.agence_name}
-              </div>
-
-            </div>
-
-          </div>
 
           {/* ---------------------------------------------------------- */}
           {/* ACTIONS                                                    */}

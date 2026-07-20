@@ -55,6 +55,9 @@ from "../modules/transfert-client/pages/TransfertClientPage";
 import TransfertCaissePage
 from "../modules/transfert-caisse/pages/TransfertcaissePage";
 
+import TransfertInterAgencePage
+from "../modules/transfert-inter-agence/pages/TransfertInterAgencePage";
+
 import ValidationPage
 from "../modules/validation/pages/ValidationPage";
 
@@ -204,6 +207,13 @@ export const router =
         },
 
         {
+          path: "transfert-inter-agence",
+
+          element:
+            <TransfertInterAgencePage />,
+        },
+
+        {
           path: "validation",
 
           element:
@@ -348,6 +358,13 @@ export const router =
 
           element:
             <TransfertCaissePage />,
+        },
+
+        {
+          path: "transfert-inter-agence",
+
+          element:
+            <TransfertInterAgencePage />,
         },
 
         {

@@ -5,11 +5,14 @@ import { api } from "../../../services/api";
 export type TransfertFilters = {
   statut?: string;
   date_operation?: string;
+
+  devise_source?: string;
+  devise_destination?: string;
+
+  prestataire?: string;
 };
 
 export type CreateTransfertClientDto = {
-  caisse_id: string;
-
   agence_dest: string;
 
   expediteur_id: string;
@@ -32,6 +35,8 @@ export type CreateTransfertClientDto = {
     | "COMPTE_CLIENT"
     | "CARTE"
     | "CHEQUE";
+
+  prestataire?: string;
 };
 
 export type TransfertClient = {
@@ -76,13 +81,14 @@ export type TransfertClient = {
     | "FORFAITAIRE"
     | "POURCENTAGE";
 
-  pourcentage_frais:
-    string | null;
+  pourcentage_frais: string | null;
 
   taux_utilise: string;
   type_taux_utilise: string;
 
   mode_paiement: string;
+
+  prestataire: string | null;
 
   statut: string;
 
@@ -93,6 +99,7 @@ export type TransfertClient = {
 
 export type PaginatedResponse<T> = {
   data: T[];
+
   meta: {
     page: number;
     limit: number;
@@ -102,6 +109,7 @@ export type PaginatedResponse<T> = {
 };
 
 // CREATE
+
 export const createTransfertClient = async (
   data: CreateTransfertClientDto
 ) => {
@@ -113,7 +121,8 @@ export const createTransfertClient = async (
   return res.data.data;
 };
 
-// GET MY TRANSFERTS + FILTERS
+// GET MY TRANSFERTS
+
 export const getMyTransferts = async (
   page = 1,
   limit = 10,
@@ -125,10 +134,20 @@ export const getMyTransferts = async (
       params: {
         page,
         limit,
-        statut:
-          filters?.statut || undefined,
+
+        statut: filters?.statut || undefined,
+
         date_operation:
           filters?.date_operation || undefined,
+
+        devise_source:
+          filters?.devise_source || undefined,
+
+        devise_destination:
+          filters?.devise_destination || undefined,
+
+        prestataire:
+          filters?.prestataire || undefined,
       },
     }
   );
@@ -136,7 +155,8 @@ export const getMyTransferts = async (
   return res.data;
 };
 
-// GET BY AGENCE + FILTERS
+// GET BY AGENCE
+
 export const getTransfertsByAgence = async (
   agenceId: string,
   page = 1,
@@ -149,41 +169,57 @@ export const getTransfertsByAgence = async (
       params: {
         page,
         limit,
-        statut:
-          filters?.statut || undefined,
+
+        statut: filters?.statut || undefined,
+
         date_operation:
           filters?.date_operation || undefined,
+
+        devise_source:
+          filters?.devise_source || undefined,
+
+        devise_destination:
+          filters?.devise_destination || undefined,
+
+        prestataire:
+          filters?.prestataire || undefined,
       },
     }
   );
 
   return res.data;
-}; 
+};
+
+// ADMIN
 
 export const getAllTransferts = async (
   page = 1,
   limit = 10,
   filters?: TransfertFilters
-): Promise<
-  PaginatedResponse<TransfertClient>
-> => {
+): Promise<PaginatedResponse<TransfertClient>> => {
+  const res = await api.get(
+    "/transfert-client",
+    {
+      params: {
+        page,
+        limit,
 
-  const res =
-    await api.get(
-      "/transfert-client",
-      {
-        params: {
-          page,
-          limit,
+        statut: filters?.statut,
 
-          statut:
-            filters?.statut,
+        date_operation:
+          filters?.date_operation,
 
-          date_operation:
-            filters?.date_operation,
-        },
-      }
-    );
+        devise_source:
+          filters?.devise_source,
+
+        devise_destination:
+          filters?.devise_destination,
+
+        prestataire:
+          filters?.prestataire,
+      },
+    }
+  );
 
   return res.data;
 };

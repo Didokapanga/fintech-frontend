@@ -7,8 +7,10 @@ export interface Client {
   prenom?: string;
 
   telephone: string;
+  email?: string;
 
   sexe?: string;
+  date_naissance?: string;
 
   adresse?: string;
   commune?: string;
@@ -21,6 +23,7 @@ export interface Client {
   type_piece?: string;
   numero_piece?: string;
 
+  date_delivrance_piece?: string;
   date_expiration_piece?: string;
 
   is_activated?: boolean;
@@ -28,13 +31,14 @@ export interface Client {
 
 export interface CreateClientDto {
   nom: string;
-
   postnom?: string;
   prenom?: string;
 
   telephone: string;
+  email?: string;
 
   sexe?: string;
+  date_naissance?: string;
 
   adresse?: string;
   commune?: string;
@@ -47,6 +51,7 @@ export interface CreateClientDto {
   type_piece?: string;
   numero_piece?: string;
 
+  date_delivrance_piece?: string;
   date_expiration_piece?: string;
 }
 

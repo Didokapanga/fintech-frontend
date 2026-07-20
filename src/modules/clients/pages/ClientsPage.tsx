@@ -134,6 +134,23 @@ export default function ClientsPage() {
   },
 
   {
+      header: "Expiration pièce",
+
+      accessor:
+        "date_expiration_piece",
+
+      render: (
+        value
+      ) =>
+
+        new Date(
+          String(value)
+        ).toLocaleString(
+          "fr-FR"
+        ),
+    },
+
+  {
     header: "Ville",
     accessor: "ville",
 

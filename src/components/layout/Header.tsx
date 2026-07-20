@@ -167,6 +167,7 @@ export default function Header() {
           justify-center
           gap-4
           px-8
+          py-1
         "
       >
 
@@ -205,28 +206,40 @@ export default function Header() {
 
             <>
 
-              <p
+              <div
                 className="
-                  text-xs
-                  font-semibold
-                  uppercase
-                  tracking-wider
-                  text-blue-600
+                  flex
+                  items-center
+                  justify-between
+                  gap-4
                 "
               >
-                💱 TAUX DE CHANGE
-              </p>
 
-              <h3
-                className="
-                  mt-1
-                  text-sm
-                  font-bold
-                  text-slate-900
-                "
-              >
-                {current.title}
-              </h3>
+                <span
+                  className="
+                    text-[11px]
+                    font-semibold
+                    uppercase
+                    tracking-wider
+                    text-blue-600
+                    whitespace-nowrap
+                  "
+                >
+                  💱 TAUX DE CHANGE
+                </span>
+
+                <span
+                  className="
+                    text-sm
+                    font-bold
+                    text-slate-900
+                    text-right
+                  "
+                >
+                  {current.title}
+                </span>
+
+              </div>
 
               <div
                 className="
@@ -261,27 +274,39 @@ export default function Header() {
 
             <>
 
-              <p
+              <div
                 className="
-                  text-xs
-                  font-semibold
-                  uppercase
-                  tracking-wider
-                  text-emerald-600
+                  flex
+                  items-center
+                  justify-between
+                  gap-4
                 "
               >
-                💵 TARIF TRANSFERT
-              </p>
 
-              <h3
-                className="
-                  mt-1
-                  text-sm
-                  font-bold
-                "
-              >
-                {current.min} - {current.max} {current.devise}
-              </h3>
+                <span
+                  className="
+                    text-[11px]
+                    font-semibold
+                    uppercase
+                    tracking-wider
+                    text-emerald-600
+                    whitespace-nowrap
+                  "
+                >
+                  💵 TARIF TRANSFERT
+                </span>
+
+                <span
+                  className="
+                    text-sm
+                    font-bold
+                    text-right
+                  "
+                >
+                  {current.min} - {current.max} {current.devise}
+                </span>
+
+              </div>
 
               <div
                 className="

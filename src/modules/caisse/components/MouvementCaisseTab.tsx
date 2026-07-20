@@ -794,13 +794,11 @@ export default function MouvementCaisseTab() {
           1 && (
 
           <Pagination
-            page={page}
-            totalPages={
-              meta.totalPages
-            }
-            onChange={
-              setPage
-            }
+              page={meta.page}
+              totalPages={meta.totalPages}
+              totalItems={meta.total}
+              perPage={meta.limit}
+              onChange={setPage}
           />
 
         )}

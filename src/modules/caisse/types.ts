@@ -5,6 +5,18 @@ export type CaisseState =
   | "FERMEE"
   | "CLOTUREE";
 
+export type CaisseType =
+  | "AGENCE"
+  | "AGENT";
+
+export type CaisseSupport =
+  | "ESPECE"
+  | "MOBILE_MONEY"
+  | "BANQUE"
+  | "IMF"
+  | "SMF"
+  | "AUTRE";
+
 export type CaisseDevise = {
   id: string;
   devise: string;
@@ -18,9 +30,15 @@ export type Caisse = {
   agence_id: string;
   agent_id: string | null;
 
-  type: "AGENCE" | "AGENT";
+  type: CaisseType;
 
   state: CaisseState;
+
+  support: CaisseSupport;
+
+  prestataire: string | null;
+
+  devise_principale: string;
 
   code_caisse: string;
 
@@ -39,3 +57,8 @@ export type Caisse = {
 
   devises: CaisseDevise[];
 };
+
+export interface CaisseReference {
+  support: string;
+  prestataires: string[];
+}

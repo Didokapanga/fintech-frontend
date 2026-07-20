@@ -2,6 +2,7 @@
 
 import {
   useEffect,
+  useState,
 } from "react";
 
 import {
@@ -20,6 +21,7 @@ import {
 import type {
   Permission,
 } from "../types";
+import AppMessageState from "../../../components/ui/AppMessageState";
 
 type Props = {
   open: boolean;
@@ -61,8 +63,36 @@ export default function PermissionFormModal({
     },
   });
 
+  type MessageState = {
+    variant:
+      | "error"
+      | "success"
+      | "info"
+      | "warning";
+
+    title: string;
+
+    message: string;
+  };
+
+  type ErrorWithResponse =
+    Error & {
+      response?: {
+        data?: {
+          message?: string;
+        };
+      };
+    };
   const createMutation =
     useCreatePermission();
+
+  const [
+    appMessage,
+    setAppMessage,
+  ] =
+    useState<MessageState | null>(
+      null
+    );
 
   const updateMutation =
     useUpdatePermission();
@@ -83,11 +113,11 @@ export default function PermissionFormModal({
 
       }
 
-    }, [
-      open,
-      permission?.id,
-      reset,
-    ]);
+  }, [
+    open,
+    permission,
+    reset,
+  ]);
   
 
   const onSubmit = (
@@ -102,16 +132,31 @@ export default function PermissionFormModal({
     if (isEdit && permission) {
 
       updateMutation.mutate(
-        {
-          id: permission.id,
-          data,
+      {
+        id: permission.id,
+        data,
+      },
+      {
+        onSuccess: () => {
+          onClose();
         },
-        {
-          onSuccess: () => {
-            onClose();
-          },
-        }
-      );
+
+        onError: (error) => {
+
+          const apiError =
+            error as ErrorWithResponse;
+
+          setAppMessage({
+            variant: "error",
+            title: "Modification refusée",
+            message:
+              apiError?.response?.data?.message ||
+              "Impossible de modifier cette permission.",
+          });
+
+        },
+      }
+    );
 
       return;
     }
@@ -120,7 +165,29 @@ export default function PermissionFormModal({
       data,
       {
         onSuccess: () => {
+
+          setAppMessage({
+            variant: "success",
+            title: "Succès",
+            message: "Permission créée avec succès.",
+          });
+
           onClose();
+        },
+
+        onError: (error) => {
+
+          const apiError =
+            error as ErrorWithResponse;
+
+          setAppMessage({
+            variant: "error",
+            title: "Création refusée",
+            message:
+              apiError?.response?.data?.message ||
+              "Impossible de créer cette permission.",
+          });
+
         },
       }
     );
@@ -193,10 +260,6 @@ export default function PermissionFormModal({
 
         </div>
 
-        {/* <div className="mb-4 text-red-500">
-          TEST MODAL VERSION 2
-        </div> */}
-
         {/* BODY */}
 
         <form
@@ -208,6 +271,22 @@ export default function PermissionFormModal({
             p-6
           "
         >
+          {appMessage && (
+
+          <div className="mb-5">
+
+            <AppMessageState
+              variant={appMessage.variant}
+              title={appMessage.title}
+              message={appMessage.message}
+              onAction={() =>
+                setAppMessage(null)
+              }
+            />
+
+          </div>
+
+        )}
 
           <div>
 

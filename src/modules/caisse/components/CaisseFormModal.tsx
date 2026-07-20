@@ -92,7 +92,10 @@ export default function CaisseFormModal({
       agence_id: "",
       agent_id: "",
       type: undefined,
-      devises: [],
+
+      support: "ESPECE",
+      prestataire: "",
+      devise_principale: "USD",
     },
   });
 
@@ -101,6 +104,11 @@ export default function CaisseFormModal({
       control,
       name: "type",
     });
+
+  const selectedSupport = useWatch({
+    control,
+    name: "support",
+  });
 
   /* ------------------------------------------------------------------------ */
   /*                                   QUERIES                                */
@@ -247,13 +255,20 @@ export default function CaisseFormModal({
 
       type: data.type,
 
-      devises: data.devises,
+      support: data.support,
+
+      prestataire:
+        data.support === "ESPECE"
+          ? null
+          : data.prestataire,
+
+      devise_principale:
+        data.devise_principale,
 
       ...(data.type === "AGENT" &&
         data.agent_id
           ? {
-              agent_id:
-                data.agent_id,
+              agent_id: data.agent_id,
             }
           : {}),
     };
@@ -570,98 +585,95 @@ export default function CaisseFormModal({
 
           <div>
 
-            <label
-              className="
-                mb-2
-                flex
-                items-center
-                gap-2
-                text-sm
-                font-medium
-                text-slate-700
-              "
-            >
-
-              <CircleDollarSign
-                size={16}
-              />
-
-              Devise
-
+            <label className="mb-2 flex items-center gap-2 text-sm font-medium text-slate-700">
+              <Wallet size={16} />
+                Canal d'opération
             </label>
 
-            <div className="space-y-3">
+            <select
+              {...register("support")}
+              className="input"
+            >
 
-              <label
-                className="
-                  flex
-                  items-center
-                  gap-3
-                "
-              >
-                <input
-                  type="checkbox"
-                  value="USD"
-                  {...register("devises", {
-                    required:
-                      "Sélectionnez au moins une devise",
-                  })}
-                />
+              <option value="ESPECE">Espèce</option>
+              <option value="MOBILE_MONEY">Mobile Money</option>
+              <option value="BANQUE">Banque</option>
+              <option value="IMF">IMF</option>
+              <option value="SMF">SMF</option>
+              <option value="AUTRE">Autre</option>
 
-                USD
+            </select>
+
+          </div>
+
+          {/******************************************************************/}
+          {/* PRESTATAIRE                                                    */}
+          {/******************************************************************/}
+
+          {selectedSupport !== "ESPECE" && (
+
+            <div>
+
+              <label className="mb-2 text-sm font-medium text-slate-700">
+                Opérateur
               </label>
 
-              <label
-                className="
-                  flex
-                  items-center
-                  gap-3
-                "
-              >
-                <input
-                  type="checkbox"
-                  value="CDF"
-                  {...register("devises")}
-                />
+              <input
+                className="input"
+                placeholder="Ex : MPESA"
 
-                CDF
-              </label>
+                {...register("prestataire", {
+                  pattern: {
+                    value: /^[A-Z0-9_]+$/,
+                    message:
+                      "Utilisez uniquement des lettres, chiffres et '_'"
+                  },
 
-              <label
-                className="
-                  flex
-                  items-center
-                  gap-3
-                "
-              >
-                <input
-                  type="checkbox"
-                  value="EUR"
-                  {...register("devises")}
-                />
+                  onChange: (e) => {
+                    e.target.value = e.target.value
+                      .toUpperCase()
+                      .replace(/\s+/g, "_")
+                      .replace(/[^A-Z0-9_]/g, "");
+                  }
+                })}
+              />
 
-                EUR
-              </label>
+              {errors.prestataire && (
+                <p className="mt-1 text-xs text-red-500">
+                  {errors.prestataire.message}
+                </p>
+              )}
 
             </div>
 
-            {errors.devises && (
-
-              <p
-                className="
-                  mt-1
-                  text-xs
-                  text-red-500
-                "
-              >
-                {
-                  errors
-                    .devises
-                    ?.message
-                }
-              </p>
-
             )}
+
+          {/******************************************************************/}
+          {/* DEVISE PRINCIPALE                                              */}
+          {/******************************************************************/}
+
+          <div>
+
+            <label className="mb-2 flex items-center gap-2 text-sm font-medium text-slate-700">
+
+              <CircleDollarSign size={16} />
+
+              Devise principale
+
+            </label>
+
+            <select
+              {...register("devise_principale")}
+              className="input"
+            >
+
+              <option value="USD">USD</option>
+
+              <option value="CDF">CDF</option>
+
+              <option value="EUR">EUR</option>
+
+            </select>
 
           </div>
 

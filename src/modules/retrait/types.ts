@@ -1,16 +1,7 @@
-export type RetraitDetailDto = {
-  devise: string;
-  montant: number;
-  montant_reference: number;
-};
-
 export type CreateRetraitDto = {
-  code_reference: string;
-  code_secret: string;
-  caisse_id: string;
-  numero_piece: string;
-
-  details: RetraitDetailDto[];
+    code_reference: string;
+    code_secret: string;
+    numero_piece: string;
 };
 
 export type PersonneRetrait = {

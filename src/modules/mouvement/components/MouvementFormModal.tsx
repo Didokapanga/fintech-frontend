@@ -194,19 +194,11 @@ export default function MouvementFormModal({
   /* WATCH                                                                  */
   /* ---------------------------------------------------------------------- */
 
-  const caisseAgence =
-    caisses.find(
-      (c) =>
-        c.agence_id ===
-        user?.agence_id &&
-        c.type === "AGENCE"
-    );
-
-  const caissesAgence =
-    caisses.filter(
-      (c) =>
-        c.type === "AGENCE"
-    );
+  const caissesAgence = caisses.filter(
+      c =>
+          c.type === "AGENCE" &&
+          c.agence_id === user?.agence_id
+  );
 
   const selectedCaisse =
     caissesAgence.find(
@@ -220,35 +212,21 @@ export default function MouvementFormModal({
 
   useEffect(() => {
 
-    if (
-      canCreateAgence &&
-      caisseAgence
-    ) {
+      if (
+          selectedCaisse &&
+          selectedCaisse.devises.length > 0
+      ) {
 
-      setValue(
-        "caisse_id",
-        caisseAgence.id
-      );
+          setValue(
+              "devise",
+              selectedCaisse.devises[0].devise
+          );
 
-    }
-
-    if (
-      canCreateAgence &&
-      caisseAgence &&
-      caisseAgence.devises?.length
-    ) {
-
-      setValue(
-        "devise",
-        caisseAgence.devises[0].devise
-      );
-
-    }
+      }
 
   }, [
-    canCreateAgence,
-    caisseAgence,
-    setValue,
+      selectedCaisse,
+      setValue,
   ]);
 
   /* ---------------------------------------------------------------------- */
@@ -373,17 +351,70 @@ export default function MouvementFormModal({
 
           )}
 
-          {canCreateAgence &&
-            !canCreateGlobal &&
-            caisseAgence && (
+          {canCreateAgence && !canCreateGlobal && (
 
-              <Input
-                label="Caisse"
-                value={`${caisseAgence.code_caisse} | ${caisseAgence.agence_name}`}
-                readOnly
-              />
+            <div>
 
-            )}
+              <label
+                className="
+                  mb-1.5
+                  block
+                  text-sm
+                  font-medium
+                  text-slate-700
+                "
+              >
+                Caisse
+              </label>
+
+              <select
+                {...register("caisse_id", {
+                  required: "La caisse est obligatoire",
+                })}
+                className="
+                  w-full
+                  rounded-xl
+                  border
+                  border-slate-200
+                  px-3
+                  py-3
+                "
+              >
+
+                <option value="">
+                  Sélectionner une caisse
+                </option>
+
+                {caissesAgence.map((c) => {
+
+              const devisePrincipale = c.devises?.find(
+                d => d.devise === c.devise_principale
+              );
+
+              return (
+                <option
+                  key={c.id}
+                  value={c.id}
+                >
+                  {[
+                    c.support,
+                    c.prestataire,
+                    c.devise_principale,
+                    `${Number(devisePrincipale?.solde ?? 0).toLocaleString()} ${c.devise_principale}`,
+                    c.code_caisse,
+                  ]
+                    .filter(Boolean)
+                    .join(" • ")}
+                </option>
+              );
+
+            })}
+
+              </select>
+
+            </div>
+
+          )}
 
           {/* TYPE */}
 

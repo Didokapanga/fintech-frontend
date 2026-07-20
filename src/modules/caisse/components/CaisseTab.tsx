@@ -207,427 +207,314 @@ export default function CaisseTab() {
   /*                                  COLUMNS                                 */
   /* ------------------------------------------------------------------------ */
 
-  const columns:
-    Column<Caisse>[] =
-    [
+  const columns: Column<Caisse>[] = [
 
-      {
-        header: "Caisse",
+    {
+      header: "Caisse",
+      accessor: "code_caisse",
 
-        accessor: "code_caisse",
+      render: (value, row) => (
 
-        render: (
-          value,
-          row
-        ) => (
+        <div className="flex items-center gap-3">
 
           <div
             className="
               flex
+              h-11
+              w-11
               items-center
-              gap-3
+              justify-center
+              rounded-2xl
+              bg-indigo-50
+              text-indigo-600
             "
           >
+            <Wallet2 size={18} />
+          </div>
 
-            <div
-              className="
-                flex
-                h-11
-                w-11
-                items-center
-                justify-center
-                rounded-2xl
-                bg-indigo-50
-                text-indigo-600
-              "
-            >
+          <div className="flex flex-col">
 
-              <Wallet2
-                size={18}
-              />
+            <span className="font-semibold text-slate-800">
+              {String(value)}
+            </span>
 
-            </div>
-
-            <div
-              className="
-                flex
-                flex-col
-              "
-            >
-
-              <span
-                className="
-                  font-semibold
-                  text-slate-800
-                "
-              >
-                {String(value)}
-              </span>
-
-              <span
-                className="
-                  text-xs
-                  text-slate-500
-                "
-              >
-                {row.agence_name}
-              </span>
-
-            </div>
+            <span className="text-xs text-slate-500">
+              {row.agence_name}
+            </span>
 
           </div>
 
-        ),
-      },
+        </div>
 
-      {
-        header: "Devises",
-        accessor: "devises",
+      ),
+    },
 
-        render: (_value, row) => (
+    {
+      header: "Support",
+      accessor: "support",
 
-          <div className="flex flex-wrap gap-1">
+      render: (value) => (
 
-            {row.devises.map((d) => (
-              <span
-                key={d.id}
-                className="
-                  rounded-full
-                  bg-emerald-50
-                  px-2
-                  py-1
-                  text-xs
-                  font-medium
-                  text-emerald-700
-                "
-              >
-                {d.devise}
-              </span>
-            ))}
+        <span
+          className="
+            inline-flex
+            rounded-full
+            bg-blue-50
+            px-3
+            py-1
+            text-xs
+            font-medium
+            text-blue-700
+          "
+        >
+          {String(value).replace("_", " ")}
+        </span>
+
+      ),
+    },
+
+    {
+      header: "Prestataire",
+      accessor: "prestataire",
+
+      render: (_value, row) => (
+
+        <span className="text-sm text-slate-700">
+          {row.prestataire ?? "—"}
+        </span>
+
+      ),
+    },
+
+    {
+      header: "Type",
+      accessor: "type",
+
+      render: (value) => (
+
+        <div
+          className="
+            inline-flex
+            items-center
+            gap-2
+            rounded-full
+            border
+            border-slate-200
+            bg-slate-100
+            px-3
+            py-1
+            text-xs
+            font-medium
+            text-slate-700
+          "
+        >
+
+          <Building2 size={13} />
+
+          {value === "AGENCE"
+            ? "PRINCIPALE"
+            : "SECONDAIRE"}
+
+        </div>
+
+      ),
+    },
+
+    {
+      header: "Solde",
+      accessor: "devises",
+
+      render: (_value, row) => {
+
+        const devise =
+          row.devises?.find(
+            d => d.devise === row.devise_principale
+          ) ?? row.devises?.[0];
+
+        return devise ? (
+
+          <div className="flex flex-col">
+
+            <span className="font-medium text-slate-800">
+              {devise.devise}
+            </span>
+
+            <span className="text-xs text-slate-500">
+              {Number(devise.solde).toLocaleString("fr-FR")} {devise.devise}
+            </span>
 
           </div>
 
-        ),
+        ) : (
+
+          <span>-</span>
+
+        );
+
       },
+    },
 
-      {
-        header:
-          "Type",
+    {
+      header: "Statut",
+      accessor: "state",
 
-        accessor:
-          "type",
+      render: (value) =>
 
-        render:
-          (
-            value
-          ) => (
+        value ? (
 
-            <div
-              className="
-                inline-flex
-                items-center
-                gap-2
-                rounded-full
-                border
-                border-slate-200
-                bg-slate-100
-                px-3
-                py-1
-                text-xs
-                font-medium
-                text-slate-700
-              "
-            >
+          <CaisseStatusBadge
+            state={
+              value as Caisse["state"]
+            }
+          />
 
-              <Building2
-                size={13}
-              />
+        ) : (
 
-              {String(
-                value ||
-                  "-"
-              )}
-
-            </div>
-
-          ),
-      },
-
-      {
-        header: "Soldes",
-        accessor: "devises",
-
-        render: (_value, row) => (
-
-          <div className="flex flex-col gap-1">
-
-            {row.devises.map((d) => (
-
-              <span
-                key={d.id}
-                className="text-xs"
-              >
-                {d.devise} :
-                {" "}
-                {Number(d.solde).toLocaleString()}
-              </span>
-
-            ))}
-
-          </div>
+          <span>-</span>
 
         ),
-      },
+    },
 
-      {
-        header:
-          "Statut",
+    {
+      header: "Actions",
+      accessor: "id",
 
-        accessor:
-          "state",
+      render: (_v, row) => (
 
-        render:
-          (
-            value
-          ) =>
+        <div
+          className="
+            flex
+            flex-wrap
+            items-center
+            gap-2
+          "
+        >
 
-            value
-              ? (
+          {/* OPEN */}
 
-                <CaisseStatusBadge
-                  state={
-                    value as Caisse["state"]
-                  }
-                />
+          {row.state === "FERMEE" && (
 
-              )
-              : (
-                <span>
-                  -
-                </span>
-              ),
-      },
-
-      {
-        header:
-          "Actions",
-
-        accessor:
-          "id",
-
-        render:
-          (
-            _v,
-            row
-          ) => (
-
-            <div
-              className="
-                flex
-                flex-wrap
-                items-center
-                gap-2
-              "
+            <PermissionGate
+              permissions={[
+                PERMISSIONS.CAISSE_OPEN,
+                PERMISSIONS.CAISSE_OPEN_AGENCE,
+                PERMISSIONS.CAISSE_OPEN_USER,
+              ]}
             >
 
-              {/* OPEN */}
-
-              {row.state ===
-                "FERMEE" && (
-
-                <PermissionGate
-                  permissions={[
-                    PERMISSIONS.CAISSE_OPEN,
-                    PERMISSIONS.CAISSE_OPEN_AGENCE,
-                    PERMISSIONS.CAISSE_OPEN_USER,
-                  ]}
-                >
-                  <Button
-                    onClick={() =>
-
-                      openCaisse(
-                        row.id,
-                        {
-                          onSuccess:
-                            () => {
-
-                              setAppMessage(
-                                {
-                                  variant:
-                                    "success",
-
-                                  title:
-                                    "Succès",
-
-                                  message:
-                                    "Caisse ouverte avec succès",
-                                }
-                              );
-                            },
-
-                          onError:
-                            (
-                              error
-                            ) =>
-
-                              handleError(
-                                error,
-                                "Impossible d’ouvrir cette caisse",
-                                "Ouverture refusée"
-                              ),
-                        }
-                      )
-                    }
-                    className="
-                      h-9
-                      rounded-xl
-                      px-3
-                      text-xs
-                    "
-                  >
-
-                    <LockOpen
-                      size={14}
-                    />
-
-                    Ouvrir
-
-                  </Button>
-                </PermissionGate>
-              )}
-
-              {/* CLOSE */}
-
-              {row.state ===
-                "OUVERTE" && (
-
-                <PermissionGate
-                  permissions={[
-                    PERMISSIONS.CAISSE_CLOSE,
-                    PERMISSIONS.CAISSE_CLOSE_AGENCE,
-                    PERMISSIONS.CAISSE_CLOSE_USER,
-                  ]}
-                >
-                  <Button
-                    variant="secondary"
-                    onClick={() =>
-
-                      closeCaisse(
-                        row.id,
-                        {
-                          onSuccess:
-                            () => {
-
-                              setAppMessage(
-                                {
-                                  variant:
-                                    "success",
-
-                                  title:
-                                    "Succès",
-
-                                  message:
-                                    "Caisse fermée avec succès",
-                                }
-                              );
-                            },
-
-                          onError:
-                            (
-                              error
-                            ) =>
-
-                              handleError(
-                                error,
-                                "Impossible de fermer cette caisse",
-                                "Fermeture refusée"
-                              ),
-                        }
-                      )
-                    }
-                    className="
-                      h-9
-                      rounded-xl
-                      px-3
-                      text-xs
-                    "
-                  >
-
-                    <Lock
-                      size={14}
-                    />
-
-                    Fermer
-
-                  </Button>
-                </PermissionGate>
-              )}
-
-              {/* EDIT */}
-
-              <PermissionGate
-                permissions={[
-                  PERMISSIONS.CAISSE_UPDATE
-                ]}
+              <Button
+                onClick={() =>
+                  openCaisse(row.id, {
+                    onSuccess: () => {
+                      setAppMessage({
+                        variant: "success",
+                        title: "Succès",
+                        message: "Caisse ouverte avec succès",
+                      });
+                    },
+                    onError: (error) =>
+                      handleError(
+                        error,
+                        "Impossible d’ouvrir cette caisse",
+                        "Ouverture refusée"
+                      ),
+                  })
+                }
+                className="h-9 rounded-xl px-3 text-xs"
               >
-                <Button
-                  variant="secondary"
-                  onClick={() =>
-                    alert(
-                      "Edition bientôt disponible"
-                    )
-                  }
-                  className="
-                    h-9
-                    rounded-xl
-                    px-3
-                    text-xs
-                  "
-                >
+                <LockOpen size={14} />
+                
+              </Button>
 
-                  <Pencil
-                    size={14}
-                  />
+            </PermissionGate>
 
-                  Modifier
+          )}
 
-                </Button>
-              </PermissionGate>
-              {/* DELETE */}
+          {/* CLOSE */}
 
-              <PermissionGate
-                permissions={[
-                  PERMISSIONS.CAISSE_DELETE
-                ]}
+          {row.state === "OUVERTE" && (
+
+            <PermissionGate
+              permissions={[
+                PERMISSIONS.CAISSE_CLOSE,
+                PERMISSIONS.CAISSE_CLOSE_AGENCE,
+                PERMISSIONS.CAISSE_CLOSE_USER,
+              ]}
+            >
+
+              <Button
+                variant="secondary"
+                onClick={() =>
+                  closeCaisse(row.id, {
+                    onSuccess: () => {
+                      setAppMessage({
+                        variant: "success",
+                        title: "Succès",
+                        message: "Caisse fermée avec succès",
+                      });
+                    },
+                    onError: (error) =>
+                      handleError(
+                        error,
+                        "Impossible de fermer cette caisse",
+                        "Fermeture refusée"
+                      ),
+                  })
+                }
+                className="h-9 rounded-xl px-3 text-xs"
               >
-                <Button
-                  variant="danger"
-                  onClick={() =>
-                    setSelectedId(
-                      row.id
-                    )
-                  }
-                  className="
-                    h-9
-                    rounded-xl
-                    px-3
-                    text-xs
-                  "
-                >
+                <Lock size={14} />
+                
+              </Button>
 
-                  <Trash2
-                    size={14}
-                  />
+            </PermissionGate>
 
-                  Supprimer
+          )}
 
-                </Button>
-              </PermissionGate>
-            </div>
+          <PermissionGate
+            permissions={[
+              PERMISSIONS.CAISSE_UPDATE,
+            ]}
+          >
 
-          ),
-      },
-    ];
+            <Button
+              variant="secondary"
+              onClick={() =>
+                alert("Edition bientôt disponible")
+              }
+              className="h-9 rounded-xl px-3 text-xs"
+            >
+              <Pencil size={14} />
+              
+            </Button>
+
+          </PermissionGate>
+
+          <PermissionGate
+            permissions={[
+              PERMISSIONS.CAISSE_DELETE,
+            ]}
+          >
+
+            <Button
+              variant="danger"
+              onClick={() =>
+                setSelectedId(row.id)
+              }
+              className="h-9 rounded-xl px-3 text-xs"
+            >
+              <Trash2 size={14} />
+              
+            </Button>
+
+          </PermissionGate>
+
+        </div>
+
+      ),
+    },
+
+  ];
 
   /* ------------------------------------------------------------------------ */
   /*                                   RENDER                                 */
@@ -801,17 +688,15 @@ export default function CaisseTab() {
 
       {/* PAGINATION */}
 
-      {meta && meta.totalPages > 1 && (
+      {meta && (
 
-        <div className="pt-2">
-
-          <Pagination
-            page={page}
-            totalPages={meta.totalPages}
-            onChange={setPage}
-          />
-
-        </div>
+        <Pagination
+          page={meta.page}
+          totalPages={meta.totalPages}
+          totalItems={meta.total}
+          perPage={meta.limit}
+          onChange={setPage}
+        />
 
       )}
 

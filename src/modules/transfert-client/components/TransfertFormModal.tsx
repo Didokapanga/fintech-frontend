@@ -9,7 +9,7 @@ import {
   Wallet,
 } from "lucide-react";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   useForm,
   useWatch,
@@ -31,14 +31,6 @@ import type {
   CreateTransfertClientDto,
 } from "../services/transfert.service";
 
-import type {
-  Caisse,
-} from "../../caisse/types";
-
-import {
-  useCaisses,
-} from "../../caisse/hooks/useCaisses";
-
 import {
   useAgences,
 } from "../../agence/hooks/useAgences";
@@ -48,6 +40,7 @@ import {
 } from "../../../app/store";
 import { useClients } from "../../clients/hooks/useClients";
 import type { Client } from "../../clients/types";
+import { useCaisseReferences } from "../../caisse/hooks/useCaisseReferences";
 
 /* -------------------------------------------------------------------------- */
 /*                                   TYPES                                    */
@@ -137,30 +130,12 @@ export default function TransfertFormModal({
     useCreateTransfertClient();
 
   const {
-    data: caisseResponse,
-  } = useCaisses(
-    1,
-    100
-  );
-
-  const caisses =
-    useMemo(
-      () =>
-        caisseResponse?.data || [],
-      [caisseResponse]
-    );
-
-  const {
     data: agences =
       [],
   } =
     useAgences() as {
       data: Agence[];
     };
-
-  const myCaisse:
-    Caisse | undefined =
-      caisses?.[0];
 
   /* ------------------------------------------------------------------------ */
   /*                                  MESSAGE                                 */
@@ -239,34 +214,6 @@ const filteredDestinataires =
     );
   });
 
-  useEffect(() => {
-
-    if (!myCaisse) return;
-
-    setValue(
-      "caisse_id",
-      myCaisse.id
-    );
-
-  }, [
-    myCaisse,
-    setValue,
-  ]);
-
-  useEffect(() => {
-
-  if (!myCaisse) return;
-
-  setValue(
-    "caisse_id",
-    myCaisse.id
-  );
-
-}, [
-  myCaisse,
-  setValue,
-]);
-
 const deviseSelectionnee =
   useWatch({
     control,
@@ -279,6 +226,45 @@ const typeCalculFrais =
     name: "type_calcul_frais",
   });
 
+const {
+    data: caisseReferences = [],
+  } = useCaisseReferences();
+
+const modePaiement = useWatch({
+    control,
+    name: "mode_paiement",
+});
+
+const supportSelectionne =
+    caisseReferences.find(
+        (item) =>
+            item.support === modePaiement
+    );
+
+  useEffect(() => {
+
+      if (modePaiement === "ESPECE") {
+          setValue(
+              "prestataire",
+              undefined,
+              {
+                  shouldValidate: true,
+              }
+          );
+
+          return;
+      }
+
+      setValue(
+          "prestataire",
+          undefined
+      );
+
+  }, [
+      modePaiement,
+      setValue,
+  ]);
+
   useEffect(() => {
 
     if (
@@ -286,8 +272,11 @@ const typeCalculFrais =
     ) {
 
       setValue(
-        "devise_destination",
-        deviseSelectionnee
+          "devise_destination",
+          deviseSelectionnee,
+          {
+              shouldValidate: true,
+          }
       );
 
     }
@@ -347,6 +336,25 @@ const typeCalculFrais =
       return;
     }
 
+    if (
+        data.expediteur_id ===
+        data.destinataire_id
+    ) {
+
+        setAppMessage({
+
+            variant: "warning",
+
+            title: "Client invalide",
+
+            message:
+                "L'expéditeur et le bénéficiaire doivent être différents.",
+
+        });
+
+        return;
+    }
+
     const payload = data;
 
     mutate(payload, {
@@ -367,6 +375,12 @@ const typeCalculFrais =
         });
 
         reset();
+
+        setExpSearch("");
+        setDestSearch("");
+
+        setShowExpResults(false);
+        setShowDestResults(false);
 
         onClose();
       },
@@ -395,13 +409,6 @@ const typeCalculFrais =
       },
     });
   };
-
-  const deviseInfo =
-    myCaisse?.devises?.find(
-      (d) =>
-        d.devise ===
-        deviseSelectionnee
-    );
 
   /* ------------------------------------------------------------------------ */
   /*                                   RENDER                                 */
@@ -530,13 +537,6 @@ const typeCalculFrais =
 
           <input
             type="hidden"
-            {...register(
-              "caisse_id"
-            )}
-          />
-
-          <input
-            type="hidden"
             {...register("devise_source")}
           />
 
@@ -576,40 +576,6 @@ const typeCalculFrais =
                 <Field>
 
                   <Label>
-                    Caisse source
-                  </Label>
-
-                  <div
-                    className="
-                      flex
-                      h-12
-                      items-center
-                      gap-3
-                      rounded-2xl
-                      border
-                      border-slate-200
-                      bg-slate-100
-                      px-4
-                      text-sm
-                      font-medium
-                      text-slate-700
-                    "
-                  >
-
-                    <Wallet size={16} />
-
-                    {myCaisse
-                      ? `${myCaisse.code_caisse} • ${myCaisse.agence_name}`
-                      : "Chargement..."
-                    }
-
-                  </div>
-
-                </Field>
-
-                <Field>
-
-                  <Label>
                     Devise du transfert
                   </Label>
 
@@ -639,19 +605,16 @@ const typeCalculFrais =
                   >
 
                     <option value="">
-                      Sélectionner une devise
+                        Sélectionner une devise
                     </option>
 
-                    {myCaisse?.devises?.map(
-                      (devise) => (
-                        <option
-                          key={devise.id}
-                          value={devise.devise}
-                        >
-                          {devise.devise}
-                        </option>
-                      )
-                    )}
+                    <option value="USD">
+                        USD
+                    </option>
+
+                    <option value="CDF">
+                        CDF
+                    </option>
 
                   </select>
 
@@ -666,27 +629,6 @@ const typeCalculFrais =
                       "
                     >
                       {errors.devise_source.message}
-                    </p>
-
-                  )}
-
-                  {deviseInfo && (
-
-                    <p
-                      className="
-                        mt-2
-                        text-xs
-                        font-medium
-                        text-emerald-600
-                      "
-                    >
-                      Solde disponible :
-                      {" "}
-                      {Number(
-                        deviseInfo.solde
-                      ).toLocaleString()}
-                      {" "}
-                      {deviseInfo.devise}
                     </p>
 
                   )}
@@ -1222,7 +1164,7 @@ const typeCalculFrais =
                 <Field>
 
                   <Label>
-                    Mode paiement
+                    Support financier
                   </Label>
 
                   <select
@@ -1250,32 +1192,85 @@ const typeCalculFrais =
                   >
 
                     <option value="">
-                      Sélectionner
+                        Sélectionner
                     </option>
 
-                    <option value="ESPECE">
-                      Espèce
-                    </option>
-
-                    <option value="MOBILE_MONEY">
-                      Mobile Money
-                    </option>
-
-                    <option value="COMPTE_CLIENT">
-                      Compte Client
-                    </option>
-
-                    <option value="CARTE">
-                      Carte
-                    </option>
-
-                    <option value="CHEQUE">
-                      Chèque
-                    </option>
+                    {caisseReferences.map((item) => (
+                        <option
+                            key={item.support}
+                            value={item.support}
+                        >
+                            {item.support}
+                        </option>
+                    ))}
 
                   </select>
 
                 </Field>
+
+                {
+                  modePaiement !== "ESPECE" && (
+
+                  <Field>
+
+                      <Label>
+                          Prestataire
+                      </Label>
+
+                      <select
+                          {...register("prestataire", {
+                              required: "Veuillez sélectionner un prestataire.",
+                          })}
+                          className="
+                              h-12
+                              w-full
+                              rounded-2xl
+                              border
+                              border-slate-200
+                              bg-white
+                              px-4
+                              text-sm
+                              outline-none
+                              transition-all
+                              focus:border-indigo-500
+                              focus:ring-4
+                              focus:ring-indigo-100
+                          "
+                        >
+
+                          <option value="">
+                              Sélectionner
+                          </option>
+
+                          {supportSelectionne?.prestataires.map(
+                              (prestataire) => (
+                                  <option
+                                      key={prestataire}
+                                      value={prestataire}
+                                  >
+                                      {prestataire}
+                                  </option>
+                              )
+                          )}
+
+                      </select>
+                      {errors.prestataire && (
+                        <p
+                            className="
+                                mt-2
+                                text-xs
+                                font-medium
+                                text-red-500
+                            "
+                        >
+                            {errors.prestataire.message}
+                        </p>
+                      )}
+
+                  </Field>
+
+                  )
+                  }
 
               </div>
 

@@ -62,11 +62,25 @@ type Caisse = {
 
   agence_id: string;
 
+  agent_id?: string | null;
+
   code_caisse: string;
 
-  type?: string;
+  type: "AGENCE" | "AGENT";
+
+  state?: string;
+
+  support?: string;
+
+  prestataire?: string | null;
+
+  devise_principale?: string;
 
   agence_name?: string;
+
+  agent_name?: string | null;
+
+  ville?: string;
 
   devises?: {
     id: string;
@@ -109,9 +123,9 @@ export default function TransfertCaisseModal({
   const {
     register,
     handleSubmit,
-    setValue,
     reset,
-    control
+    control,
+    setValue,
   } =
     useForm<CreateTransfertCaisseDto>();
 
@@ -136,63 +150,62 @@ export default function TransfertCaisseModal({
       [response]
     );
 
-  const caisseAgence =
-    caisses.find(
-      (c) =>
-        c.agence_id ===
-        user?.agence_id &&
-        c.type ===
-          "AGENCE"
-    );
+  const availableCaisses =
+    useMemo(() => {
 
-  useEffect(() => {
-
-    if (
-      canCreateAgence &&
-      caisseAgence
-    ) {
-
-      setValue(
-        "caisse_source_id",
-        caisseAgence.id
-      );
-
-      if (
-        caisseAgence.devises?.length
-      ) {
-
-        setValue(
-          "devise",
-          caisseAgence.devises[0].devise
-        );
-
+      // Administrateur / Global
+      if (canCreateGlobal) {
+        return caisses;
       }
 
-    }
+      // Responsable agence
+      if (canCreateAgence) {
+        return caisses.filter(
+          (c) =>
+            c.agence_id === user?.agence_id
+        );
+      }
 
-  }, [
-    canCreateAgence,
-    caisseAgence,
-    setValue,
-  ]);
+      return [];
+
+    }, [
+      caisses,
+      user?.agence_id,
+      canCreateGlobal,
+      canCreateAgence,
+    ]);
 
   /* ------------------------------------------------------------------------ */
   /*                                WATCHERS                                  */
   /* ------------------------------------------------------------------------ */
 
-  const sourceId =
-    useWatch({
-      control,
+  const sourceId = useWatch({
+  control,
+  name: "caisse_source_id",
+});
 
-      name:
-        "caisse_source_id",
-    });
+const destinationId = useWatch({
+  control,
+  name: "caisse_destination_id",
+});
 
-  const selectedSourceCaisse =
-  caisses.find(
-    (c) =>
-      c.id === sourceId
-  );
+const selectedSourceCaisse = useMemo(
+  () =>
+    availableCaisses.find(
+      (c) => c.id === sourceId
+    ),
+  [availableCaisses, sourceId]
+);
+
+const selectedDevise =
+  selectedSourceCaisse?.devises?.[0]?.devise ?? "";
+
+  useEffect(() => {
+    setValue(
+      "devise",
+      selectedDevise
+    );
+  }, [selectedDevise, setValue]);
 
   /* ------------------------------------------------------------------------ */
   /*                                MUTATION                                  */
@@ -249,24 +262,25 @@ export default function TransfertCaisseModal({
   /* ------------------------------------------------------------------------ */
 
   const formatCaisse = (
-  c: Caisse
-) => {
+    c: Caisse
+  ) => {
 
-  const devises =
+    const soldes =
       c.devises
         ?.map(
-          (d) => d.devise
+          (d) => `${d.devise} (${Number(d.solde).toLocaleString()})`
         )
-        .join(", ") ||
-      "Aucune devise";
+        .join(" • ") ?? "-";
 
-    return `${c.code_caisse} • ${
-      c.type ?? "—"
-    } • ${
-      devises
-    } • ${
-      c.agence_name ?? "—"
-    }`;
+    const titulaire =
+      c.agent_name ?? "Caisse Agence";
+
+    const support =
+      c.prestataire
+        ? `${c.support} • ${c.prestataire}`
+        : c.support;
+
+    return `${c.code_caisse} • ${titulaire} • ${support} • ${soldes}`;
   };
 
   /* ------------------------------------------------------------------------ */
@@ -504,80 +518,69 @@ export default function TransfertCaisseModal({
 
               {/* SOURCE */}
 
-              {canCreateGlobal && (
+              <div>
 
-                <div>
+                <label
+                  className="
+                    mb-2
+                    block
+                    text-sm
+                    font-semibold
+                    text-slate-700
+                  "
+                >
+                  Depuis (Débit)
+                </label>
 
-                  <label
-                    className="
-                      mb-2
-                      block
-                      text-sm
-                      font-semibold
-                      text-slate-700
-                    "
-                  >
-                    Caisse source
-                  </label>
+                <select
+                  {...register(
+                    "caisse_source_id",
+                    {
+                      required: true,
+                    }
+                  )}
+                  className="
+                    h-14
+                    w-full
+                    rounded-2xl
+                    border
+                    border-slate-200
+                    bg-white
+                    px-4
+                    text-sm
+                    text-slate-700
+                    outline-none
+                    transition-all
+                    focus:border-indigo-400
+                    focus:ring-4
+                    focus:ring-indigo-100
+                  "
+                >
 
-                  <select
-                    {...register(
-                      "caisse_source_id",
-                      {
-                        required: true,
-                      }
-                    )}
-                    className="
-                      h-14
-                      w-full
-                      rounded-2xl
-                      border
-                      border-slate-200
-                      bg-white
-                      px-4
-                    "
-                  >
+                  <option value="">
+                    Sélectionner une caisse source
+                  </option>
 
-                    <option value="">
-                      Sélectionner une caisse
-                    </option>
+                  {availableCaisses
+                    .filter(
+                      (c) =>
+                        !destinationId ||
+                        c.id !== destinationId
+                    )
+                    .map((c) => (
 
-                    {caisses
-                      .filter(
-                        (c) =>
-                          c.type ===
-                          "AGENCE"
-                      )
-                      .map((c) => (
+                      <option
+                        key={c.id}
+                        value={c.id}
+                      >
+                        {formatCaisse(c)}
+                      </option>
 
-                        <option
-                          key={c.id}
-                          value={c.id}
-                        >
-                          {c.code_caisse}
-                          {" | "}
-                          {c.agence_name}
-                        </option>
+                    ))}
 
-                      ))}
+                </select>
 
-                  </select>
-
-                </div>
-              )}
-
-              {canCreateAgence &&
-                !canCreateGlobal &&
-                caisseAgence && (
-
-                  <Input
-                    label="Caisse source"
-                    value={`${caisseAgence.code_caisse} | ${caisseAgence.agence_name}`}
-                    readOnly
-                  />
-
-              )}
-
+              </div>
 
               {/* DESTINATION */}
 
@@ -592,7 +595,7 @@ export default function TransfertCaisseModal({
                     text-slate-700
                   "
                 >
-                  Caisse destination
+                  Vers (Crédit)
                 </label>
 
                 <select
@@ -624,35 +627,22 @@ export default function TransfertCaisseModal({
                     Sélectionner une caisse destination
                   </option>
 
-                  {caisses
+                  {availableCaisses
                     .filter(
                       (c) =>
-                        (
-                          !sourceId ||
-                          c.id !==
-                            sourceId
-                        ) &&
-                        c.type ===
-                          "AGENT"
+                        !sourceId ||
+                        c.id !== sourceId
                     )
-                    .map(
-                      (c) => (
+                    .map((c) => (
 
-                        <option
-                          key={
-                            c.id
-                          }
-                          value={
-                            c.id
-                          }
-                        >
-                          {formatCaisse(
-                            c
-                          )}
-                        </option>
+                      <option
+                        key={c.id}
+                        value={c.id}
+                      >
+                        {formatCaisse(c)}
+                      </option>
 
-                      )
-                    )}
+                    ))}
 
                 </select>
 
@@ -697,53 +687,17 @@ export default function TransfertCaisseModal({
                   Devise
                 </label>
 
-                <select
-                  {...register(
-                    "devise",
-                    {
-                      required: true,
-                    }
-                  )}
-                  className="
-                    h-14
-                    w-full
-                    rounded-2xl
-                    border
-                    border-slate-200
-                    bg-white
-                    px-4
-                    text-sm
-                    text-slate-700
-                    outline-none
-                    transition-all
-                    focus:border-indigo-400
-                    focus:ring-4
-                    focus:ring-indigo-100
-                  "
-                >
+                <Input
+                  value={selectedDevise}
+                  readOnly
+                />
 
-                  <option value="">
-                    Sélectionner une devise
-                  </option>
-
-                  {(
-                    selectedSourceCaisse?.devises ||
-                    caisseAgence?.devises ||
-                    []
-                  ).map(
-                    (d) => (
-
-                      <option
-                        key={d.id}
-                        value={d.devise}
-                      >
-                        {d.devise}
-                      </option>
-
-                    )
-                  )}
-
-                </select>
+                <input
+                  type="hidden"
+                  {...register("devise", {
+                    required: true,
+                  })}
+                />
 
               </div>
 

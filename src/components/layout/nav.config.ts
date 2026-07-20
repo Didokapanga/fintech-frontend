@@ -110,17 +110,29 @@ export const getNavItems = ({
     },
 
     /* ===================================================== */
-    /* TRANSFERT CAISSE */
+    /* TRANSFERTS */
     /* ===================================================== */
 
     {
-      label:
-        "Transfert caisse",
+      label: "Transferts",
 
       icon: Repeat,
 
-      path:
-        `${base}/transfert-caisse`,
+      children: [
+
+        {
+          label: "Inter-caisses",
+          icon: ArrowLeftRight,
+          path: `${base}/transfert-caisse`,
+        },
+
+        {
+          label: "Inter-agences",
+          icon: Building2,
+          path: `${base}/transfert-inter-agence`,
+        },
+
+      ],
     },
 
     /* ===================================================== */

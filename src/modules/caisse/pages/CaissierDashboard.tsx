@@ -1,4 +1,5 @@
 import {
+  useRef,
   useState,
 } from "react";
 
@@ -6,11 +7,12 @@ import {
   Send,
   Banknote,
   Inbox,
-  Lock,
   Filter,
   Wallet,
   ArrowUpRight,
   CalendarDays,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 
 import {
@@ -58,6 +60,22 @@ export default function CaissierDashboard() {
     setOpenCloture,
   ] = useState(false);
 
+  const caissesScrollRef = useRef<HTMLDivElement>(null);
+
+  const scrollCaissesLeft = () => {
+    caissesScrollRef.current?.scrollBy({
+      left: -240,
+      behavior: "smooth",
+    });
+  };
+
+  const scrollCaissesRight = () => {
+    caissesScrollRef.current?.scrollBy({
+      left: 240,
+      behavior: "smooth",
+    });
+  };
+
   /* ====================================================== */
   /* QUERY */
   /* ====================================================== */
@@ -85,8 +103,15 @@ export default function CaissierDashboard() {
   /* SELECTED CAISSE */
   /* ====================================================== */
 
+  const [selectedCaisseId, setSelectedCaisseId] =
+    useState<string>();
+
   const selectedCaisse =
-    dashboard?.caisse;
+    dashboard?.caisses.find(
+      c => c.id === selectedCaisseId
+    ) ||
+    dashboard?.caisses[0] ||
+    null;
 
   /* ====================================================== */
   /* RENDER */
@@ -182,12 +207,10 @@ export default function CaissierDashboard() {
           <div
             className="
               relative
-              flex
-              flex-col
+              grid
               gap-8
-              xl:flex-row
-              xl:items-center
-              xl:justify-between
+              xl:grid-cols-[minmax(0,2fr)_380px]
+              xl:items-start
             "
           >
 
@@ -195,6 +218,7 @@ export default function CaissierDashboard() {
 
             <div
               className="
+                min-w-0
                 flex
                 flex-col
                 gap-6
@@ -321,55 +345,278 @@ export default function CaissierDashboard() {
 
               <div
                 className="
-                  w-fit
-                  rounded-3xl
+                  flex
+                  items-center
+                  justify-between
+                  rounded-2xl
                   border
-                  border-red-100
-                  bg-gradient-to-r
-                  from-red-50
-                  to-orange-50
-                  px-5
-                  py-4
-                  shadow-sm
+                  border-slate-200
+                  bg-slate-50/80
+                  px-6
+                  py-3
                 "
               >
 
-                <p
-                  className="
-                    text-xs
-                    font-semibold
-                    uppercase
-                    tracking-[0.18em]
-                    text-red-500
-                  "
-                >
-                  Session active
-                </p>
+                <div>
 
-                <h2
-                  className="
-                    mt-2
-                    text-2xl
-                    font-bold
-                    tracking-[-0.03em]
-                    text-slate-900
-                  "
-                >
-                  {greeting},{" "}
-                  <span className="text-red-600">
-                    {user?.user_name}
-                  </span>
-                </h2>
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-red-500">
+                    Session active
+                  </p>
 
-                <p
+                  <h2 className="mt-1 text-xl font-bold text-slate-900">
+                    {greeting},{" "}
+                    <span className="text-red-600">
+                      {user?.user_name}
+                    </span>
+                  </h2>
+
+                </div>
+
+                <div
                   className="
-                    mt-1
+                    rounded-full
+                    bg-emerald-50
+                    border
+                    border-emerald-200
+                    px-4
+                    py-1.5
                     text-sm
-                    text-slate-500
+                    font-semibold
+                    text-emerald-700
                   "
                 >
-                  Heureux de vous revoir sur votre espace caissier.
-                </p>
+                  ● En ligne
+                </div>
+
+              </div>
+
+              <div className="mt-6">
+                <div
+                  className="
+                    mb-4
+                    flex
+                    items-center
+                    justify-between
+                    border-b
+                    border-slate-200
+                    pb-3
+                  "
+                >
+
+                  <div className="flex items-center gap-3">
+
+                    <h3
+                      className="
+                        text-lg
+                        font-semibold
+                        text-slate-900
+                      "
+                    >
+                      Mes caisses
+                    </h3>
+
+                    <span
+                      className="
+                        rounded-full
+                        bg-red-100
+                        px-2.5
+                        py-1
+                        text-xs
+                        font-semibold
+                        text-red-600
+                      "
+                    >
+                      {dashboard?.caisses.length ?? 0}
+                    </span>
+
+                  </div>
+
+                  <div className="flex items-center gap-2">
+
+                    <button
+                      onClick={scrollCaissesLeft}
+                      className="
+                        flex
+                        h-9
+                        w-9
+                        items-center
+                        justify-center
+                        rounded-xl
+                        border
+                        border-slate-200
+                        bg-white
+                        text-slate-500
+                        transition-all
+                        hover:border-red-300
+                        hover:text-red-600
+                        hover:shadow-sm
+                      "
+                    >
+                      <ChevronLeft size={18} />
+                    </button>
+
+                    <button
+                      onClick={scrollCaissesRight}
+                      className="
+                        flex
+                        h-9
+                        w-9
+                        items-center
+                        justify-center
+                        rounded-xl
+                        border
+                        border-slate-200
+                        bg-white
+                        text-slate-500
+                        transition-all
+                        hover:border-red-300
+                        hover:text-red-600
+                        hover:shadow-sm
+                      "
+                    >
+                      <ChevronRight size={18} />
+                    </button>
+
+                  </div>
+
+                </div>
+
+                <div
+                    ref={caissesScrollRef}
+                    className="
+                        w-full
+                        overflow-x-auto
+                        pb-2
+                        scroll-smooth
+                        no-scrollbar
+                    "
+                >
+
+                  <div
+                    className={`
+                      flex
+                      gap-4
+                      snap-x
+                      snap-mandatory
+
+                      ${
+                        (dashboard?.caisses.length ?? 0) <= 4
+                          ? "w-full"
+                          : "w-max"
+                      }
+                    `}
+                  >
+
+                    {dashboard?.caisses.map((caisse) => (
+
+                      <button
+                        key={caisse.id}
+                        onClick={() => setSelectedCaisseId(caisse.id)}
+                        className={`
+                          snap-start
+
+                          ${
+                            (dashboard?.caisses.length ?? 0) <= 4
+                              ? "basis-0 flex-1"
+                              : "w-[190px] shrink-0"
+                          }
+
+                          h-[132px]
+                          rounded-3xl
+                          border
+                          p-4
+                          text-left
+                          transition-colors
+                          duration-300
+
+                          ${
+                            selectedCaisse?.id === caisse.id
+                              ? `
+                                  border-red-500
+                                  bg-gradient-to-br
+                                  from-red-50
+                                  via-white
+                                  to-white
+                                  shadow-lg
+                                  shadow-red-100
+                                  ring-1
+                                  ring-red-200
+                                `
+                              : `
+                                  border-slate-200
+                                  bg-white
+                                  hover:border-red-300
+                                  hover:shadow-md
+                                `
+                          }
+                        `}
+                      >
+
+                        <div className="flex items-start justify-between">
+
+                          <div>
+
+                            <h4 className="text-lg font-bold tracking-tight text-slate-900">
+                              {caisse.code_caisse}
+                            </h4>
+
+                            <p className="mt-1 text-xs font-semibold uppercase tracking-wider text-slate-400">
+                              {caisse.support.replace("_", " ")}
+                            </p>
+
+                          </div>
+
+                          <div
+                            className={`mt-1 h-3 w-3 rounded-full ${
+                              caisse.state === "OUVERTE"
+                                ? "bg-emerald-500"
+                                : caisse.state === "FERMEE"
+                                ? "bg-orange-500"
+                                : "bg-red-500"
+                            }`}
+                          />
+
+                        </div>
+
+                        <div className="mt-5 flex items-center justify-between">
+
+                          <div>
+
+                            {caisse.prestataire ? (
+                              <p className="text-sm font-medium text-slate-600">
+                                {caisse.prestataire}
+                              </p>
+                            ) : (
+                              <p className="text-sm text-slate-400">
+                                Aucun prestataire
+                              </p>
+                            )}
+
+                          </div>
+
+                          <span
+                            className="
+                              rounded-full
+                              bg-slate-100
+                              px-3
+                              py-1
+                              text-xs
+                              font-semibold
+                              text-slate-600
+                            "
+                          >
+                            {caisse.devise_principale}
+                          </span>
+
+                        </div>
+
+                      </button>
+
+                    ))}
+
+                  </div>
+
+                </div>
 
               </div>
 
@@ -378,23 +625,21 @@ export default function CaissierDashboard() {
             {/* RIGHT */}
 
             {selectedCaisse && (
-
               <div
                 className="
                   relative
                   w-full
-                  max-w-[420px]
                   overflow-hidden
-                  rounded-[32px]
+                  rounded-[28px]
                   border
                   border-white/40
                   bg-gradient-to-br
                   from-slate-900
                   via-slate-800
                   to-slate-900
-                  p-7
+                  p-6
                   text-white
-                  shadow-[0_20px_60px_rgba(15,23,42,0.35)]
+                  shadow-[0_20px_60px_rgba(15,23,42,0.30)]
                 "
               >
 
@@ -411,213 +656,142 @@ export default function CaissierDashboard() {
                   "
                 />
 
-                <div
-                  className="
-                    relative
-                    flex
-                    items-start
-                    justify-between
-                  "
-                >
+                <div className="relative">
 
-                  <div>
+                  {/* HEADER */}
 
-                    <div
-                      className="
-                        flex
-                        items-center
-                        gap-2
-                      "
-                    >
+                  <div className="flex items-start justify-between">
 
-                      <Wallet
-                        size={18}
-                        className="
-                          text-red-400
-                        "
-                      />
+                    <div>
 
-                      <p
-                        className="
-                          text-sm
-                          text-slate-300
-                        "
-                      >
-                        Solde disponible
+                      <div className="flex items-center gap-2">
+
+                        <Wallet
+                          size={18}
+                          className="text-red-400"
+                        />
+
+                        <p className="text-sm text-slate-300">
+                          Solde disponible
+                        </p>
+
+                      </div>
+
+                      <h3 className="mt-3 text-2xl font-bold">
+                        {selectedCaisse.code_caisse}
+                      </h3>
+
+                      <p className="mt-1 text-sm text-slate-400">
+                        {selectedCaisse.support.replace("_", " ")}
                       </p>
 
                     </div>
 
-                    <div
-                      className="
-                        mt-6
-                        max-h-[260px]
-                        space-y-3
-                        overflow-y-auto
-                        pr-1
-                      "
-                    >
+                    <span
+                      className={`
+                        rounded-full
+                        px-3
+                        py-1
+                        text-xs
+                        font-semibold
 
-                      {Object.entries(
-                        dashboard?.soldes || {}
-                      ).map(
-                        ([
-                          devise,
-                          montant,
-                        ]) => (
+                        ${
+                          selectedCaisse.state === "OUVERTE"
+                            ? "bg-emerald-500/20 text-emerald-300"
+                            : "bg-red-500/20 text-red-300"
+                        }
+                      `}
+                    >
+                      ● {selectedCaisse.state}
+                    </span>
+
+                  </div>
+
+                  {/* SOLDES */}
+
+                  <div
+                    className="
+                      mt-6
+                      max-h-[240px]
+                      space-y-3
+                      overflow-y-auto
+                      pr-1
+                    "
+                  >
+
+                    {selectedCaisse.devises.map((devise) => (
+
+                      <div
+                        key={devise.id}
+                        className="
+                          flex
+                          items-center
+                          justify-between
+                          rounded-2xl
+                          border
+                          border-white/10
+                          bg-white/5
+                          px-4
+                          py-3
+                          transition-colors
+                          hover:bg-white/10
+                        "
+                      >
+
+                        <div className="flex items-center gap-3">
 
                           <div
-                            key={devise}
                             className="
                               flex
+                              h-10
+                              w-10
                               items-center
-                              justify-between
-                              rounded-2xl
-                              border
-                              border-white/10
-                              bg-white/5
-                              px-4
-                              py-4
-                              backdrop-blur-sm
-                              transition-all
-                              hover:bg-white/10
+                              justify-center
+                              rounded-xl
+                              bg-red-500/15
+                              text-xs
+                              font-bold
+                              text-red-300
                             "
                           >
+                            {devise.devise}
+                          </div>
 
-                            <div
-                              className="
-                                flex
-                                items-center
-                                gap-3
-                              "
-                            >
+                          <div>
 
-                              <div
-                                className="
-                                  flex
-                                  h-10
-                                  w-10
-                                  items-center
-                                  justify-center
-                                  rounded-xl
-                                  bg-red-500/15
-                                  text-xs
-                                  font-bold
-                                  text-red-300
-                                "
-                              >
-                                {devise}
-                              </div>
+                            <p className="text-xs text-slate-400">
+                              Solde
+                            </p>
 
-                              <div>
-
-                                <p
-                                  className="
-                                    text-xs
-                                    uppercase
-                                    tracking-widest
-                                    text-slate-400
-                                  "
-                                >
-                                  Solde disponible
-                                </p>
-
-                                <p
-                                  className="
-                                    mt-1
-                                    text-lg
-                                    font-bold
-                                    text-white
-                                  "
-                                >
-                                  {Number(
-                                    montant
-                                  ).toLocaleString()}
-                                </p>
-
-                              </div>
-
-                            </div>
-
-                            <div
-                              className="
-                                rounded-full
-                                bg-emerald-500/15
-                                px-3
-                                py-1
-                                text-xs
-                                font-semibold
-                                text-emerald-300
-                              "
-                            >
-                              {devise}
-                            </div>
+                            <p className="text-lg font-bold">
+                              {Number(devise.solde).toLocaleString()}
+                            </p>
 
                           </div>
 
-                        )
-                      )}
+                        </div>
 
-                    </div>
+                        <span
+                          className="
+                            rounded-full
+                            bg-emerald-500/15
+                            px-3
+                            py-1
+                            text-xs
+                            font-semibold
+                            text-emerald-300
+                          "
+                        >
+                          {devise.devise}
+                        </span>
 
-                  </div>
+                      </div>
 
-                  <div
-                    className={`
-                      rounded-2xl
-                      px-4
-                      py-2
-                      text-sm
-                      font-semibold
-                      ${
-                        selectedCaisse.state ===
-                        "OUVERTE"
-                          ? "bg-emerald-500/20 text-emerald-300"
-                          : "bg-red-500/20 text-red-300"
-                      }
-                    `}
-                  >
-                    ●{" "}
-                    {
-                      selectedCaisse.state
-                    }
+                    ))}
+
                   </div>
 
                 </div>
-
-                <button
-                  onClick={() =>
-                   setOpenCloture(true)
-                  }
-
-                  className="
-                    mt-8
-                    flex
-                    w-full
-                    items-center
-                    justify-center
-                    gap-2
-                    rounded-2xl
-                    bg-red-600
-                    px-4
-                    py-4
-                    text-sm
-                    font-semibold
-                    text-white
-                    transition-all
-                    duration-300
-                    hover:bg-red-700
-                    hover:shadow-xl
-                  "
-                >
-
-                  <Lock
-                    size={18}
-                  />
-
-                  Clôturer ma caisse
-
-                </button>
 
               </div>
 

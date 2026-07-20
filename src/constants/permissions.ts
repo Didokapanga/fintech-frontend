@@ -51,4 +51,8 @@ export const PERMISSIONS = {
   TARIF_UPDATE: "tarif.update",
   TARIF_DELETE: "tarif.delete",
 
+  // TRANSFERT INTER AGENC
+  TRANSFERT_INTER_AGENCE_CREATE :"transfert_inter_agence.create",
+  TRANSFERT_INTER_AGENCE_CREATE_AGENCE : "transfert_inter_agence.create"
+
 } as const;
