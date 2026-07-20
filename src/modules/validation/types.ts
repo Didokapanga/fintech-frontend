@@ -65,6 +65,7 @@ export type TransfertClientValidation = {
   type_taux_utilise: string;
 
   mode_paiement: string;
+  prestataire: string | null;
 
   statut: string;
 
