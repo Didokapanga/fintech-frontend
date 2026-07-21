@@ -61,3 +61,37 @@ export async function getTransfertInterAgenceById(
 
   return data;
 }
+
+export async function getTransfertsInterAgenceByAgence(
+  agenceId: string,
+  page = 1,
+  limit = 10,
+  filters: TransfertInterAgenceFilters = {}
+): Promise<TransfertInterAgenceResponse> {
+
+  const params = new URLSearchParams();
+
+  params.append("page", String(page));
+  params.append("limit", String(limit));
+
+  if (filters.devise) {
+    params.append("devise", filters.devise);
+  }
+
+  if (filters.statut) {
+    params.append("statut", filters.statut);
+  }
+
+  if (filters.date_operation) {
+    params.append(
+      "date_operation",
+      filters.date_operation
+    );
+  }
+
+  const { data } = await api.get(
+    `/transferts-inter-agence/agence/${agenceId}?${params.toString()}`
+  );
+
+  return data;
+}

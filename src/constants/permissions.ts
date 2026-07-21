@@ -53,6 +53,8 @@ export const PERMISSIONS = {
 
   // TRANSFERT INTER AGENC
   TRANSFERT_INTER_AGENCE_CREATE :"transfert_inter_agence.create",
-  TRANSFERT_INTER_AGENCE_CREATE_AGENCE : "transfert_inter_agence.create"
+  TRANSFERT_INTER_AGENCE_CREATE_AGENCE : "transfert_inter_agence.createByAgence",
+  TRANSFERT_INTER_AGENCE_READ :"transfert_inter_agence.read",
+  TRANSFERT_INTER_AGENCE_READ_AGENCE : "transfert_inter_agence.readByAgence"
 
 } as const;

@@ -127,7 +127,7 @@ export const getNavItems = ({
         },
 
         {
-          label: "Inter-agences",
+          label: "Entrée / Sortie",
           icon: Building2,
           path: `${base}/transfert-inter-agence`,
         },

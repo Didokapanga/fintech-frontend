@@ -42,6 +42,7 @@ import {
   PERMISSIONS,
 } from "../../../constants/permissions";
 import TransfertCaisseModal from "../../transfert-caisse/components/transfertCaisseModal";
+import { useAuthStore } from "../../../app/store";
 
 /* -------------------------------------------------------------------------- */
 /*                                    PAGE                                    */
@@ -78,6 +79,17 @@ export default function TransfertInterAgencePage() {
     setDateOperation,
   ] = useState("");
 
+  const user = useAuthStore(
+  (state) => state.user
+);
+
+const agenceId =
+  user?.permissions.includes(
+    PERMISSIONS.TRANSFERT_INTER_AGENCE_READ
+  )
+    ? undefined
+    : user?.agence_id;
+
   /* ------------------------------------------------------------------------ */
   /*                                   QUERY                                  */
   /* ------------------------------------------------------------------------ */
@@ -92,7 +104,8 @@ export default function TransfertInterAgencePage() {
       devise,
       statut,
       date_operation: dateOperation,
-    }
+    },
+    agenceId
   );
 
   /* ------------------------------------------------------------------------ */
