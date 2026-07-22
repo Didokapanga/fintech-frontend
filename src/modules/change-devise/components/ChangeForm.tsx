@@ -2,14 +2,6 @@ import { useClients }
 from "../../clients/hooks/useClients";
 
 import {
-  useCaisses,
-} from "../../caisse/hooks/useCaisses";
-
-import type {
-  Caisse,
-} from "../../caisse/types";
-
-import {
 //   Search,
   User2,
   Wallet,
@@ -59,7 +51,6 @@ export default function ChangeForm() {
   });
 
   const initialForm: CreateChangeDeviseDto = {
-    caisse_id: "",
     client_id: "",
     devise_source: "CDF",
     devise_destination: "USD",
@@ -71,39 +62,10 @@ export default function ChangeForm() {
     form,
     setForm,
   ] = useState<CreateChangeDeviseDto>(initialForm);
-  // const [
-  //   form,
-  //   setForm,
-  //   ] = useState<CreateChangeDeviseDto>({
-
-  //   caisse_id: "",
-
-  //   client_id: "",
-
-  //   devise_source: "CDF",
-
-  //   devise_destination: "USD",
-
-  //   montant_source: 0,
-
-  //   mode_paiement:
-  //       "ESPECE",
-
-  //   });
 
   const {
   data: clients = [],
 } = useClients();
-
-const {
-  data: caisseResponse,
-} = useCaisses(
-  1,
-  100
-);
-
-const caisses =
-  caisseResponse?.data ?? [];
 
 const [
   clientSearch,
@@ -423,50 +385,6 @@ const filteredClients =
                 text-slate-400
             "
             />
-
-            <select
-            value={form.caisse_id}
-            onChange={(e) =>
-                setForm({
-                ...form,
-
-                caisse_id:
-                    e.target.value,
-                })
-            }
-            className="
-                h-12
-                w-full
-                rounded-2xl
-                border
-                border-slate-200
-                bg-white
-                pl-10
-                pr-4
-                text-sm
-            "
-            >
-
-            <option value="">
-                Sélectionner une caisse
-            </option>
-
-            {caisses.map(
-                (
-                caisse: Caisse
-                ) => (
-
-                <option
-                    key={caisse.id}
-                    value={caisse.id}
-                >
-                    {caisse.code_caisse} - {caisse.agence_name} - {caisse.agent_name}
-                </option>
-
-                )
-            )}
-
-            </select>
 
         </div>
 

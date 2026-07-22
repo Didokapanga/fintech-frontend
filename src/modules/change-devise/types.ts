@@ -16,7 +16,6 @@ export type ModePaiement =
 /* ===================================================== */
 
 export interface CreateChangeDeviseDto {
-  caisse_id: string;
   client_id: string;
 
   devise_source: string;
