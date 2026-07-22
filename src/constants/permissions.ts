@@ -55,6 +55,12 @@ export const PERMISSIONS = {
   TRANSFERT_INTER_AGENCE_CREATE :"transfert_inter_agence.create",
   TRANSFERT_INTER_AGENCE_CREATE_AGENCE : "transfert_inter_agence.createByAgence",
   TRANSFERT_INTER_AGENCE_READ :"transfert_inter_agence.read",
-  TRANSFERT_INTER_AGENCE_READ_AGENCE : "transfert_inter_agence.readByAgence"
+  TRANSFERT_INTER_AGENCE_READ_AGENCE : "transfert_inter_agence.readByAgence",
+
+  // CHANGE DEIVSE
+  CHANGE_DEVISE_CREATE: "change_devise.create",
+  CHANGE_DEVISE_READ: "change_devise.read",
+  CHANGE_DEVISE_READ_AGENCE: "change_devise.read_agence",
+  CHANGE_DEVISE_READ_AGENT: "change_devise.read_agent",
 
 } as const;

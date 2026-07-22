@@ -28,7 +28,6 @@ import type {
 
 import {
   Button,
-  Table,
 } from "../../../components/ui";
 
 import type {
@@ -46,6 +45,7 @@ import CaisseStatusBadge from "./CaisseStatusBadge";
 import CaisseFormModal from "./CaisseFormModal";
 import { PermissionGate } from "../../../components/auth/PermissionGate";
 import { PERMISSIONS } from "../../../constants/permissions";
+import GroupedTable from "../../../components/grouped-table";
 
 /* -------------------------------------------------------------------------- */
 /*                                    TYPES                                   */
@@ -631,17 +631,25 @@ export default function CaisseTab() {
         "
       >
 
-        <Table<Caisse>
-          data={
-            caisses
-          }
-          columns={
-            columns
-          }
-          loading={
-            isLoading
-          }
-        />
+        <GroupedTable<Caisse>
+          data={caisses}
+          columns={columns}
+          loading={isLoading}
+          groupBy="code_agence"
+          groupTitle={(row) => (
+              <div className="flex flex-col">
+
+                  <span className="font-semibold text-slate-800">
+                      {row.agence_name}
+                  </span>
+
+                  <span className="text-xs text-slate-500">
+                      {row.code_agence}
+                  </span>
+
+              </div>
+          )}
+      />
 
       </div>
 
