@@ -7,7 +7,6 @@ import {
 
 import {
   Users,
-  Save,
   Search,
 } from "lucide-react";
 
@@ -51,11 +50,6 @@ export default function RolePermissionTab() {
     search,
     setSearch,
   ] = useState("");
-
-  const [
-    localPermissions,
-    setLocalPermissions,
-    ] = useState<string[]>([]);
 
   /* ===================================== */
   /* ROLES                                 */
@@ -117,10 +111,7 @@ export default function RolePermissionTab() {
         [rolePermissions]
     );
 
-const selectedPermissions =
-  localPermissions.length > 0
-    ? localPermissions
-    : rolePermissionIds;
+  const selectedPermissions = rolePermissionIds;
   
 
   /* ===================================== */
@@ -187,97 +178,37 @@ const selectedPermissions =
   /* TOGGLE                                */
   /* ===================================== */
 
-  const togglePermission =
-    (
-      permissionId: string
-    ) => {
+  const togglePermission = (
+    permissionId: string
+  ) => {
 
-      if (
-        !selectedRole
-      ) {
-        return;
-      }
+    if (!selectedRole) {
+      return;
+    }
 
-      const alreadyAssigned =
-        selectedPermissions.includes(
-          permissionId
-        );
+    const alreadyAssigned =
+      selectedPermissions.includes(permissionId);
 
-      if (
-        alreadyAssigned
-      ) {
+    if (alreadyAssigned) {
 
-        removeMutation.mutate({
+      removeMutation.mutate({
+        roleId: selectedRole.id,
+        permissionId,
+      });
 
-          roleId:
-            selectedRole.id,
+      return;
+    }
 
-          permissionId,
+    savePermissions({
+      role_id: selectedRole.id,
+      permission_ids: [permissionId],
+    });
 
-        });
-
-        setLocalPermissions(
-          (
-            prev
-          ) =>
-            prev.filter(
-              (
-                id
-              ) =>
-                id !==
-                permissionId
-            )
-        );
-
-        return;
-      }
-
-      setLocalPermissions(
-        (
-          prev
-        ) => [
-          ...prev,
-          permissionId,
-        ]
-      );
-
-    };
+  };
 
   /* ===================================== */
   /* SAVE                                  */
   /* ===================================== */
-
-  const handleSave =
-    () => {
-
-      if (
-        !selectedRole
-      ) {
-        return;
-      }
-
-      const newPermissions =
-        selectedPermissions.filter(
-          (
-            permissionId
-          ) =>
-            !rolePermissionIds.includes(
-              permissionId
-            )
-        );
-
-      if (
-        newPermissions.length === 0
-      ) {
-        return;
-      }
-
-      savePermissions({
-        role_id: selectedRole.id,
-        permission_ids: newPermissions,
-      });
-
-    };
 
   return (
 
@@ -336,8 +267,6 @@ const selectedPermissions =
               <button
                 key={role.id}
                 onClick={() => {
-
-                setLocalPermissions([]);
 
                 setSelectedRole(role);
 
@@ -468,33 +397,6 @@ const selectedPermissions =
                 </p>
 
               </div>
-
-              <button
-                onClick={
-                  handleSave
-                }
-                disabled={
-                  assignMutation.isPending
-                }
-                className="
-                  inline-flex
-                  items-center
-                  gap-2
-                  rounded-2xl
-                  bg-blue-600
-                  px-5
-                  py-3
-                  text-sm
-                  font-semibold
-                  text-white
-                "
-              >
-
-                <Save size={16} />
-
-                Enregistrer
-
-              </button>
 
             </div>
 

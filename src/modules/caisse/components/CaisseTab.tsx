@@ -87,6 +87,37 @@ type PaginatedCaissesResponse =
     };
   };
 
+  type CaisseGroupee = {
+
+    id: string;
+
+    agence_name: string;
+
+    code_agence: string;
+
+    prestataire: string | null;
+
+    support: string;
+
+    type: Caisse["type"];
+
+    state: Caisse["state"];
+
+    lignes: {
+
+      code_caisse: string;
+
+      devise: string;
+
+      solde: number;
+
+      proprietaire: string;
+
+    }[];
+
+    caisses: Caisse[];
+
+  };
 /* -------------------------------------------------------------------------- */
 /*                                  COMPONENT                                 */
 /* -------------------------------------------------------------------------- */
@@ -141,13 +172,73 @@ export default function CaisseTab() {
     isLoading: boolean;
   };
 
-  const caisses =
-    useMemo(
-      () =>
-        response?.data ||
-        [],
-      [response]
-    );
+  const caissesGroupees = useMemo<CaisseGroupee[]>(() => {
+
+    const map = new Map<string, CaisseGroupee>();
+
+    for (const caisse of response?.data ?? []) {
+
+      const key = [
+          caisse.code_agence,
+          caisse.support,
+          caisse.prestataire ?? "",
+          caisse.type,
+      ].join("-");
+
+      if (!map.has(key)) {
+
+        map.set(key, {
+
+          id: key,
+
+          agence_name: caisse.agence_name,
+
+          code_agence: caisse.code_agence,
+
+          support: caisse.support,
+
+          prestataire: caisse.prestataire,
+
+          type: caisse.type,
+
+          state: caisse.state,
+
+          lignes: [],
+
+          caisses: [],
+
+        });
+
+      }
+
+      const groupe = map.get(key)!;
+
+      const devise =
+      caisse.devises?.find(
+          d => d.devise === caisse.devise_principale
+      ) ?? caisse.devises?.[0];
+
+    groupe.caisses.push(caisse);
+
+    if (devise) {
+
+        groupe.lignes.push({
+          code_caisse: caisse.code_caisse,
+          devise: devise.devise,
+          solde: Number(devise.solde),
+          proprietaire:
+              caisse.type === "AGENCE"
+                  ? caisse.agence_name
+                  : caisse.agent_name ?? "Agent inconnu",
+      });
+
+    }
+
+    }
+
+    return Array.from(map.values());
+
+  }, [response]);
 
   const meta =
     response?.meta;
@@ -207,83 +298,103 @@ export default function CaisseTab() {
   /*                                  COLUMNS                                 */
   /* ------------------------------------------------------------------------ */
 
-  const columns: Column<Caisse>[] = [
+  const columns: Column<CaisseGroupee>[] = [
 
     {
-      header: "Caisse",
-      accessor: "code_caisse",
+        header: "Support",
+        accessor: "support",
 
-      render: (value, row) => (
+        render: (_, row) => (
 
-        <div className="flex items-center gap-3">
+          <div className="flex flex-col gap-1">
 
-          <div
-            className="
-              flex
-              h-11
-              w-11
-              items-center
-              justify-center
-              rounded-2xl
-              bg-indigo-50
-              text-indigo-600
-            "
-          >
-            <Wallet2 size={18} />
-          </div>
+              <span className="font-semibold text-slate-800">
+                  {row.prestataire ?? "Caisse Agence"}
+              </span>
 
-          <div className="flex flex-col">
+              <span
+                  className={`
+                      inline-flex w-fit rounded-full px-2 py-0.5 text-[11px] font-medium
+                      ${
+                          row.type === "AGENCE"
+                              ? "bg-blue-100 text-blue-700"
+                              : "bg-amber-100 text-amber-700"
+                      }
+                  `}
+              >
+                  {row.type === "AGENCE"
+                      ? "🏦 Caisse Agence"
+                      : "👤 Caisse Agent"}
+              </span>
 
-            <span className="font-semibold text-slate-800">
-              {String(value)}
-            </span>
-
-            <span className="text-xs text-slate-500">
-              {row.agence_name}
-            </span>
+              <span className="text-xs text-slate-500">
+                  {row.support.replaceAll("_", " ")}
+              </span>
 
           </div>
-
-        </div>
 
       ),
     },
 
     {
-      header: "Support",
-      accessor: "support",
+      header: "Caisses",
+      accessor: "lignes",
 
-      render: (value) => (
+      render: (_, row) => (
 
-        <span
-          className="
-            inline-flex
-            rounded-full
-            bg-blue-50
-            px-3
-            py-1
-            text-xs
-            font-medium
-            text-blue-700
-          "
-        >
-          {String(value).replace("_", " ")}
-        </span>
+          <div className="space-y-2">
 
-      ),
+              {row.lignes.map((ligne) => (
+
+                  <div
+                      key={`${ligne.code_caisse}-${ligne.devise}`}
+                      className="flex items-center justify-between gap-4"
+                  >
+
+                      <div className="min-w-0">
+
+                          <div className="font-medium text-slate-800 leading-none">
+                              {ligne.code_caisse}
+                          </div>
+
+                          <div className="text-[11px] text-slate-500 truncate">
+                              {ligne.proprietaire}
+                          </div>
+
+                      </div>
+
+                      <div className="text-right">
+
+                          <div className="text-sm text-slate-500 leading-none">
+                              {ligne.devise}
+                          </div>
+
+                          <div className="font-semibold text-slate-900 leading-none mt-1">
+                              {ligne.solde.toLocaleString("fr-FR")}
+                          </div>
+
+                      </div>
+
+                  </div>
+
+              ))}
+
+          </div>
+
+        ),
     },
 
     {
-      header: "Prestataire",
-      accessor: "prestataire",
+        header: "Prestataire",
+        accessor: "prestataire",
 
-      render: (_value, row) => (
+        render: (_value, row) => (
 
-        <span className="text-sm text-slate-700">
-          {row.prestataire ?? "—"}
-        </span>
+            <span className="text-sm text-slate-700 font-medium">
+                {row.prestataire ?? "PHYSIQUE"}
+            </span>
 
-      ),
+        ),
     },
 
     {
@@ -318,40 +429,6 @@ export default function CaisseTab() {
         </div>
 
       ),
-    },
-
-    {
-      header: "Solde",
-      accessor: "devises",
-
-      render: (_value, row) => {
-
-        const devise =
-          row.devises?.find(
-            d => d.devise === row.devise_principale
-          ) ?? row.devises?.[0];
-
-        return devise ? (
-
-          <div className="flex flex-col">
-
-            <span className="font-medium text-slate-800">
-              {devise.devise}
-            </span>
-
-            <span className="text-xs text-slate-500">
-              {Number(devise.solde).toLocaleString("fr-FR")} {devise.devise}
-            </span>
-
-          </div>
-
-        ) : (
-
-          <span>-</span>
-
-        );
-
-      },
     },
 
     {
@@ -631,32 +708,32 @@ export default function CaisseTab() {
         "
       >
 
-        <GroupedTable<Caisse>
-          data={caisses}
-          columns={columns}
-          loading={isLoading}
-          groupBy="code_agence"
-          groupTitle={(row) => (
-              <div className="flex flex-col">
+        <GroupedTable<CaisseGroupee>
+            data={caissesGroupees}
+            columns={columns}
+            loading={isLoading}
+            groupBy="code_agence"
+            groupTitle={(row) => (
+                <div className="flex flex-col">
 
-                  <span className="font-semibold text-slate-800">
-                      {row.agence_name}
-                  </span>
+                    <span className="font-semibold text-slate-800">
+                        {row.agence_name}
+                    </span>
 
-                  <span className="text-xs text-slate-500">
-                      {row.code_agence}
-                  </span>
+                    <span className="text-xs text-slate-500">
+                        {row.code_agence}
+                    </span>
 
-              </div>
-          )}
-      />
+                </div>
+            )}
+        />
 
       </div>
 
       {/* EMPTY */}
 
       {!isLoading &&
-        caisses.length ===
+        caissesGroupees.length ===
           0 && (
 
           <div
